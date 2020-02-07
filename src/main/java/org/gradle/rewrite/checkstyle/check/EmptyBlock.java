@@ -1,17 +1,17 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.refactor.Refactor;
 import com.netflix.rewrite.tree.*;
+import com.netflix.rewrite.tree.visitor.ReferencedTypesVisitor;
 import com.netflix.rewrite.tree.visitor.refactor.AstTransform;
 import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
+import com.netflix.rewrite.tree.visitor.refactor.op.AddImport;
+import com.netflix.rewrite.tree.visitor.refactor.op.RemoveImport;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.BlockPolicy;
 import org.gradle.rewrite.checkstyle.policy.Token;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Stream;
 
 import static com.netflix.rewrite.tree.Formatting.*;
 import static com.netflix.rewrite.tree.Tr.randomId;
@@ -23,7 +23,10 @@ import static org.gradle.rewrite.checkstyle.policy.Token.*;
  * TODO offer option to log if a logger field is available instead of rethrowing as an unchecked exception.
  */
 @Builder
-public class EmptyBlock extends RefactorVisitor<Tree> {
+public class EmptyBlock extends RefactorVisitor {
+    private final ThreadLocal<Set<Type.Class>> addImports = new ThreadLocal<>();
+    private final ThreadLocal<Set<Type.Class>> removeImports = new ThreadLocal<>();
+
     @Builder.Default
     BlockPolicy block = BlockPolicy.Statement;
 
@@ -47,19 +50,47 @@ public class EmptyBlock extends RefactorVisitor<Tree> {
         return "EmptyBlock";
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public List<AstTransform<Tree>> visitWhileLoop(Tr.WhileLoop whileLoop) {
-        if (tokens.contains(LITERAL_WHILE) && isEmptyBlock(whileLoop.getBody())) {
-            return transform(whileLoop.getBody(), b -> ((Tr.Block<Tree>) b).withStatements(
-                    singletonList(new Tr.Continue(randomId(), null, INFER))
-            ));
-        }
-        return super.visitWhileLoop(whileLoop);
+    public List<AstTransform> visitCompilationUnit(Tr.CompilationUnit cu) {
+        addImports.set(new HashSet<>());
+        removeImports.set(new HashSet<>());
+        return super.visitCompilationUnit(cu);
     }
 
     @Override
-    public List<AstTransform<Tree>> visitBlock(Tr.Block<Tree> block) {
+    public List<RefactorVisitor> andThen() {
+        return Stream.concat(
+            addImports.get().stream().map(add -> new AddImport(add.getFullyQualifiedName(), null, true)),
+            removeImports.get().stream().map(remove -> new RemoveImport(remove.getFullyQualifiedName()))
+        ).collect(toList());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<AstTransform> visitWhileLoop(Tr.WhileLoop whileLoop) {
+        List<AstTransform> changes = super.visitWhileLoop(whileLoop);
+        if (tokens.contains(LITERAL_WHILE) && isEmptyBlock(whileLoop.getBody())) {
+            changes.addAll(transform(whileLoop.getBody(), b -> ((Tr.Block<Tree>) b).withStatements(
+                    singletonList(new Tr.Continue(randomId(), null, INFER))))
+            );
+        }
+        return changes;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<AstTransform> visitDoWhileLoop(Tr.DoWhileLoop doWhileLoop) {
+        List<AstTransform> changes = super.visitDoWhileLoop(doWhileLoop);
+        if (tokens.contains(LITERAL_DO) && isEmptyBlock(doWhileLoop.getBody())) {
+            changes.addAll(transform(doWhileLoop.getBody(), b -> ((Tr.Block<Tree>) b).withStatements(
+                    singletonList(new Tr.Continue(randomId(), null, INFER))))
+            );
+        }
+        return changes;
+    }
+
+    @Override
+    public List<AstTransform> visitBlock(Tr.Block<Tree> block) {
         return Optional.ofNullable(getCursor().getParentOrThrow().getParent())
                 .map(Cursor::getTree)
                 .filter(t -> t instanceof Tr.ClassDecl && isEmptyBlock(block))
@@ -72,90 +103,93 @@ public class EmptyBlock extends RefactorVisitor<Tree> {
                 .orElse(super.visitBlock(block));
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public List<AstTransform<Tree>> visitDoWhileLoop(Tr.DoWhileLoop doWhileLoop) {
-        if (tokens.contains(LITERAL_DO) && isEmptyBlock(doWhileLoop.getBody())) {
-            return transform(doWhileLoop.getBody(), b -> ((Tr.Block<Tree>) b).withStatements(
-                    singletonList(new Tr.Continue(randomId(), null, INFER))
-            ));
-        }
-        return super.visitDoWhileLoop(doWhileLoop);
-    }
+    public List<AstTransform> visitCatch(Tr.Catch catzh) {
+        List<AstTransform> changes = super.visitCatch(catzh);
 
-    @Override
-    public List<AstTransform<Tree>> visitCatch(Tr.Catch catzh) {
         if (tokens.contains(LITERAL_CATCH) && isEmptyBlock(catzh.getBody())) {
-            var exceptionType = catzh.getParam().getTree().getTypeExpr();
-            var exceptionClassType = exceptionType == null ? null : TypeUtils.asClass(exceptionType.getType());
+            changes.addAll(transform(catzh, c -> {
+                        var exceptionType = c.getParam().getTree().getTypeExpr();
+                        var exceptionClassType = exceptionType == null ? null : TypeUtils.asClass(exceptionType.getType());
 
-            final String throwName;
-            final Type.Class throwClass;
+                        final String throwName;
+                        final Type.Class throwClass;
 
-            if (exceptionClassType != null && exceptionClassType.getFullyQualifiedName().equals("java.io.IOException")) {
-                throwName = "UncheckedIOException";
-                throwClass = Type.Class.build("java.io.UncheckedIOException");
-            } else {
-                throwName = "RuntimeException";
-                throwClass = Type.Class.build("java.lang.RuntimeException");
-            }
+                        if (exceptionClassType != null && exceptionClassType.getFullyQualifiedName().equals("java.io.IOException")) {
+                            throwName = "UncheckedIOException";
+                            throwClass = Type.Class.build("java.io.UncheckedIOException");
+                            addImports.get().add(throwClass);
+                        } else {
+                            throwName = "RuntimeException";
+                            throwClass = Type.Class.build("java.lang.RuntimeException");
+                        }
 
-            return transform(catzh, c -> c.withBody(
-                    catzh.getBody().withStatements(
-                            singletonList(new Tr.Throw(randomId(),
-                                    new Tr.NewClass(randomId(),
-                                            Tr.Ident.build(randomId(), throwName, throwClass, format(" ")),
-                                            new Tr.NewClass.Arguments(randomId(),
-                                                    singletonList(Tr.Ident.build(randomId(), catzh.getParam().getTree().getVars().iterator().next().getSimpleName(),
-                                                            exceptionType == null ? null : exceptionType.getType(), EMPTY)),
-                                                    EMPTY),
-                                            null,
-                                            throwClass,
-                                            format(" ")
-                                    ),
-                                    INFER))
-                    )
-            ));
+                        return c.withBody(
+                                c.getBody().withStatements(
+                                        singletonList(new Tr.Throw(randomId(),
+                                                new Tr.NewClass(randomId(),
+                                                        Tr.Ident.build(randomId(), throwName, throwClass, format(" ")),
+                                                        new Tr.NewClass.Arguments(randomId(),
+                                                                singletonList(Tr.Ident.build(randomId(), c.getParam().getTree().getVars().iterator().next().getSimpleName(),
+                                                                        exceptionType == null ? null : exceptionType.getType(), EMPTY)),
+                                                                EMPTY),
+                                                        null,
+                                                        throwClass,
+                                                        format(" ")
+                                                ),
+                                                INFER))
+                                )
+                        );
+                    })
+            );
         }
 
-        return super.visitCatch(catzh);
+        return changes;
     }
 
     @Override
-    public List<AstTransform<Tree>> visitIf(Tr.If iff) {
+    public List<AstTransform> visitTry(Tr.Try tryable) {
+        List<AstTransform> changes = super.visitTry(tryable);
+
+        if (tokens.contains(LITERAL_TRY) && isEmptyBlock(tryable.getBody())) {
+            changes.addAll(deleteStatementFromParentBlock(tryable));
+            removeImports.get().addAll(new ReferencedTypesVisitor().visit(tryable));
+        } else if (tokens.contains(LITERAL_FINALLY) && tryable.getFinally() != null && isEmptyBlock(tryable.getFinally().getBlock())) {
+            changes.addAll(transform(tryable, t -> t.withFinallie(null)));
+        }
+        return changes;
+    }
+
+    @Override
+    public List<AstTransform> visitIf(Tr.If iff) {
+        List<AstTransform> changes = super.visitIf(iff);
         Tr.Block<Tree> containing = getCursor().getParentOrThrow().getTree();
 
         if (iff.getElsePart() == null) {
-            return transform(containing, then -> {
-                Tr.If iff2 = retrieve(iff, then);
-                List<Tree> statements = new ArrayList<>(then.getStatements().size());
-                for (Tree statement : then.getStatements()) {
-                    if(statement == iff2) {
-                        iff2.getIfCondition().getTree().getSideEffects()
-                                .stream()
-                                .map(s -> (Tree) s.withFormatting(INFER))
-                                .forEach(statements::add);
-                    }
-                    else {
-                        statements.add(statement);
-                    }
-                }
-                return then.withStatements(statements);
-            });
+            changes.addAll(transform(containing, then -> {
+                        Tr.If iff2 = retrieve(iff, then);
+                        List<Tree> statements = new ArrayList<>(then.getStatements().size());
+                        for (Tree statement : then.getStatements()) {
+                            if (statement == iff2) {
+                                iff2.getIfCondition().getTree().getSideEffects()
+                                        .stream()
+                                        .map(s -> (Tree) s.withFormatting(INFER))
+                                        .forEach(statements::add);
+                            } else {
+                                statements.add(statement);
+                            }
+                        }
+                        return then.withStatements(statements);
+                    })
+            );
         }
 
-        return super.visitIf(iff);
+        return changes;
     }
 
     private boolean isEmptyBlock(Statement blockNode) {
         return block.equals(BlockPolicy.Statement) &&
                 blockNode instanceof Tr.Block &&
                 ((Tr.Block<?>) blockNode).getStatements().isEmpty();
-    }
-
-    public static Refactor run(Refactor refactor, EmptyBlock emptyBlock) {
-        return refactor
-                .run(emptyBlock)
-                .addImport("java.io.UncheckedIOException", null, true);
     }
 }

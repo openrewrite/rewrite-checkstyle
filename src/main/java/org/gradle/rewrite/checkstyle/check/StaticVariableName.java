@@ -16,7 +16,7 @@ import static java.util.stream.Collectors.toList;
  * Fix for <a href="https://checkstyle.sourceforge.io/config_naming.html#StaticVariableName">StaticVariableName</a>.
  */
 @Builder
-public class StaticVariableName extends RefactorVisitor<Tr.VariableDecls> {
+public class StaticVariableName extends RefactorVisitor {
     @Builder.Default
     private String format = "^[a-z][a-zA-Z0-9]*$";
 
@@ -41,7 +41,7 @@ public class StaticVariableName extends RefactorVisitor<Tr.VariableDecls> {
     }
 
     @Override
-    public List<AstTransform<Tr.VariableDecls>> visitMultiVariable(Tr.VariableDecls multiVariable) {
+    public List<AstTransform> visitMultiVariable(Tr.VariableDecls multiVariable) {
         if (!multiVariable.hasModifier("static") || !(
                 (applyToPublic && multiVariable.hasModifier("public")) ||
                         (applyToProtected && multiVariable.hasModifier("protected")) ||
@@ -52,7 +52,7 @@ public class StaticVariableName extends RefactorVisitor<Tr.VariableDecls> {
         }
 
         if (multiVariable.getVars().stream().anyMatch(v -> !v.getSimpleName().matches(format))) {
-            return transform(mv -> mv.withVars(mv.getVars().stream()
+            return transform(multiVariable, mv -> mv.withVars(mv.getVars().stream()
                     .map(v -> v.getSimpleName().matches(format) ? v :
                         v.withName(v.getName().withName(renamer.apply(v.getSimpleName()))))
                     .collect(toList())));
