@@ -1,6 +1,6 @@
 package org.gradle.rewrite.checkstyle.policy;
 
-public enum LiteralToken {
+public enum Token {
     LITERAL_WHILE,
     LITERAL_TRY,
     LITERAL_CATCH,
