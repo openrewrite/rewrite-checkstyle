@@ -4,14 +4,14 @@ import com.netflix.rewrite.tree.*;
 import com.netflix.rewrite.tree.visitor.ReferencedTypesVisitor;
 import com.netflix.rewrite.tree.visitor.refactor.AstTransform;
 import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
-import com.netflix.rewrite.tree.visitor.refactor.op.AddImport;
-import com.netflix.rewrite.tree.visitor.refactor.op.RemoveImport;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.BlockPolicy;
 import org.gradle.rewrite.checkstyle.policy.Token;
 
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import static com.netflix.rewrite.tree.Formatting.*;
 import static com.netflix.rewrite.tree.Tr.randomId;
@@ -24,9 +24,6 @@ import static org.gradle.rewrite.checkstyle.policy.Token.*;
  */
 @Builder
 public class EmptyBlock extends RefactorVisitor {
-    private final ThreadLocal<Set<Type.Class>> addImports = new ThreadLocal<>();
-    private final ThreadLocal<Set<Type.Class>> removeImports = new ThreadLocal<>();
-
     @Builder.Default
     BlockPolicy block = BlockPolicy.Statement;
 
@@ -48,21 +45,6 @@ public class EmptyBlock extends RefactorVisitor {
     @Override
     protected String getRuleName() {
         return "EmptyBlock";
-    }
-
-    @Override
-    public List<AstTransform> visitCompilationUnit(Tr.CompilationUnit cu) {
-        addImports.set(new HashSet<>());
-        removeImports.set(new HashSet<>());
-        return super.visitCompilationUnit(cu);
-    }
-
-    @Override
-    public List<RefactorVisitor> andThen() {
-        return Stream.concat(
-            addImports.get().stream().map(add -> new AddImport(add.getFullyQualifiedName(), null, true)),
-            removeImports.get().stream().map(remove -> new RemoveImport(remove.getFullyQualifiedName()))
-        ).collect(toList());
     }
 
     @SuppressWarnings("unchecked")
@@ -96,55 +78,51 @@ public class EmptyBlock extends RefactorVisitor {
                 .filter(t -> t instanceof Tr.ClassDecl && isEmptyBlock(block))
                 .filter(t -> (tokens.contains(STATIC_INIT) && block.getStatic() != null) ||
                         (tokens.contains(INSTANCE_INIT) && block.getStatic() == null))
-                .map(t -> transform(((Tr.ClassDecl) t).getBody(), body -> body
-                        .withStatements(body.getStatements().stream()
-                                .filter(s -> s != block)
-                                .collect(toList()))))
+                .map(t -> maybeTransform(true, super.visitBlock(block),
+                        transform(((Tr.ClassDecl) t).getBody(), body -> body
+                            .withStatements(body.getStatements().stream()
+                                    .filter(s -> s != block)
+                                    .collect(toList())))))
                 .orElse(super.visitBlock(block));
     }
 
     @Override
     public List<AstTransform> visitCatch(Tr.Catch catzh) {
-        List<AstTransform> changes = super.visitCatch(catzh);
+        return maybeTransform(tokens.contains(LITERAL_CATCH) && isEmptyBlock(catzh.getBody()),
+                super.visitCatch(catzh),
+                transform(catzh, c -> {
+                    var exceptionType = c.getParam().getTree().getTypeExpr();
+                    var exceptionClassType = exceptionType == null ? null : TypeUtils.asClass(exceptionType.getType());
 
-        if (tokens.contains(LITERAL_CATCH) && isEmptyBlock(catzh.getBody())) {
-            changes.addAll(transform(catzh, c -> {
-                        var exceptionType = c.getParam().getTree().getTypeExpr();
-                        var exceptionClassType = exceptionType == null ? null : TypeUtils.asClass(exceptionType.getType());
+                    final String throwName;
+                    final Type.Class throwClass;
 
-                        final String throwName;
-                        final Type.Class throwClass;
+                    if (exceptionClassType != null && exceptionClassType.getFullyQualifiedName().equals("java.io.IOException")) {
+                        throwName = "UncheckedIOException";
+                        throwClass = Type.Class.build("java.io.UncheckedIOException");
+                        maybeAddImport(throwClass);
+                    } else {
+                        throwName = "RuntimeException";
+                        throwClass = Type.Class.build("java.lang.RuntimeException");
+                    }
 
-                        if (exceptionClassType != null && exceptionClassType.getFullyQualifiedName().equals("java.io.IOException")) {
-                            throwName = "UncheckedIOException";
-                            throwClass = Type.Class.build("java.io.UncheckedIOException");
-                            addImports.get().add(throwClass);
-                        } else {
-                            throwName = "RuntimeException";
-                            throwClass = Type.Class.build("java.lang.RuntimeException");
-                        }
-
-                        return c.withBody(
-                                c.getBody().withStatements(
-                                        singletonList(new Tr.Throw(randomId(),
-                                                new Tr.NewClass(randomId(),
-                                                        Tr.Ident.build(randomId(), throwName, throwClass, format(" ")),
-                                                        new Tr.NewClass.Arguments(randomId(),
-                                                                singletonList(Tr.Ident.build(randomId(), c.getParam().getTree().getVars().iterator().next().getSimpleName(),
-                                                                        exceptionType == null ? null : exceptionType.getType(), EMPTY)),
-                                                                EMPTY),
-                                                        null,
-                                                        throwClass,
-                                                        format(" ")
-                                                ),
-                                                INFER))
-                                )
-                        );
-                    })
-            );
-        }
-
-        return changes;
+                    return c.withBody(
+                            c.getBody().withStatements(
+                                    singletonList(new Tr.Throw(randomId(),
+                                            new Tr.NewClass(randomId(),
+                                                    Tr.Ident.build(randomId(), throwName, throwClass, format(" ")),
+                                                    new Tr.NewClass.Arguments(randomId(),
+                                                            singletonList(Tr.Ident.build(randomId(), c.getParam().getTree().getVars().iterator().next().getSimpleName(),
+                                                                    exceptionType == null ? null : exceptionType.getType(), EMPTY)),
+                                                            EMPTY),
+                                                    null,
+                                                    throwClass,
+                                                    format(" ")
+                                            ),
+                                            INFER))
+                            )
+                    );
+                }));
     }
 
     @Override
@@ -152,11 +130,11 @@ public class EmptyBlock extends RefactorVisitor {
         List<AstTransform> changes = super.visitTry(tryable);
 
         if (tokens.contains(LITERAL_TRY) && isEmptyBlock(tryable.getBody())) {
-            changes.addAll(deleteStatementFromParentBlock(tryable));
-            removeImports.get().addAll(new ReferencedTypesVisitor().visit(tryable));
+            deleteStatement(tryable);
         } else if (tokens.contains(LITERAL_FINALLY) && tryable.getFinally() != null && isEmptyBlock(tryable.getFinally().getBlock())) {
             changes.addAll(transform(tryable, t -> t.withFinallie(null)));
         }
+
         return changes;
     }
 
@@ -185,6 +163,15 @@ public class EmptyBlock extends RefactorVisitor {
         }
 
         return changes;
+    }
+
+    @Override
+    public List<AstTransform> visitSynchronized(Tr.Synchronized synch) {
+        if (isEmptyBlock(synch)) {
+            deleteStatement(synch);
+        }
+
+        return super.visitSynchronized(synch);
     }
 
     private boolean isEmptyBlock(Statement blockNode) {

@@ -204,7 +204,7 @@ open class EmptyBlockTest : Parser by OpenJdkParser() {
         """.trimIndent())
 
         val fixed = a.refactor().run(EmptyBlock.builder()
-                .tokens(setOf(STATIC_INIT))
+                .tokens(setOf(STATIC_INIT)) // FIXME should be LITERAL_IF!
                 .build()).fix()
 
         assertRefactored(fixed, """
