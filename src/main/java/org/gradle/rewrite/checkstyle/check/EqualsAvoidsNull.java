@@ -5,6 +5,7 @@ import com.netflix.rewrite.tree.visitor.MethodMatcher;
 import com.netflix.rewrite.tree.visitor.refactor.AstTransform;
 import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
 import com.netflix.rewrite.tree.visitor.refactor.ScopedRefactorVisitor;
+import com.netflix.rewrite.tree.visitor.refactor.op.UnwrapParentheses;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Collections;
@@ -65,6 +66,11 @@ public class EqualsAvoidsNull extends RefactorVisitor {
 
         @Override
         public List<AstTransform> visitBinary(Tr.Binary binary) {
+            Tree parent = getCursor().getParentOrThrow().getTree();
+            if (parent instanceof Tr.Parentheses) {
+                andThen(new UnwrapParentheses(parent.getId()));
+            }
+
             return maybeTransform(binary.getId().equals(scope),
                     super.visitBinary(binary),
                     transform(Expression.class, binary, b -> b.getRight().withFormatting(binary.getRight().getFormatting().withPrefix("")))

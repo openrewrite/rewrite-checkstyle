@@ -31,11 +31,12 @@ open class EqualsAvoidsNullTest: Parser by OpenJdkParser() {
     }
 
     @Test
-    fun removeUnnecessaryNullCheck() {
+    fun removeUnnecessaryNullCheckAndParens() {
         val a = parse("""
             public class A {
                 {
                     String s = null;
+                    if((s != null && s.equals("test"))) {}
                     if(s != null && s.equals("test")) {}
                     if(null != s && s.equals("test")) {}
                 }
@@ -48,6 +49,7 @@ open class EqualsAvoidsNullTest: Parser by OpenJdkParser() {
             public class A {
                 {
                     String s = null;
+                    if("test".equals(s)) {}
                     if("test".equals(s)) {}
                     if("test".equals(s)) {}
                 }
