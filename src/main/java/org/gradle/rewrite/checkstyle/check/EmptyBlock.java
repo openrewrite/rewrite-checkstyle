@@ -46,7 +46,7 @@ public class EmptyBlock extends RefactorVisitor {
     );
 
     @Override
-    protected String getRuleName() {
+    public String getRuleName() {
         return "EmptyBlock";
     }
 

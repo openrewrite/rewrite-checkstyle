@@ -36,7 +36,7 @@ public class StaticVariableName extends RefactorVisitor {
     private final boolean applyToPrivate = true;
 
     @Override
-    protected String getRuleName() {
+    public String getRuleName() {
         return "StaticVariableName";
     }
 
