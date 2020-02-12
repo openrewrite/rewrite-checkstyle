@@ -7,6 +7,56 @@ import org.junit.jupiter.api.Test
 
 open class EmptyBlockTest : Parser by OpenJdkParser() {
     @Test
+    fun emptySwitch() {
+        val a = parse("""
+            public class A {
+                {
+                    int i = 0;
+                    switch(i) {
+                    }
+                }
+            }
+        """.trimIndent())
+
+        val fixed = a.refactor().run(EmptyBlock.builder()
+                .tokens(setOf(LITERAL_SWITCH))
+                .build()).fix()
+
+        assertRefactored(fixed, """
+            public class A {
+                {
+                    int i = 0;
+                }
+            }
+        """)
+    }
+
+    @Test
+    fun emptySynchronized() {
+        val a = parse("""
+            public class A {
+                {
+                    final Object o = new Object();
+                    synchronized(o) {
+                    }
+                }
+            }
+        """.trimIndent())
+
+        val fixed = a.refactor().run(EmptyBlock.builder()
+                .tokens(setOf(LITERAL_SYNCHRONIZED))
+                .build()).fix()
+
+        assertRefactored(fixed, """
+            public class A {
+                {
+                    final Object o = new Object();
+                }
+            }
+        """)
+    }
+
+    @Test
     fun emptyTry() {
         val a = parse("""
             import java.io.*;
@@ -36,8 +86,8 @@ open class EmptyBlockTest : Parser by OpenJdkParser() {
     @Test
     fun emptyCatchBlockWithIOException() {
         val a = parse("""
-            import java.nio.file.*;
             import java.io.IOException;
+            import java.nio.file.*;
             
             public class A {
                 public void foo() {
@@ -54,9 +104,9 @@ open class EmptyBlockTest : Parser by OpenJdkParser() {
                 .build()).fix()
 
         assertRefactored(fixed, """
-            import java.nio.file.*;
             import java.io.IOException;
             import java.io.UncheckedIOException;
+            import java.nio.file.*;
             
             public class A {
                 public void foo() {
@@ -204,7 +254,7 @@ open class EmptyBlockTest : Parser by OpenJdkParser() {
         """.trimIndent())
 
         val fixed = a.refactor().run(EmptyBlock.builder()
-                .tokens(setOf(STATIC_INIT)) // FIXME should be LITERAL_IF!
+                .tokens(setOf(LITERAL_IF))
                 .build()).fix()
 
         assertRefactored(fixed, """
@@ -228,6 +278,71 @@ open class EmptyBlockTest : Parser by OpenJdkParser() {
                     n /= sideEffect();
                     new A();
                     boolSideEffect();
+                }
+            }
+        """)
+    }
+
+    @Test
+    fun invertIfWithOnlyElseClauseAndBinaryOperator() {
+        // extra spaces after the original if condition to ensure that we preserve the if statement's block formatting
+        val a = parse("""
+            public class A {
+                {
+                    if("foo".length() > 3)   {
+                    } else {
+                        System.out.println("this");
+                    }
+                }
+            }
+        """.trimIndent())
+
+        val fixed = a.refactor().run(EmptyBlock.builder()
+                .tokens(setOf(LITERAL_IF))
+                .build()).fix()
+
+        assertRefactored(fixed, """
+            public class A {
+                {
+                    if("foo".length() <= 3)   {
+                        System.out.println("this");
+                    }
+                }
+            }
+        """)
+    }
+
+    @Test
+    fun invertIfWithElseIfElseClause() {
+        val a = parse("""
+            public class A {
+                {
+                    if("foo".length() > 3) {
+                    } else if("foo".length() > 4) {
+                        System.out.println("longer");
+                    }
+                    else {
+                        System.out.println("this");
+                    }
+                }
+            }
+        """.trimIndent())
+
+        val fixed = a.refactor().run(EmptyBlock.builder()
+                .tokens(setOf(LITERAL_IF))
+                .build()).fix()
+
+        assertRefactored(fixed, """
+            public class A {
+                {
+                    if("foo".length() <= 3) {
+                        if("foo".length() > 4) {
+                            System.out.println("longer");
+                        }
+                        else {
+                            System.out.println("this");
+                        }
+                    }
                 }
             }
         """)
