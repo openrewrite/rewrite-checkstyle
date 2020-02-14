@@ -11,6 +11,7 @@ open class HiddenFieldTest : Parser by OpenJdkParser() {
             public class B {
                 protected int n2;
                 int n3;
+                private int n4;
             }
         """.trimIndent()
 
