@@ -12,6 +12,11 @@ import static com.netflix.rewrite.tree.Tr.randomId;
 
 public class FinalClass extends RefactorVisitor {
     @Override
+    public String getRuleName() {
+        return "FinalClass";
+    }
+
+    @Override
     public List<AstTransform> visitClassDecl(Tr.ClassDecl classDecl) {
         return maybeTransform(classDecl.getBody().getStatements().stream()
                         .noneMatch(s -> s instanceof Tr.MethodDecl &&

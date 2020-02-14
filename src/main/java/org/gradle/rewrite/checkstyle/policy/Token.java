@@ -30,16 +30,18 @@ public enum Token {
     LITERAL_TRY((t, p) -> t instanceof Tr.Try),
     LITERAL_WHILE((t, p) -> t instanceof Tr.WhileLoop),
     METHOD_DEF((t, p) -> t instanceof Tr.MethodDecl),
-    OBJBLOCK((t, p) -> t instanceof Tr.Block && p instanceof Tr.ClassDecl),
+    OBJBLOCK((t, p) -> t instanceof Tr.Block && p.getTree() instanceof Tr.ClassDecl),
     STATIC_INIT((t, p) -> t instanceof Tr.Block && ((Tr.Block<?>) t).getStatic() != null),
     INSTANCE_INIT((t, p) -> t instanceof Tr.NewClass),
-    ARRAY_INIT((t, p) -> t instanceof Tr.NewArray);
+    ARRAY_INIT((t, p) -> t instanceof Tr.NewArray),
+    VARIABLE_DEF((t, p) -> t instanceof Tr.VariableDecls.NamedVar),
+    PARAMETER_DEF((t, p) -> p.getParentOrThrow().getTree() instanceof Tr.MethodDecl);
 
     public interface TokenMatcher {
-        boolean matches(Tree tree, @Nullable Tree parent);
+        boolean matchesNotNullCursor(Tree tree, Cursor parent);
 
         default boolean matches(Tree tree, @Nullable Cursor parentCursor) {
-            return matches(tree, parentCursor == null ? (Tree) null : parentCursor.getTree());
+            return parentCursor != null && matchesNotNullCursor(tree, parentCursor);
         }
     }
 

@@ -26,6 +26,11 @@ public class FallThrough extends RefactorVisitor {
     private final Pattern reliefPattern = Pattern.compile("falls?[ -]?thr(u|ough)");
 
     @Override
+    public String getRuleName() {
+        return "FallThrough";
+    }
+
+    @Override
     public List<AstTransform> visitCase(Tr.Case caze) {
         Tr.Switch switzh = getCursor().getParentOrThrow().getParentOrThrow().getTree();
         if ((checkLastCaseGroup || !isLastCase(caze)) && !new LastLineBreaksOrFallsThrough(caze).visit(switzh)) {

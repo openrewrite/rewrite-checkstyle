@@ -11,6 +11,11 @@ import static java.util.stream.Collectors.toList;
 
 public class HideUtilityClassConstructor extends RefactorVisitor {
     @Override
+    public String getRuleName() {
+        return "HideUtilityClassConstructor";
+    }
+
+    @Override
     public List<AstTransform> visitClassDecl(Tr.ClassDecl classDecl) {
         return maybeTransform(classDecl.getBody().getStatements().stream()
                         .allMatch(s -> !(s instanceof Tr.MethodDecl) ||

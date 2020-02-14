@@ -4,11 +4,19 @@ plugins {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
+configurations.all {
+    resolutionStrategy {
+        cacheDynamicVersionsFor 0, 'seconds'
+        cacheChangingModulesFor 0, 'seconds'
+    }
+}
+
 dependencies {
-    implementation 'com.netflix.devinsight.rewrite:rewrite-core:latest.release'
+    implementation 'com.netflix.devinsight.rewrite:rewrite-core:latest.integration'
 
     implementation 'com.puppycrawl.tools:checkstyle:latest.release'
 
@@ -31,4 +39,5 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    jvmArgs = ['-XX:+UnlockDiagnosticVMOptions', '-XX:+ShowHiddenFrames']
 }
