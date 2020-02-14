@@ -7,26 +7,47 @@ import org.junit.jupiter.api.Test
 open class HiddenFieldTest : Parser by OpenJdkParser() {
     @Test
     fun renameHiddenFields() {
+        val b = """
+            public class B {
+                protected int n2;
+                int n3;
+            }
+        """.trimIndent()
+
         val a = parse("""
-            public class A {
+            public class A extends B {
                 int n;
                 int n1;
 
-                public void foo(int n) {
-                    int n1 = 2;
+                class C {
+                    public void foo(int n) {
+                        int n1 = 2;
+                    }
+                }
+                
+                static class D {
+                    public void foo(int n) {
+                    }
                 }
             }
-        """.trimIndent())
+        """.trimIndent(), b)
 
         val fixed = a.refactor().run(HiddenField.builder().build()).fix()
 
         assertRefactored(fixed, """
-            public class A {
+            public class A extends B {
                 int n;
                 int n1;
 
-                public void foo(int n2) {
-                    int n3 = 2;
+                class C {
+                    public void foo(int n4) {
+                        int n5 = 2;
+                    }
+                }
+                
+                static class D {
+                    public void foo(int n) {
+                    }
                 }
             }
         """)

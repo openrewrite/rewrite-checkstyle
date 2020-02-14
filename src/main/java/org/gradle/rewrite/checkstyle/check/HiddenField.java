@@ -1,9 +1,7 @@
 package org.gradle.rewrite.checkstyle.check;
 
 import com.netflix.rewrite.internal.lang.Nullable;
-import com.netflix.rewrite.tree.Cursor;
-import com.netflix.rewrite.tree.Tr;
-import com.netflix.rewrite.tree.Tree;
+import com.netflix.rewrite.tree.*;
 import com.netflix.rewrite.tree.visitor.CursorAstVisitor;
 import com.netflix.rewrite.tree.visitor.refactor.AstTransform;
 import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
@@ -18,8 +16,9 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.netflix.rewrite.tree.TypeUtils.getVisibleSupertypeMembers;
 import static java.util.Collections.emptyList;
-import static java.util.stream.StreamSupport.stream;
+import static java.util.stream.Collectors.toList;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
 
 @Builder
@@ -51,6 +50,20 @@ public class HiddenField extends RefactorVisitor {
     }
 
     @Override
+    public List<AstTransform> visitClassDecl(Tr.ClassDecl classDecl) {
+        List<Type.Var> visibleSupertypeMembers = getVisibleSupertypeMembers(classDecl.getType());
+        List<Tr.VariableDecls.NamedVar> shadows = visibleSupertypeMembers.stream()
+                .flatMap(member -> new FindNameShadows(member.getName()).visit(classDecl.getBody()).stream())
+                .collect(toList());
+
+        if (!shadows.isEmpty()) {
+            shadows.forEach(shadow -> andThen(new RenameShadowedName(shadow.getId(), visibleSupertypeMembers)));
+        }
+
+        return super.visitClassDecl(classDecl);
+    }
+
+    @Override
     public List<AstTransform> visitVariable(Tr.VariableDecls.NamedVar variable) {
         Cursor parent = getCursor()
                 .getParentOrThrow() // Tr.VariableDecls
@@ -58,18 +71,31 @@ public class HiddenField extends RefactorVisitor {
                 .getParentOrThrow(); // maybe Tr.ClassDecl
 
         if (parent.getTree() instanceof Tr.ClassDecl) {
+            Tr.ClassDecl classDecl = parent.getTree();
             List<Tr.VariableDecls.NamedVar> shadows = new FindNameShadows(variable).visit(getCursor().enclosingBlock());
             if (!shadows.isEmpty()) {
-                shadows.forEach(shadow -> andThen(new RenameShadowedName(shadow.getId())));
+                shadows.forEach(shadow -> andThen(new RenameShadowedName(shadow.getId(), getVisibleSupertypeMembers(classDecl.getType()))));
             }
         }
 
         return super.visitVariable(variable);
     }
 
-    @RequiredArgsConstructor
     private class FindNameShadows extends CursorAstVisitor<List<Tr.VariableDecls.NamedVar>> {
+        @Nullable
         private final Tr.VariableDecls.NamedVar thatLookLike;
+
+        private final String thatLookLikeName;
+
+        public FindNameShadows(Tr.VariableDecls.NamedVar thatLookLike) {
+            this.thatLookLike = thatLookLike;
+            this.thatLookLikeName = thatLookLike.getSimpleName();
+        }
+
+        public FindNameShadows(String thatLookLikeName) {
+            this.thatLookLike = null;
+            this.thatLookLikeName = thatLookLikeName;
+        }
 
         @Override
         public List<Tr.VariableDecls.NamedVar> defaultTo(Tree t) {
@@ -77,10 +103,19 @@ public class HiddenField extends RefactorVisitor {
         }
 
         @Override
+        public List<Tr.VariableDecls.NamedVar> visitClassDecl(Tr.ClassDecl classDecl) {
+            // don't go into static inner classes, interfaces, or enums which have a different name scope
+            if (!(classDecl.getKind() instanceof Tr.ClassDecl.Kind.Class) || classDecl.hasModifier("static")) {
+                return emptyList();
+            }
+            return super.visitClassDecl(classDecl);
+        }
+
+        @Override
         public List<Tr.VariableDecls.NamedVar> visitVariable(Tr.VariableDecls.NamedVar variable) {
             List<Tr.VariableDecls.NamedVar> shadows = super.visitVariable(variable);
 
-            if (variable != thatLookLike && variable.getSimpleName().equals(thatLookLike.getSimpleName()) &&
+            if (variable != thatLookLike && variable.getSimpleName().equals(thatLookLikeName) &&
                     tokens.stream().anyMatch(t -> t.equals(LAMBDA) ?
                             getCursor().getParentOrThrow().getTree() instanceof Tr.Lambda.Parameters :
                             t.getMatcher().matches(variable, getCursor().getParentOrThrow()))) {
@@ -102,17 +137,19 @@ public class HiddenField extends RefactorVisitor {
 
         @Override
         public Boolean visitVariable(Tr.VariableDecls.NamedVar variable) {
-            return (
-                    variable != scope.getTree() &&
+            return (variable != scope.getTree() &&
                     getCursor().isInSameNameScope(scope) &&
-                    variable.getName().getSimpleName().equals(name)
+                    variable.getSimpleName().equals(name)
             ) || super.visitVariable(variable);
         }
     }
 
     private static class RenameShadowedName extends ScopedRefactorVisitor {
-        public RenameShadowedName(UUID scope) {
+        private final List<Type.Var> supertypeMembers;
+
+        public RenameShadowedName(UUID scope, List<Type.Var> supertypeMembers) {
             super(scope);
+            this.supertypeMembers = supertypeMembers;
         }
 
         @Override
@@ -121,12 +158,17 @@ public class HiddenField extends RefactorVisitor {
                     super.visitVariable(variable),
                     transform(variable, (v, cursor) -> {
                         String nextName = nextName(v.getSimpleName());
-                        while (new ShadowsName(cursor, nextName).visit(cursor.enclosingCompilationUnit())) {
+                        while (matchesSupertypeMember(nextName) ||
+                                new ShadowsName(cursor, nextName).visit(cursor.enclosingCompilationUnit())) {
                             nextName = nextName(nextName);
                         }
                         return v.withName(v.getName().withName(nextName));
                     })
             );
+        }
+
+        private boolean matchesSupertypeMember(String nextName) {
+            return supertypeMembers.stream().anyMatch(m -> m.getName().equals(nextName));
         }
 
         private String nextName(String name) {
