@@ -8,7 +8,7 @@ import com.netflix.rewrite.tree.Tree;
 public enum Token {
     ANNOTATION_DEF((t, p) -> t instanceof Tr.Annotation),
     CLASS_DEF((t, p) -> t instanceof Tr.ClassDecl && ((Tr.ClassDecl) t).getKind() instanceof Tr.ClassDecl.Kind.Class),
-    CTOR_DEF((t, p) -> t instanceof Tr.MethodInvocation && ((Tr.MethodInvocation) t).isConstructor()),
+    CTOR_DEF((t, p) -> t instanceof Tr.MethodDecl && ((Tr.MethodDecl) t).isConstructor()),
     ENUM_CONSTANT_DEF((t, p) -> t instanceof Tr.EnumValue),
     ENUM_DEF((t, p) -> t instanceof Tr.ClassDecl && ((Tr.ClassDecl) t).getKind() instanceof Tr.ClassDecl.Kind.Enum),
     INTERFACE_DEF((t, p) -> t instanceof Tr.ClassDecl && ((Tr.ClassDecl) t).getKind() instanceof Tr.ClassDecl.Kind.Interface),
