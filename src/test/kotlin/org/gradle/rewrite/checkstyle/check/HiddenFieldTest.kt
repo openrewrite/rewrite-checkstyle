@@ -3,6 +3,7 @@ package org.gradle.rewrite.checkstyle.check
 import com.netflix.rewrite.parse.OpenJdkParser
 import com.netflix.rewrite.parse.Parser
 import org.junit.jupiter.api.Test
+import java.util.regex.Pattern
 
 open class HiddenFieldTest : Parser by OpenJdkParser() {
     @Test
@@ -50,6 +51,140 @@ open class HiddenFieldTest : Parser by OpenJdkParser() {
                     public void foo(int n) {
                     }
                 }
+            }
+        """)
+    }
+
+    @Test
+    fun ignorePattern() {
+        val a = parse("""
+            public class A {
+                int n;
+                
+                public void foo(int n) {
+                }
+            }
+        """.trimIndent())
+
+        val fixed = a.refactor().run(HiddenField.builder()
+                .ignoreFormat(Pattern.compile("\\w+"))
+                .build()).fix()
+
+        assertRefactored(fixed, """
+            public class A {
+                int n;
+                
+                public void foo(int n) {
+                }
+            }
+        """)
+    }
+
+    @Test
+    fun ignoreConstructorParameter() {
+        val a = parse("""
+            public class A {
+                int n;
+                
+                A(int n) {
+                }
+            }
+        """.trimIndent())
+
+        val fixed = a.refactor().run(HiddenField.builder()
+                .ignoreConstructorParameter(true)
+                .build()).fix()
+
+        assertRefactored(fixed, """
+            public class A {
+                int n;
+                
+                A(int n) {
+                }
+            }
+        """)
+    }
+
+    @Test
+    fun ignoreSetter() {
+        val a = parse("""
+            public class A {
+                int n;
+                
+                public void setN(int n) {
+                }
+                
+                public A setN(int n) {
+                    return this;
+                }
+            }
+        """.trimIndent())
+
+        val fixed = a.refactor().run(HiddenField.builder()
+                .ignoreSetter(true)
+                .build()).fix()
+
+        assertRefactored(fixed, """
+            public class A {
+                int n;
+                
+                public void setN(int n) {
+                }
+                
+                public A setN(int n1) {
+                    return this;
+                }
+            }
+        """)
+    }
+
+    @Test
+    fun ignoreSetterThatReturnsItsClass() {
+        val a = parse("""
+            public class A {
+                int n;
+                
+                public A setN(int n) {
+                    return this;
+                }
+            }
+        """.trimIndent())
+
+        val fixed = a.refactor().run(HiddenField.builder()
+                .ignoreSetter(true)
+                .setterCanReturnItsClass(true)
+                .build()).fix()
+
+        assertRefactored(fixed, """
+            public class A {
+                int n;
+                
+                public A setN(int n) {
+                    return this;
+                }
+            }
+        """)
+    }
+
+    @Test
+    fun ignoreAbstractMethods() {
+        val a = parse("""
+            public abstract class A {
+                int n;
+                
+                public abstract void foo(int n);
+            }
+        """.trimIndent())
+
+        val fixed = a.refactor().run(HiddenField.builder()
+                .ignoreAbstractMethods(true)
+                .build()).fix()
+
+        assertRefactored(fixed, """
+            public abstract class A {
+                int n;
+                
+                public abstract void foo(int n);
             }
         """)
     }

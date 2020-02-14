@@ -53,7 +53,8 @@ public class HiddenField extends RefactorVisitor {
     public List<AstTransform> visitClassDecl(Tr.ClassDecl classDecl) {
         List<Type.Var> visibleSupertypeMembers = getVisibleSupertypeMembers(classDecl.getType());
         List<Tr.VariableDecls.NamedVar> shadows = visibleSupertypeMembers.stream()
-                .flatMap(member -> new FindNameShadows(member.getName()).visit(classDecl.getBody()).stream())
+                .filter(member -> ignoreFormat == null || !ignoreFormat.matcher(member.getName()).matches())
+                .flatMap(member -> new FindNameShadows(member.getName(), getCursor().enclosingClass()).visit(classDecl.getBody()).stream())
                 .collect(toList());
 
         if (!shadows.isEmpty()) {
@@ -70,9 +71,9 @@ public class HiddenField extends RefactorVisitor {
                 .getParentOrThrow() // Tr.Block
                 .getParentOrThrow(); // maybe Tr.ClassDecl
 
-        if (parent.getTree() instanceof Tr.ClassDecl) {
+        if (parent.getTree() instanceof Tr.ClassDecl && (ignoreFormat == null || !ignoreFormat.matcher(variable.getSimpleName()).matches())) {
             Tr.ClassDecl classDecl = parent.getTree();
-            List<Tr.VariableDecls.NamedVar> shadows = new FindNameShadows(variable).visit(getCursor().enclosingBlock());
+            List<Tr.VariableDecls.NamedVar> shadows = new FindNameShadows(variable, getCursor().enclosingClass()).visit(getCursor().enclosingBlock());
             if (!shadows.isEmpty()) {
                 shadows.forEach(shadow -> andThen(new RenameShadowedName(shadow.getId(), getVisibleSupertypeMembers(classDecl.getType()))));
             }
@@ -86,13 +87,16 @@ public class HiddenField extends RefactorVisitor {
         private final Tr.VariableDecls.NamedVar thatLookLike;
 
         private final String thatLookLikeName;
+        private final Tr.ClassDecl enclosingClass;
 
-        public FindNameShadows(Tr.VariableDecls.NamedVar thatLookLike) {
+        public FindNameShadows(Tr.VariableDecls.NamedVar thatLookLike, Tr.ClassDecl enclosingClass) {
             this.thatLookLike = thatLookLike;
             this.thatLookLikeName = thatLookLike.getSimpleName();
+            this.enclosingClass = enclosingClass;
         }
 
-        public FindNameShadows(String thatLookLikeName) {
+        public FindNameShadows(String thatLookLikeName, Tr.ClassDecl enclosingClass) {
+            this.enclosingClass = enclosingClass;
             this.thatLookLike = null;
             this.thatLookLikeName = thatLookLikeName;
         }
@@ -115,7 +119,38 @@ public class HiddenField extends RefactorVisitor {
         public List<Tr.VariableDecls.NamedVar> visitVariable(Tr.VariableDecls.NamedVar variable) {
             List<Tr.VariableDecls.NamedVar> shadows = super.visitVariable(variable);
 
-            if (variable != thatLookLike && variable.getSimpleName().equals(thatLookLikeName) &&
+            Tree maybeMethodDecl = getCursor()
+                    .getParentOrThrow() // Tr.VariableDecls
+                    .getParentOrThrow() // maybe Tr.MethodDecl
+                    .getTree();
+
+            boolean isIgnorableConstructorParam = ignoreConstructorParameter;
+            if (isIgnorableConstructorParam) {
+                isIgnorableConstructorParam = maybeMethodDecl instanceof Tr.MethodDecl && ((Tr.MethodDecl) maybeMethodDecl).isConstructor();
+            }
+
+            boolean isIgnorableSetter = ignoreSetter;
+            if (isIgnorableSetter &= maybeMethodDecl instanceof Tr.MethodDecl) {
+                Tr.MethodDecl methodDecl = (Tr.MethodDecl) maybeMethodDecl;
+                String methodName = methodDecl.getSimpleName();
+                isIgnorableSetter = methodName.startsWith("set") &&
+                        methodDecl.getReturnTypeExpr() != null &&
+                        (setterCanReturnItsClass ?
+                                enclosingClass.getType().equals(methodDecl.getReturnTypeExpr().getType()) :
+                                Type.Primitive.Void.equals(methodDecl.getReturnTypeExpr().getType())) &&
+                        (methodName.length() > 3 && variable.getSimpleName().equalsIgnoreCase(methodName.substring(3)));
+            }
+
+            boolean isIgnorableAbstractMethod = ignoreAbstractMethods;
+            if (isIgnorableAbstractMethod) {
+                isIgnorableAbstractMethod = maybeMethodDecl instanceof Tr.MethodDecl && ((Tr.MethodDecl) maybeMethodDecl).hasModifier("abstract");
+            }
+
+            if (variable != thatLookLike &&
+                    !isIgnorableSetter &&
+                    !isIgnorableConstructorParam &&
+                    !isIgnorableAbstractMethod &&
+                    variable.getSimpleName().equals(thatLookLikeName) &&
                     tokens.stream().anyMatch(t -> t.equals(LAMBDA) ?
                             getCursor().getParentOrThrow().getTree() instanceof Tr.Lambda.Parameters :
                             t.getMatcher().matches(variable, getCursor().getParentOrThrow()))) {
