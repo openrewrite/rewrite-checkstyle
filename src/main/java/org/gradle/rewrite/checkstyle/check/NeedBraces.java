@@ -33,6 +33,11 @@ public class NeedBraces extends RefactorVisitor {
     );
 
     @Override
+    public String getRuleName() {
+        return "NeedBraces";
+    }
+
+    @Override
     public List<AstTransform> visitIf(Tr.If iff) {
         return maybeTransform(tokens.contains(LITERAL_IF) &&
                         !(iff.getThenPart() instanceof Tr.Block) &&
