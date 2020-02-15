@@ -133,6 +133,8 @@ public class HiddenField extends RefactorVisitor {
             if (isIgnorableSetter &= maybeMethodDecl instanceof Tr.MethodDecl) {
                 Tr.MethodDecl methodDecl = (Tr.MethodDecl) maybeMethodDecl;
                 String methodName = methodDecl.getSimpleName();
+
+                //noinspection ConstantConditions
                 isIgnorableSetter = methodName.startsWith("set") &&
                         methodDecl.getReturnTypeExpr() != null &&
                         (setterCanReturnItsClass ?
@@ -153,7 +155,7 @@ public class HiddenField extends RefactorVisitor {
                     variable.getSimpleName().equals(thatLookLikeName) &&
                     tokens.stream().anyMatch(t -> t.equals(LAMBDA) ?
                             getCursor().getParentOrThrow().getTree() instanceof Tr.Lambda.Parameters :
-                            t.getMatcher().matches(variable, getCursor().getParentOrThrow()))) {
+                            t.getMatcher().matches(getCursor()))) {
                 shadows.add(variable);
             }
             return shadows;

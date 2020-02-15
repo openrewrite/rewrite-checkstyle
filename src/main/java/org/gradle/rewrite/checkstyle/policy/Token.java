@@ -5,6 +5,10 @@ import com.netflix.rewrite.tree.Cursor;
 import com.netflix.rewrite.tree.Tr;
 import com.netflix.rewrite.tree.Tree;
 
+import java.util.Set;
+
+import static java.util.Arrays.stream;
+
 public enum Token {
     ANNOTATION_DEF((t, p) -> t instanceof Tr.Annotation),
     CLASS_DEF((t, p) -> t instanceof Tr.ClassDecl && ((Tr.ClassDecl) t).getKind() instanceof Tr.ClassDecl.Kind.Class),
@@ -25,13 +29,16 @@ public enum Token {
     LITERAL_FINALLY((t, p) -> t instanceof Tr.Try.Finally),
     LITERAL_FOR((t, p) -> t instanceof Tr.ForLoop),
     LITERAL_IF((t, p) -> t instanceof Tr.If),
+    LITERAL_NEW((t, p) -> t instanceof Tr.NewClass || t instanceof Tr.NewArray),
     LITERAL_SWITCH((t, p) -> t instanceof Tr.Switch),
     LITERAL_SYNCHRONIZED((t, p) -> t instanceof Tr.Synchronized),
     LITERAL_TRY((t, p) -> t instanceof Tr.Try),
     LITERAL_WHILE((t, p) -> t instanceof Tr.WhileLoop),
+    METHOD_CALL((t, p) -> t instanceof Tr.MethodInvocation),
     METHOD_DEF((t, p) -> t instanceof Tr.MethodDecl),
     OBJBLOCK((t, p) -> t instanceof Tr.Block && p.getTree() instanceof Tr.ClassDecl),
     STATIC_INIT((t, p) -> t instanceof Tr.Block && ((Tr.Block<?>) t).getStatic() != null),
+    SUPER_CTOR_CALL((t, p) -> t instanceof Tr.MethodInvocation && ((Tr.MethodInvocation) t).getSimpleName().equals("super")),
     INSTANCE_INIT((t, p) -> t instanceof Tr.NewClass),
     ARRAY_INIT((t, p) -> t instanceof Tr.NewArray),
     VARIABLE_DEF((t, p) -> t instanceof Tr.VariableDecls.NamedVar),
@@ -40,8 +47,8 @@ public enum Token {
     public interface TokenMatcher {
         boolean matchesNotNullCursor(Tree tree, Cursor parent);
 
-        default boolean matches(Tree tree, @Nullable Cursor parentCursor) {
-            return parentCursor != null && matchesNotNullCursor(tree, parentCursor);
+        default boolean matches(Cursor cursor) {
+            return cursor != null && matchesNotNullCursor(cursor.getTree(), cursor.getParent());
         }
     }
 
@@ -53,5 +60,9 @@ public enum Token {
 
     public TokenMatcher getMatcher() {
         return matcher;
+    }
+
+    public static boolean matchesOneOf(Set<Token> configured, Cursor cursor, Token... tokens) {
+        return stream(tokens).anyMatch(token -> configured.contains(token) && token.getMatcher().matches(cursor));
     }
 }

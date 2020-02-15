@@ -35,7 +35,7 @@ public class RightCurly extends RefactorVisitor {
     @Override
     public List<AstTransform> visitBlock(Tr.Block<Tree> block) {
         Cursor parentCursor = getCursor().getParentOrThrow();
-        boolean tokenMatches = tokens.stream().anyMatch(t -> t.getMatcher().matches(parentCursor.getTree(), parentCursor.getParent())) ||
+        boolean tokenMatches = tokens.stream().anyMatch(t -> t.getMatcher().matches(getCursor())) ||
                 parentCursor.getTree() instanceof Tr.Block;
 
         boolean satisfiesPolicy = block.getEndOfBlockSuffix().contains("\n") ||
