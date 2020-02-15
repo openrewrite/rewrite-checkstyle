@@ -5,23 +5,23 @@ import com.netflix.rewrite.parse.Parser
 import org.gradle.rewrite.checkstyle.policy.PadPolicy
 import org.junit.jupiter.api.Test
 
-open class EmptyForInitializerPd: Parser by OpenJdkParser() {
+open class EmptyForIteratorPadTest: Parser by OpenJdkParser() {
     @Test
     fun noSpaceInitializerPadding() {
         val a = parse("""
             public class A {
                 {
-                    for (; i < j; i++, j--);
+                    for (int i = 0; i < 2; i++ );
                 }
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyForInitializerPad()).fix()
+        val fixed = a.refactor().run(EmptyForIteratorPad()).fix()
 
         assertRefactored(fixed, """
             public class A {
                 {
-                    for (; i < j; i++, j--);
+                    for (int i = 0; i < 2; i++);
                 }
             }
         """)
@@ -32,40 +32,40 @@ open class EmptyForInitializerPd: Parser by OpenJdkParser() {
         val a = parse("""
             public class A {
                 {
-                    for (; i < j; i++, j--);
+                    for (int i = 0; i < 2; i++);
                 }
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyForInitializerPad(PadPolicy.SPACE)).fix()
+        val fixed = a.refactor().run(EmptyForIteratorPad(PadPolicy.SPACE)).fix()
 
         assertRefactored(fixed, """
             public class A {
                 {
-                    for ( ; i < j; i++, j--);
+                    for (int i = 0; i < 2; i++ );
                 }
             }
         """)
     }
 
     @Test
-    fun noCheckIfInitializerStartsWithLineTerminator() {
+    fun noCheckIfIteratorEndsWithLineTerminator() {
         val a = parse("""
             public class A {
                 {
-                    for (
-                          ; i < j; i++, j--);
+                    for (int i = 0; i < 2;
+                        );
                 }
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyForInitializerPad()).fix()
+        val fixed = a.refactor().run(EmptyForIteratorPad()).fix()
 
         assertRefactored(fixed, """
             public class A {
                 {
-                    for (
-                          ; i < j; i++, j--);
+                    for (int i = 0; i < 2;
+                        );
                 }
             }
         """)
