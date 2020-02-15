@@ -31,20 +31,28 @@ open class StaticVariableNameTest : Parser by OpenJdkParser() {
     }
 
     @Test
-    fun changeSingleVariableField() {
+    fun changeSingleVariableFieldAndReference() {
         val a = parse("""
-            import java.util.List;
+            import java.util.*;
             public class A {
-               static List MY_LIST;
+               static List<String> MY_LIST;
+               
+               static {
+                   MY_LIST = new ArrayList<>();
+               }
             }
         """.trimIndent())
 
         val fixed = a.refactor().run(StaticVariableName.builder().build()).fix()
 
         assertRefactored(fixed, """
-            import java.util.List;
+            import java.util.*;
             public class A {
-               static List myList;
+               static List<String> myList;
+               
+               static {
+                   myList = new ArrayList<>();
+               }
             }
         """)
     }

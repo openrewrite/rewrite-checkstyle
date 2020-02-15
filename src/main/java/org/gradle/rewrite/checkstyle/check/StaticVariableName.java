@@ -1,16 +1,14 @@
 package org.gradle.rewrite.checkstyle.check;
 
 import com.netflix.rewrite.tree.Tr;
+import com.netflix.rewrite.tree.Type;
+import com.netflix.rewrite.tree.TypeUtils;
 import com.netflix.rewrite.tree.visitor.refactor.AstTransform;
 import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
 import lombok.Builder;
-import org.apache.commons.collections.StaticBucketMap;
 
 import java.util.List;
 import java.util.function.Function;
-
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 
 /**
  * Fix for <a href="https://checkstyle.sourceforge.io/config_naming.html#StaticVariableName">StaticVariableName</a>.
@@ -41,35 +39,29 @@ public class StaticVariableName extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitMultiVariable(Tr.VariableDecls multiVariable) {
-        if (!multiVariable.hasModifier("static") || !(
+    public List<AstTransform> visitVariable(Tr.VariableDecls.NamedVar variable) {
+        Tr.VariableDecls multiVariable = getCursor().getParentOrThrow().getTree();
+        if(multiVariable.hasModifier("static") && (
                 (applyToPublic && multiVariable.hasModifier("public")) ||
                         (applyToProtected && multiVariable.hasModifier("protected")) ||
                         (applyToPrivate && multiVariable.hasModifier("private")) ||
                         (applyToPackage && (!multiVariable.hasModifier("public") && !multiVariable.hasModifier("protected") && !multiVariable.hasModifier("private")))
         )) {
-            return emptyList();
+            Type.Class containingClassType = TypeUtils.asClass(getCursor().enclosingClass().getType());
+            changeFieldName(containingClassType, variable.getSimpleName(), renamer.apply(variable.getSimpleName()));
         }
-
-        if (multiVariable.getVars().stream().anyMatch(v -> !v.getSimpleName().matches(format))) {
-            return transform(multiVariable, mv -> mv.withVars(mv.getVars().stream()
-                    .map(v -> v.getSimpleName().matches(format) ? v :
-                        v.withName(v.getName().withName(renamer.apply(v.getSimpleName()))))
-                    .collect(toList())));
-        }
-
-        return emptyList();
+        return super.visitVariable(variable);
     }
 
     static String snakeCaseToCamel(String value) {
-        if(!value.matches("([A-Z0-9]+_*)+")) {
+        if (!value.matches("([A-Z0-9]+_*)+")) {
             return value;
         }
 
         StringBuilder camelName = new StringBuilder();
         char last = 0;
         for (char c : value.toCharArray()) {
-            if(c != '_') {
+            if (c != '_') {
                 camelName.append(last == '_' ? c : Character.toLowerCase(c));
             }
             last = c;
