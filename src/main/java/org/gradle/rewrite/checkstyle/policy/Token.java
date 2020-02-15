@@ -16,7 +16,7 @@ public enum Token {
     LITERAL_CASE((t, p) -> t instanceof Tr.Case &&
             (((Tr.Case) t).getPattern() != null &&
                     !"default".equals(((Tr.Case) t).getPattern().printTrimmed()))),
-    LITERAL_CATCH((t, p) -> t instanceof Tr.Catch),
+    LITERAL_CATCH((t, p) -> t instanceof Tr.Try.Catch),
     LITERAL_DEFAULT((t, p) -> t instanceof Tr.Case &&
             (((Tr.Case) t).getPattern() != null &&
                     "default".equals(((Tr.Case) t).getPattern().printTrimmed()))),

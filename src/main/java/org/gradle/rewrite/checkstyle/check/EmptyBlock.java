@@ -92,7 +92,7 @@ public class EmptyBlock extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitCatch(Tr.Catch catzh) {
+    public List<AstTransform> visitCatch(Tr.Try.Catch catzh) {
         return maybeTransform(tokens.contains(LITERAL_CATCH) && isEmptyBlock(catzh.getBody()),
                 super.visitCatch(catzh),
                 transform(catzh, c -> {
@@ -136,7 +136,7 @@ public class EmptyBlock extends RefactorVisitor {
 
         if (tokens.contains(LITERAL_TRY) && isEmptyBlock(tryable.getBody())) {
             deleteStatement(tryable);
-        } else if (tokens.contains(LITERAL_FINALLY) && tryable.getFinally() != null && isEmptyBlock(tryable.getFinally().getBlock())) {
+        } else if (tokens.contains(LITERAL_FINALLY) && tryable.getFinally() != null && isEmptyBlock(tryable.getFinally().getBody())) {
             changes.addAll(transform(tryable, t -> t.withFinallie(null)));
         }
 

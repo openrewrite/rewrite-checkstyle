@@ -4,7 +4,6 @@ import com.netflix.rewrite.tree.Cursor;
 import com.netflix.rewrite.tree.Formatting;
 import com.netflix.rewrite.tree.Tr;
 import com.netflix.rewrite.tree.Tree;
-import com.netflix.rewrite.tree.visitor.AstVisitor;
 import com.netflix.rewrite.tree.visitor.refactor.AstTransform;
 import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
 import lombok.Builder;
@@ -66,49 +65,33 @@ public class LeftCurly extends RefactorVisitor {
 
         return maybeTransform(!satisfiesPolicy(option, block, containing.getTree(), spansMultipleLines),
                 super.visitBlock(block),
-                transform(block, b -> formatCurly(option, containing, spansMultipleLines, b))
+                transform(block, b -> formatCurly(option, b, spansMultipleLines, containing))
         );
     }
 
     private boolean satisfiesPolicy(LeftCurlyPolicy option, Tr.Block<Tree> block, Tree containing, boolean spansMultipleLines) {
-        boolean satisfiesPolicy;
         switch (option) {
             case EOL:
-                satisfiesPolicy = (ignoreEnums && containing instanceof Tr.Case) || !block.getFormatting().getPrefix().contains("\n");
-                break;
+                return (ignoreEnums && containing instanceof Tr.Case) || !block.getFormatting().getPrefix().contains("\n");
             case NL:
-                satisfiesPolicy = block.getFormatting().getPrefix().contains("\n");
-                break;
+                return block.getFormatting().getPrefix().contains("\n");
             case NLOW:
             default:
-                satisfiesPolicy = (spansMultipleLines && satisfiesPolicy(NL, block, containing, spansMultipleLines)) ||
+                return (spansMultipleLines && satisfiesPolicy(NL, block, containing, spansMultipleLines)) ||
                         (!spansMultipleLines && satisfiesPolicy(EOL, block, containing, spansMultipleLines));
         }
-        return satisfiesPolicy;
     }
 
-    private static Tr.Block<Tree> formatCurly(LeftCurlyPolicy option, Cursor containing, boolean spansMultipleLines, Tr.Block<Tree> b) {
+    private static Tr.Block<Tree> formatCurly(LeftCurlyPolicy option, Tr.Block<Tree> block, boolean spansMultipleLines, Cursor containing) {
         switch (option) {
             case EOL:
-                return containing.getParentOrThrow().getTree() instanceof Tr.ClassDecl && b.getStatic() == null ?
-                        b : b.withFormatting(b.getFormatting().withPrefix(" "));
+                return containing.getParentOrThrow().getTree() instanceof Tr.ClassDecl && block.getStatic() == null ?
+                        block : block.withFormatting(block.getFormatting().withPrefix(" "));
             case NL:
-                return b.withFormatting(b.getFormatting().withPrefix(b.getEndOfBlockSuffix()));
+                return block.withFormatting(block.getFormatting().withPrefix(block.getEndOfBlockSuffix()));
             case NLOW:
             default:
-                return formatCurly(spansMultipleLines ? NL : EOL, containing, spansMultipleLines, b);
-        }
-    }
-
-    private static class SpansMultipleLines extends AstVisitor<Boolean> {
-        @Override
-        public Boolean defaultTo(Tree t) {
-            return false;
-        }
-
-        @Override
-        public Boolean visit(Tree tree) {
-            return !(tree instanceof Tr.Block) && (tree.getFormatting().getPrefix().contains("\n") || super.visit(tree));
+                return formatCurly(spansMultipleLines ? NL : EOL, block, spansMultipleLines, containing);
         }
     }
 }
