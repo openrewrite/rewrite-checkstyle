@@ -1,6 +1,5 @@
 package org.gradle.rewrite.checkstyle.policy;
 
-import com.netflix.rewrite.internal.lang.Nullable;
 import com.netflix.rewrite.tree.Cursor;
 import com.netflix.rewrite.tree.Tr;
 import com.netflix.rewrite.tree.Tree;
