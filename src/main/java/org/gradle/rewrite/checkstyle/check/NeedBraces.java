@@ -98,7 +98,7 @@ public class NeedBraces extends RefactorVisitor {
     }
 
     private boolean isNotAllowableSingleLine() {
-        return !allowSingleLineStatement || new SpansMultipleLines().visit((Tree) getCursor().getTree());
+        return !allowSingleLineStatement || new SpansMultipleLines(null).visit((Tree) getCursor().getTree());
     }
 
     private Tree addBraces(Tree body, Cursor cursor) {

@@ -1,7 +1,6 @@
 package org.gradle.rewrite.checkstyle.check;
 
 import com.netflix.rewrite.tree.Cursor;
-import com.netflix.rewrite.tree.Formatting;
 import com.netflix.rewrite.tree.Tr;
 import com.netflix.rewrite.tree.Tree;
 import com.netflix.rewrite.tree.visitor.refactor.AstTransform;
@@ -62,7 +61,7 @@ public class LeftCurly extends RefactorVisitor {
         Cursor containing = getCursor().getParentOrThrow();
 
         boolean spansMultipleLines = LeftCurlyPolicy.NLOW.equals(option) ?
-                new SpansMultipleLines().visit((Tree) containing.getTree().withFormatting(EMPTY)) : false;
+                new SpansMultipleLines(block).visit((Tree) containing.getTree().withFormatting(EMPTY)) : false;
 
         return maybeTransform(!satisfiesPolicy(option, block, containing.getTree(), spansMultipleLines),
                 super.visitBlock(block),

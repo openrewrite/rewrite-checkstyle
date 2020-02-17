@@ -152,11 +152,9 @@ public class EmptyBlock extends RefactorVisitor {
             return changes;
         }
 
-        Tree containing = getCursor().getParentOrThrow().getTree();
-
         if (iff.getElsePart() == null) {
             // extract side effects from condition (if there are any).
-            changes.addAll(transform(containing, enclosing -> {
+            changes.addAll(transform(getCursor().getParentOrThrow().getTree(), enclosing -> {
                         if (enclosing instanceof Tr.Block) {
                             Tr.Block<Tree> enclosingBlock = (Tr.Block<Tree>) enclosing;
                             Tr.If iff2 = (Tr.If) new RetrieveTreeVisitor(iff.getId()).visit(enclosing);
@@ -206,13 +204,14 @@ public class EmptyBlock extends RefactorVisitor {
             return cond;
         }));
 
-        changes.addAll(transform(iff, i -> {
+        changes.addAll(transform(iff, (i, cursor) -> {
             if (i.getElsePart() == null) {
                 return i.withThenPart(new Tr.Empty(randomId(), EMPTY)).withElsePart(null);
             }
 
             Tr.Block<Tree> thenPart = (Tr.Block<Tree>) i.getThenPart();
 
+            var containing = cursor.getParentOrThrow().getTree();
             Statement elseStatement = i.getElsePart().getStatement();
             List<Tree> elseStatementBody;
             if(elseStatement instanceof Tr.Block) {

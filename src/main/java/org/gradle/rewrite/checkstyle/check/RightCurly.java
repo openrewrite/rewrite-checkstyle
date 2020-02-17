@@ -12,9 +12,7 @@ import org.gradle.rewrite.checkstyle.policy.Token;
 import java.util.List;
 import java.util.Set;
 
-import static java.util.Collections.singletonList;
-import static org.gradle.rewrite.checkstyle.policy.RightCurlyPolicy.ALONE;
-import static org.gradle.rewrite.checkstyle.policy.RightCurlyPolicy.SAME;
+import static org.gradle.rewrite.checkstyle.policy.RightCurlyPolicy.*;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
 
 @Builder
@@ -36,10 +34,11 @@ public class RightCurly extends RefactorVisitor {
     public List<AstTransform> visitBlock(Tr.Block<Tree> block) {
         Cursor parentCursor = getCursor().getParentOrThrow();
         boolean tokenMatches = tokens.stream().anyMatch(t -> t.getMatcher().matches(getCursor())) ||
+                (option != ALONE_OR_SINGLELINE && tokens.stream().anyMatch(t -> t.getMatcher().matches(parentCursor))) ||
                 parentCursor.getTree() instanceof Tr.Block;
 
         boolean satisfiesPolicy = block.getEndOfBlockSuffix().contains("\n") ||
-                (option != ALONE && !new SpansMultipleLines().visit(block));
+                (option != ALONE && !new SpansMultipleLines(null).visit(block));
 
         return maybeTransform(tokenMatches && !satisfiesPolicy && parentCursor.enclosingBlock() != null,
                 super.visitBlock(block),
