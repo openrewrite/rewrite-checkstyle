@@ -44,9 +44,8 @@ public class RightCurly extends RefactorVisitor {
         return maybeTransform(tokenMatches && !satisfiesPolicy && parentCursor.enclosingBlock() != null,
                 super.visitBlock(block),
                 transform(block, (b, cursor) -> {
-                    @SuppressWarnings("ConstantConditions") String suffix = formatter()
-                            .findIndent(cursor.getParentOrThrow().enclosingBlock().getIndent(),
-                                    singletonList(cursor.getParentOrThrow().getTree())).getPrefix();
+                    String suffix = formatter().findIndent(cursor.getParentOrThrow().enclosingBlock().getIndent(),
+                                    cursor.getParentOrThrow().getTree()).getPrefix();
 
                     Tr.Block<Tree> transformed = b.withEndOfBlockSuffix(suffix);
 
@@ -90,10 +89,9 @@ public class RightCurly extends RefactorVisitor {
         return (option == SAME) != isAlone;
     }
 
-    @SuppressWarnings("ConstantConditions")
     private <T extends Tree> T formatMultiBlock(T tree, Cursor cursor) {
         return option == SAME ?
-                tree.withFormatting(tree.getFormatting().withPrefix(" ")) :
+                tree.withPrefix(" ") :
                 tree.withFormatting(formatter().format(cursor.enclosingBlock()));
     }
 }

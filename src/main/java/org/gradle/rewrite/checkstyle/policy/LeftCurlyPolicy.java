@@ -10,9 +10,11 @@ public enum LeftCurlyPolicy {
 
     /**
      * The brace must always be on a new line. For example:
+     * <pre>{@code
      * if (condition)
      * {
      * ...
+     * }</pre>
      */
     NL,
 

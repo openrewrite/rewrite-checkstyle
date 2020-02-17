@@ -8,6 +8,7 @@ import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
 import java.util.List;
 
 import static com.netflix.rewrite.tree.Formatting.format;
+import static com.netflix.rewrite.tree.Formatting.formatFirstPrefix;
 import static com.netflix.rewrite.tree.Tr.randomId;
 
 public class FinalClass extends RefactorVisitor {
@@ -37,7 +38,7 @@ public class FinalClass extends RefactorVisitor {
                     Formatting format = format(" ");
                     if (insertPosition == 0 && !modifiers.isEmpty()) {
                         format = modifiers.get(0).getFormatting();
-                        modifiers.set(0, modifiers.get(0).withFormatting(format(" ")));
+                        formatFirstPrefix(modifiers, " ");
                     }
 
                     modifiers.add(insertPosition, new Tr.Modifier.Final(randomId(), format));

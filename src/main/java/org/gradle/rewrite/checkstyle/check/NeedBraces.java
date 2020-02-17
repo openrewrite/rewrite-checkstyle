@@ -102,8 +102,8 @@ public class NeedBraces extends RefactorVisitor {
     }
 
     private Tree addBraces(Tree body, Cursor cursor) {
-        @SuppressWarnings("ConstantConditions") int enclosingIndent = cursor.getParentOrThrow().enclosingBlock().getIndent();
-        Formatter.Result format = formatter().findIndent(enclosingIndent, singletonList(cursor.getParentOrThrow().getTree()));
+        int enclosingIndent = cursor.getParentOrThrow().enclosingBlock().getIndent();
+        Formatter.Result format = formatter().findIndent(enclosingIndent, cursor.getParentOrThrow().getTree());
 
         String originalBodySuffix = body.getFormatting().getSuffix();
 

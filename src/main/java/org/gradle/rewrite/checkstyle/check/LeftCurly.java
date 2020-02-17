@@ -13,6 +13,7 @@ import org.gradle.rewrite.checkstyle.policy.Token;
 import java.util.List;
 import java.util.Set;
 
+import static com.netflix.rewrite.tree.Formatting.EMPTY;
 import static org.gradle.rewrite.checkstyle.policy.LeftCurlyPolicy.EOL;
 import static org.gradle.rewrite.checkstyle.policy.LeftCurlyPolicy.NL;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
@@ -61,7 +62,7 @@ public class LeftCurly extends RefactorVisitor {
         Cursor containing = getCursor().getParentOrThrow();
 
         boolean spansMultipleLines = LeftCurlyPolicy.NLOW.equals(option) ?
-                new SpansMultipleLines().visit((Tree) containing.getTree().withFormatting(Formatting.format(""))) : false;
+                new SpansMultipleLines().visit((Tree) containing.getTree().withFormatting(EMPTY)) : false;
 
         return maybeTransform(!satisfiesPolicy(option, block, containing.getTree(), spansMultipleLines),
                 super.visitBlock(block),
@@ -86,9 +87,9 @@ public class LeftCurly extends RefactorVisitor {
         switch (option) {
             case EOL:
                 return containing.getParentOrThrow().getTree() instanceof Tr.ClassDecl && block.getStatic() == null ?
-                        block : block.withFormatting(block.getFormatting().withPrefix(" "));
+                        block : block.withPrefix(" ");
             case NL:
-                return block.withFormatting(block.getFormatting().withPrefix(block.getEndOfBlockSuffix()));
+                return block.withPrefix(block.getEndOfBlockSuffix());
             case NLOW:
             default:
                 return formatCurly(spansMultipleLines ? NL : EOL, block, spansMultipleLines, containing);

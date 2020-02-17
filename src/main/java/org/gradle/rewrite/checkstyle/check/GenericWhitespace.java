@@ -8,6 +8,9 @@ import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
 
 import java.util.List;
 
+import static com.netflix.rewrite.tree.Formatting.EMPTY;
+import static com.netflix.rewrite.tree.Formatting.stripPrefix;
+
 public class GenericWhitespace extends RefactorVisitor {
     @Override
     public String getRuleName() {
@@ -19,7 +22,7 @@ public class GenericWhitespace extends RefactorVisitor {
         Tree tree = getCursor().getParentOrThrow().getTree();
         return maybeTransform(!(tree instanceof Tr.MethodDecl) && !typeParams.getFormatting().getPrefix().isEmpty(),
                 super.visitTypeParameters(typeParams),
-                transform(typeParams, tp -> tp.withFormatting(Formatting.EMPTY))
+                transform(typeParams, tp -> tp.withFormatting(EMPTY))
         );
     }
 
@@ -27,22 +30,20 @@ public class GenericWhitespace extends RefactorVisitor {
     public List<AstTransform> visitTypeParameter(Tr.TypeParameter typeParam) {
         Tr.TypeParameters typeParams = getCursor().getParentOrThrow().getTree();
 
-        if(typeParams.getParams().size() == 1) {
-            return maybeTransform(!typeParam.getFormatting().equals(Formatting.EMPTY),
+        if (typeParams.getParams().size() == 1) {
+            return maybeTransform(!typeParam.getFormatting().equals(EMPTY),
                     super.visitTypeParameter(typeParam),
-                    transform(typeParam, tp -> tp.withFormatting(Formatting.EMPTY))
+                    transform(typeParam, tp -> tp.withFormatting(EMPTY))
             );
-        }
-        else if(typeParams.getParams().get(0) == typeParam) {
+        } else if (typeParams.getParams().get(0) == typeParam) {
             return maybeTransform(!typeParam.getFormatting().getPrefix().isEmpty(),
                     super.visitTypeParameter(typeParam),
-                    transform(typeParam, tp -> tp.withFormatting(tp.getFormatting().withPrefix("")))
+                    transform(typeParam, Formatting::stripPrefix)
             );
-        }
-        else if(typeParams.getParams().get(typeParams.getParams().size() - 1) == typeParam) {
+        } else if (typeParams.getParams().get(typeParams.getParams().size() - 1) == typeParam) {
             return maybeTransform(!typeParam.getFormatting().getSuffix().isEmpty(),
                     super.visitTypeParameter(typeParam),
-                    transform(typeParam, tp -> tp.withFormatting(tp.getFormatting().withSuffix("")))
+                    transform(typeParam, Formatting::stripSuffix)
             );
         }
 

@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import static com.netflix.rewrite.tree.Formatting.*;
 import static java.util.stream.Collectors.toList;
 import static org.gradle.rewrite.checkstyle.policy.PunctuationToken.*;
 
@@ -56,7 +57,7 @@ public class NoWhitespaceAfter extends RefactorVisitor {
         return maybeTransform(tokens.contains(ARRAY_DECLARATOR) && multiVariable.getDimensionsBeforeName().stream().anyMatch(this::whitespaceInPrefix),
                 super.visitMultiVariable(multiVariable),
                 transform(multiVariable, mv -> mv.withDimensionsBeforeName(mv.getDimensionsBeforeName().stream()
-                        .map(this::stripPrefix).collect(toList())))
+                        .map(Formatting::stripPrefix).collect(toList())))
         );
     }
 
@@ -73,7 +74,7 @@ public class NoWhitespaceAfter extends RefactorVisitor {
         return maybeTransform(tokens.contains(ARRAY_DECLARATOR) && arrayType.getDimensions().stream().anyMatch(this::whitespaceInPrefix),
                 super.visitArrayType(arrayType),
                 transform(arrayType, at -> at.withDimensions(at.getDimensions().stream()
-                        .map(this::stripPrefix).collect(toList())))
+                        .map(Formatting::stripPrefix).collect(toList())))
         );
     }
 
@@ -93,7 +94,7 @@ public class NoWhitespaceAfter extends RefactorVisitor {
                             new ArrayList<>(na.getInitializer().getElements());
 
                     if (fixedInit.size() == 1) {
-                        fixedInit.set(0, fixedInit.get(0).withFormatting(Formatting.EMPTY));
+                        fixedInit.set(0, fixedInit.get(0).withFormatting(EMPTY));
                     } else {
                         fixedInit.set(0, stripPrefix(fixedInit.get(0)));
                         fixedInit.set(fixedInit.size() - 1, stripSuffix(fixedInit.get(fixedInit.size() - 1)));
@@ -161,13 +162,5 @@ public class NoWhitespaceAfter extends RefactorVisitor {
         }
         String prefix = t.getFormatting().getPrefix();
         return (prefix.contains(" ") || prefix.contains("\t")) && (!allowLineBreaks || !prefix.startsWith("\n"));
-    }
-
-    private <T extends Tree> T stripSuffix(@Nullable T t) {
-        return t == null ? null : t.withFormatting(t.getFormatting().withSuffix(""));
-    }
-
-    private <T extends Tree> T stripPrefix(@Nullable T t) {
-        return t == null ? null : t.withFormatting(t.getFormatting().withPrefix(""));
     }
 }

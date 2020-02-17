@@ -223,7 +223,7 @@ public class EmptyBlock extends RefactorVisitor {
                 // Tr.If will typically just have a format of one space (the space between "else" and "if" in "else if")
                 // we want this to be on its own line now inside its containing if block
                 String prefix = "\n" + range(0, thenPart.getIndent()).mapToObj(n -> " ").collect(joining(""));
-                elseStatementBody = singletonList(elseStatement.withFormatting(elseStatement.getFormatting().withPrefix(prefix)));
+                elseStatementBody = singletonList(elseStatement.withPrefix(prefix));
                 andThen(formatter().shiftRight(elseStatement, i.getThenPart(), containing));
             }
             else {

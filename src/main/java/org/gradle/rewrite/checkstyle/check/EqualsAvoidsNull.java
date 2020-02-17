@@ -12,6 +12,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import static com.netflix.rewrite.tree.Formatting.EMPTY;
+import static com.netflix.rewrite.tree.Formatting.stripPrefix;
+import static java.util.Collections.singletonList;
+
 @RequiredArgsConstructor
 public class EqualsAvoidsNull extends RefactorVisitor {
     private static final MethodMatcher STRING_EQUALS = new MethodMatcher("String equals(java.lang.Object)");
@@ -44,7 +48,7 @@ public class EqualsAvoidsNull extends RefactorVisitor {
             return maybeTransform(true,
                     super.visitMethodInvocation(method),
                     transform(method, m -> m.withSelect(m.getArgs().getArgs().get(0).withFormatting(m.getSelect().getFormatting()))
-                            .withArgs(m.getArgs().withArgs(Collections.singletonList(m.getSelect().withFormatting(Formatting.EMPTY)))))
+                            .withArgs(m.getArgs().withArgs(singletonList(m.getSelect().withFormatting(EMPTY)))))
             );
         }
 
@@ -73,7 +77,7 @@ public class EqualsAvoidsNull extends RefactorVisitor {
 
             return maybeTransform(binary.getId().equals(scope),
                     super.visitBinary(binary),
-                    transform(Expression.class, binary, b -> b.getRight().withFormatting(binary.getRight().getFormatting().withPrefix("")))
+                    transform(Expression.class, binary, b -> stripPrefix(b.getRight()))
             );
         }
     }

@@ -32,7 +32,7 @@ public class EmptyForInitializerPad extends RefactorVisitor {
                 transform(forLoop, f -> {
                     Statement init = f.getControl().getInit();
                     String fixedPrefix = option == PadPolicy.NOSPACE ? "" : " ";
-                    return f.withControl(f.getControl().withInit(init.withFormatting(init.getFormatting().withPrefix(fixedPrefix))));
+                    return f.withControl(f.getControl().withInit(init.withPrefix(fixedPrefix)));
                 })
         );
     }

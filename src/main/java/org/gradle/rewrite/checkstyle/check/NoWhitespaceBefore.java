@@ -1,6 +1,7 @@
 package org.gradle.rewrite.checkstyle.check;
 
 import com.netflix.rewrite.internal.lang.Nullable;
+import com.netflix.rewrite.tree.Formatting;
 import com.netflix.rewrite.tree.Statement;
 import com.netflix.rewrite.tree.Tr;
 import com.netflix.rewrite.tree.Tree;
@@ -14,6 +15,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
+import static com.netflix.rewrite.tree.Formatting.stripPrefix;
+import static com.netflix.rewrite.tree.Formatting.stripSuffix;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static org.gradle.rewrite.checkstyle.policy.PunctuationToken.*;
@@ -69,7 +72,7 @@ public class NoWhitespaceBefore extends RefactorVisitor {
                 super.visitMethodInvocation(method),
                 transform(method, m -> m.withSelect(stripSuffix(m.getSelect()))
                         .withArgs(m.getArgs().withArgs(m.getArgs().getArgs().stream()
-                                .map(this::stripSuffix)
+                                .map(Formatting::stripSuffix)
                                 .collect(toList()))))
         );
     }
@@ -188,7 +191,7 @@ public class NoWhitespaceBefore extends RefactorVisitor {
                                                                        PunctuationToken... tokensToMatch) {
         return maybeTransform(stream(tokensToMatch).anyMatch(tokens::contains) && whitespaceInSuffix(tree),
                 callSuper.apply(tree),
-                transform(tree, this::stripSuffix)
+                transform(tree, Formatting::stripSuffix)
         );
     }
 
@@ -196,7 +199,7 @@ public class NoWhitespaceBefore extends RefactorVisitor {
                                                                        PunctuationToken... tokensToMatch) {
         return maybeTransform(stream(tokensToMatch).anyMatch(tokens::contains) && whitespaceInPrefix(tree),
                 callSuper.apply(tree),
-                transform(tree, this::stripPrefix)
+                transform(tree, Formatting::stripPrefix)
         );
     }
 
@@ -210,13 +213,5 @@ public class NoWhitespaceBefore extends RefactorVisitor {
 
     private boolean whitespaceInPrefix(@Nullable Tree t) {
         return t != null && (t.getFormatting().getPrefix().contains(" ") || t.getFormatting().getPrefix().contains("\t"));
-    }
-
-    private <T extends Tree> T stripSuffix(@Nullable T t) {
-        return t == null ? null : t.withFormatting(t.getFormatting().withSuffix(""));
-    }
-
-    private <T extends Tree> T stripPrefix(@Nullable T t) {
-        return t == null ? null : t.withFormatting(t.getFormatting().withPrefix(""));
     }
 }

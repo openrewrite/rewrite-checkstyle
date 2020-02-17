@@ -68,11 +68,7 @@ public class MethodParamPad extends RefactorVisitor {
                         hasWrongSpacing(getter.apply(t)) &&
                         getter.apply(t) != null,
                 callSuper.apply(t),
-                transform(t, t2 -> {
-                    U fixable = getter.apply(t2);
-                    Formatting f = fixable.getFormatting().withPrefix(option == NOSPACE ? "" : " ");
-                    return setter.apply(t2, fixable.withFormatting(f));
-                })
+                transform(t, t2 -> setter.apply(t2, getter.apply(t2).withPrefix(option == NOSPACE ? "" : " ")))
         );
     }
 

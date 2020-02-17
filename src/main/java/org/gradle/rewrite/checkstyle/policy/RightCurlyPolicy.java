@@ -3,20 +3,20 @@ package org.gradle.rewrite.checkstyle.policy;
 public enum RightCurlyPolicy {
     /**
      * The brace must be alone on the line. For example:
-     * <code>
+     * <pre>{@code
      *     try {
      *         ...
      *     }
      *     finally {
      *         ...
      *     }
-     * </code>
+     * }</code>
      */
     ALONE,
 
     /**
      * The brace must be alone on the line, yet single-line format of block is allowed. For example:
-     * <code>
+     * <pre>{@code
      *     // Brace is alone on the line
      *     try {
      *         ...
@@ -27,14 +27,14 @@ public enum RightCurlyPolicy {
      *
      *     // Single-line format of block
      *     public long getId() { return id; }
-     * </code>
+     * }</pre>
      */
     ALONE_OR_SINGLELINE,
 
     /**
      * Works like alone_or_singleline but the brace should be on the same line as the next part of a multi-block statement (one that directly contains multiple blocks: if/else-if/else or try/catch/finally). If no next part of a multi-block statement present, brace must be alone on line. It also allows single-line format of multi-block statements.
      * Examples:
-     * <code>
+     * <pre>{@code
      *     public long getId() {return id;} // this is OK, it is single line
      *
      *     // try-catch-finally blocks
@@ -75,7 +75,7 @@ public enum RightCurlyPolicy {
      *     } int i = 5; // NOT OK, no next part of a multi-block statement, so should be alone
      *
      *     Thread t = new Thread(new Runnable() {
-     *        \@Override
+     *        {@literal @}Override
      *        public void run() {
      *                   ...
      *        } // this is OK, should be alone as next part of a multi-block statement is absent
@@ -86,7 +86,7 @@ public enum RightCurlyPolicy {
      *     if (a > 0) {
      *         ...
      *     } else { ... } // OK, single-line multi-block statement
-     * </code>
+     * }</pre>
      */
     SAME
 }
