@@ -1,9 +1,6 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.Formatting;
-import com.netflix.rewrite.tree.Tr;
-import com.netflix.rewrite.tree.Type;
-import com.netflix.rewrite.tree.TypeUtils;
+import com.netflix.rewrite.tree.*;
 import com.netflix.rewrite.tree.visitor.refactor.AstTransform;
 import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
 import com.netflix.rewrite.tree.visitor.refactor.ScopedRefactorVisitor;
@@ -14,6 +11,8 @@ import java.util.UUID;
 
 import static com.netflix.rewrite.tree.Formatting.format;
 import static com.netflix.rewrite.tree.Tr.randomId;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 
 public class CovariantEquals extends RefactorVisitor {
     @Override
@@ -32,21 +31,10 @@ public class CovariantEquals extends RefactorVisitor {
             }
         }
 
-        /*
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Test t = (Test) o;
-            return n == t.n;
-        }
-        */
-
         return super.visitMethod(method);
     }
 
-    class AddOverrideAnnotation extends ScopedRefactorVisitor {
-
+    static class AddOverrideAnnotation extends ScopedRefactorVisitor {
         public AddOverrideAnnotation(UUID scope) {
             super(scope);
         }
@@ -69,6 +57,27 @@ public class CovariantEquals extends RefactorVisitor {
                             fixedMethod = fixedMethod.withModifiers(Formatting.formatFirstPrefix(fixedMethod.getModifiers(), methodIndent));
                         }
 
+                        Tr.VariableDecls.NamedVar currentParamName = ((Tr.VariableDecls) m.getParams().getParams().iterator().next())
+                                .getVars().iterator().next();
+                        Tr.VariableDecls.NamedVar paramName =  currentParamName
+                                .withName(currentParamName.getName().withName("o".equals(currentParamName.getSimpleName()) ? "other" : "o"));
+
+                        fixedMethod = fixedMethod.withParams(m.getParams().withParams(m.getParams().getParams().stream()
+                                .map(p -> ((Tr.VariableDecls) p)
+                                        .withVars(singletonList(paramName))
+                                        .withTypeExpr(TreeBuilder.buildName("Object")))
+                                .collect(toList())));
+
+                        List<Statement> equalsBody = TreeBuilder.buildSnippet(cursor.enclosingCompilationUnit(), new Cursor(cursor, method.getBody()),
+                                "if (this == {}) return true;\n" +
+                                        "if ({} == null || getClass() != {}.getClass()) return false;\n" +
+                                        "Test {} = (Test) {};\n", paramName, paramName, paramName, currentParamName, paramName);
+
+                        //noinspection ConstantConditions
+                        equalsBody.addAll(fixedMethod.getBody().getStatements());
+
+                        fixedMethod = fixedMethod.withBody(fixedMethod.getBody().withStatements(equalsBody));
+
                         return fixedMethod;
                     })
             );
@@ -83,5 +92,4 @@ public class CovariantEquals extends RefactorVisitor {
             return method.getModifiers().iterator().next().getFormatting().getPrefix();
         }
     }
-
 }
