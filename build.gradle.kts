@@ -11,7 +11,7 @@ group = "org.gradle"
 description = "Refactor checkstyle automatically"
 
 repositories {
-    mavenLocal()
+    maven { url = uri("https://oss.jfrog.org/artifactory/oss-snapshot-local") }
     mavenCentral()
 }
 
