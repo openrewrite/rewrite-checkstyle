@@ -9,7 +9,6 @@ import com.netflix.rewrite.tree.visitor.refactor.AstTransform;
 import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
 import com.netflix.rewrite.tree.visitor.refactor.ScopedRefactorVisitor;
 import com.netflix.rewrite.tree.visitor.refactor.op.UnwrapParentheses;
-import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,12 +17,19 @@ import static com.netflix.rewrite.tree.Formatting.EMPTY;
 import static com.netflix.rewrite.tree.Formatting.stripPrefix;
 import static java.util.Collections.singletonList;
 
-@RequiredArgsConstructor
 public class EqualsAvoidsNull extends RefactorVisitor {
     private static final MethodMatcher STRING_EQUALS = new MethodMatcher("String equals(java.lang.Object)");
     private static final MethodMatcher STRING_EQUALS_IGNORE_CASE = new MethodMatcher("String equalsIgnoreCase(java.lang.String)");
 
     private final boolean ignoreEqualsIgnoreCase;
+
+    public EqualsAvoidsNull(boolean ignoreEqualsIgnoreCase) {
+        this.ignoreEqualsIgnoreCase = ignoreEqualsIgnoreCase;
+    }
+
+    public EqualsAvoidsNull() {
+        this(false);
+    }
 
     @Override
     public String getRuleName() {
