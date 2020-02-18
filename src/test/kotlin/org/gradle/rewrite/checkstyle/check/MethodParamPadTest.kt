@@ -27,7 +27,7 @@ open class MethodParamPadTest: Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(MethodParamPad.builder().build()).fix()
+        val fixed = a.refactor().visit(MethodParamPad.builder().build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A extends B {
@@ -70,7 +70,7 @@ open class MethodParamPadTest: Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(MethodParamPad.builder().option(PadPolicy.SPACE).build()).fix()
+        val fixed = a.refactor().visit(MethodParamPad.builder().option(PadPolicy.SPACE).build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A extends B {
@@ -101,8 +101,8 @@ open class MethodParamPadTest: Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(MethodParamPad.builder()
-                .allowLineBreaks(true).build()).fix()
+        val fixed = a.refactor().visit(MethodParamPad.builder()
+                .allowLineBreaks(true).build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A extends B {

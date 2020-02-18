@@ -19,7 +19,7 @@ open class MultipleVariableDeclarationsTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(MultipleVariableDeclarations()).fix()
+        val fixed = a.refactor().visit(MultipleVariableDeclarations()).fix().fixed
 
         assertRefactored(fixed, """
             class Test {

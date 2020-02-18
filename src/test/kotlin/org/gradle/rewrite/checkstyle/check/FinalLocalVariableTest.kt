@@ -17,7 +17,7 @@ open class FinalLocalVariableTest: Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(FinalLocalVariable()).fix()
+        val fixed = a.refactor().visit(FinalLocalVariable()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -41,7 +41,7 @@ open class FinalLocalVariableTest: Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(FinalLocalVariable()).fix()
+        val fixed = a.refactor().visit(FinalLocalVariable()).fix().fixed
 
         // the final only applies to any initialized variables (b in this case)
         assertRefactored(fixed, """

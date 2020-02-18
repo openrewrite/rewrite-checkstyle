@@ -20,7 +20,7 @@ open class StaticVariableNameTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(StaticVariableName.builder().build()).fix()
+        val fixed = a.refactor().visit(StaticVariableName.builder().build()).fix().fixed
 
         assertRefactored(fixed, """
             import java.util.List;
@@ -43,7 +43,7 @@ open class StaticVariableNameTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(StaticVariableName.builder().build()).fix()
+        val fixed = a.refactor().visit(StaticVariableName.builder().build()).fix().fixed
 
         assertRefactored(fixed, """
             import java.util.*;
@@ -69,12 +69,12 @@ open class StaticVariableNameTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(StaticVariableName.builder()
+        val fixed = a.refactor().visit(StaticVariableName.builder()
                 .applyToPublic(false)
                 .applyToPrivate(false)
                 .applyToPackage(false)
                 .build()
-        ).fix()
+        ).fix().fixed
 
         assertRefactored(fixed, """
             import java.util.List;

@@ -17,7 +17,7 @@ open class EqualsAvoidsNullTest: Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EqualsAvoidsNull(false)).fix()
+        val fixed = a.refactor().visit(EqualsAvoidsNull(false)).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -43,7 +43,7 @@ open class EqualsAvoidsNullTest: Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EqualsAvoidsNull(false)).fix()
+        val fixed = a.refactor().visit(EqualsAvoidsNull(false)).fix().fixed
 
         assertRefactored(fixed, """
             public class A {

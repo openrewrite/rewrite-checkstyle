@@ -26,7 +26,7 @@ class GenericWhitespaceTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(GenericWhitespace()).fix()
+        val fixed = a.refactor().visit(GenericWhitespace()).fix().fixed
 
         assertRefactored(fixed, """
             import java.util.*;

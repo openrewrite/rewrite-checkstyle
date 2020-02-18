@@ -27,7 +27,7 @@ open class ExplicitInitializationTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(ExplicitInitialization()).fix()
+        val fixed = a.refactor().visit(ExplicitInitialization()).fix().fixed
 
         assertRefactored(fixed, """
             class Test {

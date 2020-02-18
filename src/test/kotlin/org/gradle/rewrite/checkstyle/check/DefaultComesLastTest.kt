@@ -26,7 +26,7 @@ open class DefaultComesLastTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(DefaultComesLast()).fix()
+        val fixed = a.refactor().visit(DefaultComesLast()).fix().fixed
 
         assertRefactored(fixed, """
             class Test {
@@ -69,7 +69,7 @@ open class DefaultComesLastTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(DefaultComesLast()).fix()
+        val fixed = a.refactor().visit(DefaultComesLast()).fix().fixed
 
         assertRefactored(fixed, """
             class Test {
@@ -110,7 +110,7 @@ open class DefaultComesLastTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(DefaultComesLast(true)).fix()
+        val fixed = a.refactor().visit(DefaultComesLast(true)).fix().fixed
 
         assertRefactored(fixed, """
             class Test {

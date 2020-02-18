@@ -26,13 +26,13 @@ open class TypecastParenPadTest : Parser by OpenJdkParser() {
 
     @Test
     fun shouldPadTypecast() {
-        val fixed = parse(unpadded).refactor().run(TypecastParenPad(PadPolicy.SPACE)).fix()
+        val fixed = parse(unpadded).refactor().visit(TypecastParenPad(PadPolicy.SPACE)).fix().fixed
         assertRefactored(fixed, padded)
     }
 
     @Test
     fun shouldUnpadTypecast() {
-        val fixed = parse(padded).refactor().run(TypecastParenPad()).fix()
+        val fixed = parse(padded).refactor().visit(TypecastParenPad()).fix().fixed
         assertRefactored(fixed, unpadded)
     }
 }

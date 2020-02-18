@@ -17,7 +17,7 @@ open class CovariantEqualsTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(CovariantEquals()).fix()
+        val fixed = a.refactor().visit(CovariantEquals()).fix().fixed
 
         assertRefactored(fixed, """
             class Test {

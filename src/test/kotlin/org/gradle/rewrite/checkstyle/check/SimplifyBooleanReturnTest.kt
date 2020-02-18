@@ -28,7 +28,7 @@ open class SimplifyBooleanReturnTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(SimplifyBooleanReturn()).fix()
+        val fixed = a.refactor().visit(SimplifyBooleanReturn()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {

@@ -23,9 +23,9 @@ open class RightCurlyTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(RightCurly.builder()
+        val fixed = a.refactor().visit(RightCurly.builder()
                 .tokens(setOf(LITERAL_TRY, LITERAL_CATCH, LITERAL_FINALLY, LITERAL_IF, LITERAL_ELSE, METHOD_DEF))
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             class A {
@@ -73,9 +73,9 @@ open class RightCurlyTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(RightCurly.builder()
+        val fixed = a.refactor().visit(RightCurly.builder()
                 .option(RightCurlyPolicy.ALONE_OR_SINGLELINE)
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             class A {
@@ -118,9 +118,9 @@ open class RightCurlyTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(RightCurly.builder()
+        val fixed = a.refactor().visit(RightCurly.builder()
                 .option(RightCurlyPolicy.SAME)
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             class A {

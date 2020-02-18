@@ -16,7 +16,7 @@ open class EmptyForIteratorPadTest: Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyForIteratorPad()).fix()
+        val fixed = a.refactor().visit(EmptyForIteratorPad()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -37,7 +37,7 @@ open class EmptyForIteratorPadTest: Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyForIteratorPad()).fix()
+        val fixed = a.refactor().visit(EmptyForIteratorPad()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -58,7 +58,7 @@ open class EmptyForIteratorPadTest: Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyForIteratorPad(PadPolicy.SPACE)).fix()
+        val fixed = a.refactor().visit(EmptyForIteratorPad(PadPolicy.SPACE)).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -80,7 +80,7 @@ open class EmptyForIteratorPadTest: Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyForIteratorPad()).fix()
+        val fixed = a.refactor().visit(EmptyForIteratorPad()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {

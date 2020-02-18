@@ -16,7 +16,7 @@ open class NoFinalizerTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(NoFinalizer()).fix()
+        val fixed = a.refactor().visit(NoFinalizer()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {

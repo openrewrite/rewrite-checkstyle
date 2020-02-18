@@ -34,7 +34,7 @@ open class HiddenFieldTest : Parser by OpenJdkParser() {
             }
         """.trimIndent(), b)
 
-        val fixed = a.refactor().run(HiddenField.builder().build()).fix()
+        val fixed = a.refactor().visit(HiddenField.builder().build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A extends B {
@@ -66,9 +66,9 @@ open class HiddenFieldTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(HiddenField.builder()
+        val fixed = a.refactor().visit(HiddenField.builder()
                 .ignoreFormat(Pattern.compile("\\w+"))
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -91,9 +91,9 @@ open class HiddenFieldTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(HiddenField.builder()
+        val fixed = a.refactor().visit(HiddenField.builder()
                 .ignoreConstructorParameter(true)
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -120,9 +120,9 @@ open class HiddenFieldTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(HiddenField.builder()
+        val fixed = a.refactor().visit(HiddenField.builder()
                 .ignoreSetter(true)
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -150,10 +150,10 @@ open class HiddenFieldTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(HiddenField.builder()
+        val fixed = a.refactor().visit(HiddenField.builder()
                 .ignoreSetter(true)
                 .setterCanReturnItsClass(true)
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -176,9 +176,9 @@ open class HiddenFieldTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(HiddenField.builder()
+        val fixed = a.refactor().visit(HiddenField.builder()
                 .ignoreAbstractMethods(true)
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public abstract class A {

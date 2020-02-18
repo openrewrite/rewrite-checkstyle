@@ -33,8 +33,9 @@ public class EqualsAvoidsNull extends RefactorVisitor {
     @SuppressWarnings("ConstantConditions")
     @Override
     public List<AstTransform> visitMethodInvocation(Tr.MethodInvocation method) {
-        if (STRING_EQUALS.matches(method) || (!ignoreEqualsIgnoreCase && STRING_EQUALS_IGNORE_CASE.matches(method)) &&
-                method.getArgs().getArgs().get(0) instanceof Tr.Literal && !(method.getSelect() instanceof Tr.Literal)) {
+        if ((STRING_EQUALS.matches(method) || (!ignoreEqualsIgnoreCase && STRING_EQUALS_IGNORE_CASE.matches(method))) &&
+                method.getArgs().getArgs().get(0) instanceof Tr.Literal &&
+                !(method.getSelect() instanceof Tr.Literal)) {
             Tree parent = getCursor().getParentOrThrow().getTree();
             if (parent instanceof Tr.Binary) {
                 Tr.Binary binary = (Tr.Binary) parent;

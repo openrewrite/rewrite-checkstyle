@@ -19,7 +19,7 @@ open class LeftCurlyTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(LeftCurly.builder().build()).fix()
+        val fixed = a.refactor().visit(LeftCurly.builder().build()).fix().fixed
 
         assertRefactored(fixed, """
             class A {
@@ -42,9 +42,9 @@ open class LeftCurlyTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(LeftCurly.builder()
+        val fixed = a.refactor().visit(LeftCurly.builder()
                 .option(LeftCurlyPolicy.NL)
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             class A
@@ -73,9 +73,9 @@ open class LeftCurlyTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(LeftCurly.builder()
+        val fixed = a.refactor().visit(LeftCurly.builder()
                 .option(LeftCurlyPolicy.NLOW)
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             class A {
@@ -107,9 +107,9 @@ open class LeftCurlyTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(LeftCurly.builder()
+        val fixed = a.refactor().visit(LeftCurly.builder()
                 .option(LeftCurlyPolicy.EOL)
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             class A {

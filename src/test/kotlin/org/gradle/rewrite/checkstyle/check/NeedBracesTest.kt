@@ -22,7 +22,7 @@ open class NeedBracesTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(NeedBraces.builder().build()).fix()
+        val fixed = a.refactor().visit(NeedBraces.builder().build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -60,9 +60,9 @@ open class NeedBracesTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(NeedBraces.builder()
+        val fixed = a.refactor().visit(NeedBraces.builder()
                 .allowEmptyLoopBody(true)
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -87,9 +87,9 @@ open class NeedBracesTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(NeedBraces.builder()
+        val fixed = a.refactor().visit(NeedBraces.builder()
                 .allowSingleLineStatement(true)
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -118,10 +118,10 @@ open class NeedBracesTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(NeedBraces.builder()
+        val fixed = a.refactor().visit(NeedBraces.builder()
                 .tokens(setOf(LITERAL_CASE, LITERAL_DEFAULT))
                 .allowSingleLineStatement(true)
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {

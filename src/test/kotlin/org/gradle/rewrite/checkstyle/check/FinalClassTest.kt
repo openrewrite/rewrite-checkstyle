@@ -17,7 +17,7 @@ open class FinalClassTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(FinalClass()).fix()
+        val fixed = a.refactor().visit(FinalClass()).fix().fixed
 
         assertRefactored(fixed, """
             public final class A {
@@ -42,7 +42,7 @@ open class FinalClassTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(FinalClass()).fix()
+        val fixed = a.refactor().visit(FinalClass()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {

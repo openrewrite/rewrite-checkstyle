@@ -42,7 +42,7 @@ open class FallThroughTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(FallThrough.builder().build()).fix()
+        val fixed = a.refactor().visit(FallThrough.builder().build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {

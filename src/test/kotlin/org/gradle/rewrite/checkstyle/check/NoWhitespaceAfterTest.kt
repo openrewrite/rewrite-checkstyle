@@ -51,10 +51,10 @@ open class NoWhitespaceAfterTest : Parser by OpenJdkParser() {
             }
         """.trimIndent(), notNull)
 
-        val fixed = a.refactor().run(NoWhitespaceAfter.builder()
+        val fixed = a.refactor().visit(NoWhitespaceAfter.builder()
                 .tokens(setOf(ARRAY_INIT, AT, INC, DEC, UNARY_MINUS, UNARY_PLUS, BNOT, LNOT, DOT,
                         TYPECAST, ARRAY_DECLARATOR, INDEX_OP, LITERAL_SYNCHRONIZED, METHOD_REF))
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -105,10 +105,10 @@ open class NoWhitespaceAfterTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(NoWhitespaceAfter.builder()
+        val fixed = a.refactor().visit(NoWhitespaceAfter.builder()
                 .tokens(setOf(DOT))
                 .allowLineBreaks(false)
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {

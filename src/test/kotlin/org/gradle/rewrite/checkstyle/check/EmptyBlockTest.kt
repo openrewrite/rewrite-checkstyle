@@ -18,9 +18,9 @@ open class EmptyBlockTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_SWITCH))
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -43,9 +43,9 @@ open class EmptyBlockTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_SYNCHRONIZED))
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -71,9 +71,9 @@ open class EmptyBlockTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_TRY))
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -99,9 +99,9 @@ open class EmptyBlockTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_CATCH))
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             import java.io.IOException;
@@ -136,9 +136,9 @@ open class EmptyBlockTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_CATCH, LITERAL_FINALLY))
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             import java.nio.file.*;
@@ -168,9 +168,9 @@ open class EmptyBlockTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_WHILE, LITERAL_DO))
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -195,9 +195,9 @@ open class EmptyBlockTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(STATIC_INIT))
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -215,9 +215,9 @@ open class EmptyBlockTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(INSTANCE_INIT))
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -253,9 +253,9 @@ open class EmptyBlockTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_IF))
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -297,9 +297,9 @@ open class EmptyBlockTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_IF))
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -328,9 +328,9 @@ open class EmptyBlockTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_IF))
-                .build()).fix()
+                .build()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {

@@ -18,7 +18,7 @@ open class StringLiteralEqualityTest : Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(StringLiteralEquality()).fix()
+        val fixed = a.refactor().visit(StringLiteralEquality()).fix().fixed
 
         assertRefactored(fixed, """
             class Test {

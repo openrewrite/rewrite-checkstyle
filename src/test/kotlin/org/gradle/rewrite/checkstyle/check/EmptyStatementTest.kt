@@ -23,7 +23,7 @@ open class EmptyStatementTest: Parser by OpenJdkParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().run(EmptyStatement()).fix()
+        val fixed = a.refactor().visit(EmptyStatement()).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
