@@ -49,7 +49,7 @@ open class DefaultComesLastTest : Parser by OpenJdkParser() {
     }
 
     @Test
-    fun moveDefaultToLastWhenSharedWithLastCaseStatement() {
+    fun moveDefaultToLastWhenSharedWithAnotherCaseStatement() {
         val a = parse("""
             class Test {
                 int n;
@@ -61,9 +61,9 @@ open class DefaultComesLastTest : Parser by OpenJdkParser() {
                             break;
                         case 3:
                         default:
+                            break;
                         case 4:
                         case 5:
-                            break;
                     }
                 }
             }
@@ -80,11 +80,11 @@ open class DefaultComesLastTest : Parser by OpenJdkParser() {
                             break;
                         case 2:
                             break;
-                        case 3:
                         case 4:
                         case 5:
-                        default:
                             break;
+                        case 3:
+                        default:
                     }
                 }
             }
