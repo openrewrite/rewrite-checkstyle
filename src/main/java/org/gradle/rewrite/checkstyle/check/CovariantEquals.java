@@ -16,6 +16,11 @@ import static java.util.stream.Collectors.toList;
 
 public class CovariantEquals extends RefactorVisitor {
     @Override
+    public String getRuleName() {
+        return "CovariantEquals";
+    }
+
+    @Override
     public List<AstTransform> visitMethod(Tr.MethodDecl method) {
         Type.Class classType = TypeUtils.asClass(getCursor().enclosingClass().getType());
 
