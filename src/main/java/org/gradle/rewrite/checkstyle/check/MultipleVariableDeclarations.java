@@ -18,7 +18,7 @@ import static java.util.stream.Collectors.toList;
 public class MultipleVariableDeclarations extends RefactorVisitor {
     @Override
     public String getRuleName() {
-        return "MultipleVariableDeclarations";
+        return "checkstyle.MultipleVariableDeclarations";
     }
 
     @SuppressWarnings("unchecked")

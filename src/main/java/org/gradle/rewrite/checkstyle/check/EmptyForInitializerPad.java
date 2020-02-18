@@ -19,7 +19,7 @@ public class EmptyForInitializerPad extends RefactorVisitor {
 
     @Override
     public String getRuleName() {
-        return "EmptyForInitializerPad";
+        return "checkstyle.EmptyForInitializerPad";
     }
 
     @Override

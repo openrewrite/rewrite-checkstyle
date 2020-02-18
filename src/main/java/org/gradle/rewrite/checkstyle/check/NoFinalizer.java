@@ -12,7 +12,7 @@ import static java.util.stream.Collectors.toList;
 public class NoFinalizer extends RefactorVisitor {
     @Override
     public String getRuleName() {
-        return "NoFinalizer";
+        return "checkstyle.NoFinalizer";
     }
 
     @Override

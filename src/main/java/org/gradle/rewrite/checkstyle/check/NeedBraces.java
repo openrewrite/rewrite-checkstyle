@@ -34,7 +34,7 @@ public class NeedBraces extends RefactorVisitor {
 
     @Override
     public String getRuleName() {
-        return "NeedBraces";
+        return "checkstyle.NeedBraces";
     }
 
     @Override

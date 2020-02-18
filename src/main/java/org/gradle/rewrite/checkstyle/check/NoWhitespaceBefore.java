@@ -36,7 +36,7 @@ public class NoWhitespaceBefore extends RefactorVisitor {
 
     @Override
     public String getRuleName() {
-        return "NoWhitespaceBefore";
+        return "checkstyle.NoWhitespaceBefore";
     }
 
     @Override

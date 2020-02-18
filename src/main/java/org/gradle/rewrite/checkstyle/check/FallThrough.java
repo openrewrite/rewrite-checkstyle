@@ -27,7 +27,7 @@ public class FallThrough extends RefactorVisitor {
 
     @Override
     public String getRuleName() {
-        return "FallThrough";
+        return "checkstyle.FallThrough";
     }
 
     @Override

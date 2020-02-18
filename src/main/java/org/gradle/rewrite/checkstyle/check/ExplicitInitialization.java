@@ -25,7 +25,7 @@ public class ExplicitInitialization extends RefactorVisitor {
 
     @Override
     public String getRuleName() {
-        return "ExplicitInitialization";
+        return "checkstyle.ExplicitInitialization";
     }
 
     @Override

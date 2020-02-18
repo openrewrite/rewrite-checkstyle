@@ -24,7 +24,7 @@ public class DefaultComesLast extends RefactorVisitor {
 
     @Override
     public String getRuleName() {
-        return "DefaultComesLast";
+        return "checkstyle.DefaultComesLast";
     }
 
     @Override

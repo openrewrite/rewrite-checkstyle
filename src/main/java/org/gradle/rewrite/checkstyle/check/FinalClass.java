@@ -14,7 +14,7 @@ import static com.netflix.rewrite.tree.Tr.randomId;
 public class FinalClass extends RefactorVisitor {
     @Override
     public String getRuleName() {
-        return "FinalClass";
+        return "checkstyle.FinalClass";
     }
 
     @Override

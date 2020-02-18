@@ -15,6 +15,11 @@ import static java.util.stream.Collectors.toList;
 
 public class SimplifyBooleanReturn extends RefactorVisitor {
     @Override
+    public String getRuleName() {
+        return "checkstyle.SimplifyBooleanReturn";
+    }
+
+    @Override
     public List<AstTransform> visitIf(Tr.If iff) {
         return maybeTransform(iff,
                 thenHasOnlyReturnStatement(iff) && singleFollowingStatement(getCursor())

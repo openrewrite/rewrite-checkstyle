@@ -25,7 +25,7 @@ public class SimplifyBooleanExpression extends RefactorVisitor {
 
     @Override
     public String getRuleName() {
-        return "SimplifyBooleanExpression";
+        return "checkstyle.SimplifyBooleanExpression";
     }
 
     @Override

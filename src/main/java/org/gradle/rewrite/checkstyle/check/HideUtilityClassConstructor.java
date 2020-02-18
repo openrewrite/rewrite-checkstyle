@@ -12,7 +12,7 @@ import static java.util.stream.Collectors.toList;
 public class HideUtilityClassConstructor extends RefactorVisitor {
     @Override
     public String getRuleName() {
-        return "HideUtilityClassConstructor";
+        return "checkstyle.HideUtilityClassConstructor";
     }
 
     @Override

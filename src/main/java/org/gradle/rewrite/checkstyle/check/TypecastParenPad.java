@@ -34,7 +34,7 @@ public class TypecastParenPad extends RefactorVisitor {
 
     @Override
     public String getRuleName() {
-        return "TypecastParenPad";
+        return "checkstyle.TypecastParenPad";
     }
 
     @Override

@@ -27,7 +27,7 @@ public class RightCurly extends RefactorVisitor {
 
     @Override
     public String getRuleName() {
-        return "RightCurly";
+        return "checkstyle.RightCurly";
     }
 
     @Override

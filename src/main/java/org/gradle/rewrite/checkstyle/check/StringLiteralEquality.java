@@ -16,6 +16,11 @@ import static java.util.Collections.singletonList;
 
 public class StringLiteralEquality extends RefactorVisitor {
     @Override
+    public String getRuleName() {
+        return "checkstyle.StringLiteralEquality";
+    }
+
+    @Override
     public List<AstTransform> visitBinary(Tr.Binary binary) {
         return maybeTransform(binary,
                 binary.getOperator() instanceof Tr.Binary.Operator.Equal && (

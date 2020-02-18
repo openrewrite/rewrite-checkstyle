@@ -35,7 +35,7 @@ public class StaticVariableName extends RefactorVisitor {
 
     @Override
     public String getRuleName() {
-        return "StaticVariableName";
+        return "checkstyle.StaticVariableName";
     }
 
     @Override

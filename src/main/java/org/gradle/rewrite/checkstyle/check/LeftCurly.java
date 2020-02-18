@@ -53,7 +53,7 @@ public class LeftCurly extends RefactorVisitor {
 
     @Override
     public String getRuleName() {
-        return "LeftCurly";
+        return "checkstyle.LeftCurly";
     }
 
     @Override

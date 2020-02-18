@@ -17,7 +17,7 @@ import static java.util.stream.Collectors.toList;
 public class EmptyStatement extends RefactorVisitor {
     @Override
     public String getRuleName() {
-        return "EmptyStatement";
+        return "checkstyle.EmptyStatement";
     }
 
     @Override

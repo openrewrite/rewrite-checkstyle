@@ -13,7 +13,7 @@ import static com.netflix.rewrite.tree.Formatting.EMPTY;
 public class GenericWhitespace extends RefactorVisitor {
     @Override
     public String getRuleName() {
-        return "GenericWhitespace";
+        return "checkstyle.GenericWhitespace";
     }
 
     @Override

@@ -46,7 +46,7 @@ public class HiddenField extends RefactorVisitor {
 
     @Override
     public String getRuleName() {
-        return "HiddenField";
+        return "checkstyle.HiddenField";
     }
 
     @Override

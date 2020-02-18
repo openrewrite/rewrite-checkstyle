@@ -16,7 +16,7 @@ import static com.netflix.rewrite.tree.Tr.randomId;
 public class FinalLocalVariable extends RefactorVisitor {
     @Override
     public String getRuleName() {
-        return "FinalLocalVariable";
+        return "checkstyle.FinalLocalVariable";
     }
 
     @Override

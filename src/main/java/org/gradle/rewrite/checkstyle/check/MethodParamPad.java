@@ -35,7 +35,7 @@ public class MethodParamPad extends RefactorVisitor {
 
     @Override
     public String getRuleName() {
-        return "MethodParamPad";
+        return "checkstyle.MethodParamPad";
     }
 
     @Override

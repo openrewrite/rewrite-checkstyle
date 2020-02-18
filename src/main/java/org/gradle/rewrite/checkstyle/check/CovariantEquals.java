@@ -15,7 +15,7 @@ import static java.util.stream.Collectors.toList;
 public class CovariantEquals extends RefactorVisitor {
     @Override
     public String getRuleName() {
-        return "CovariantEquals";
+        return "checkstyle.CovariantEquals";
     }
 
     @Override

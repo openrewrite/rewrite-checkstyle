@@ -46,7 +46,7 @@ public class EmptyBlock extends RefactorVisitor {
 
     @Override
     public String getRuleName() {
-        return "EmptyBlock";
+        return "checkstyle.EmptyBlock";
     }
 
     @SuppressWarnings("unchecked")

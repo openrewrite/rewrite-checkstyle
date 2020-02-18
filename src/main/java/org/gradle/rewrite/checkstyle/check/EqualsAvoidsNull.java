@@ -27,7 +27,7 @@ public class EqualsAvoidsNull extends RefactorVisitor {
 
     @Override
     public String getRuleName() {
-        return "EqualsAvoidsNull";
+        return "checkstyle.EqualsAvoidsNull";
     }
 
     @SuppressWarnings("ConstantConditions")
