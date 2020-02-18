@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 
 open class SimplifyBooleanReturnTest : Parser by OpenJdkParser() {
     @Test
-    fun simplifyBooleanExpression() {
+    fun simplifyBooleanReturn() {
         val a = parse("""
             public class A {
                 boolean ifNoElse() {
@@ -18,15 +18,12 @@ open class SimplifyBooleanReturnTest : Parser by OpenJdkParser() {
                 
                 static boolean isOddMillis() {
                     boolean even = System.currentTimeMillis() % 2 == 0;
-
-                    // can be simplified to "if (even)"
                     if (even == true) {
                         return false;
                     }
                     else {
                         return true;
                     }
-                    // return can be simplified to "return !even"
                 }
             }
         """.trimIndent())
@@ -41,7 +38,7 @@ open class SimplifyBooleanReturnTest : Parser by OpenJdkParser() {
                 
                 static boolean isOddMillis() {
                     boolean even = System.currentTimeMillis() % 2 == 0;
-                    return !even;
+                    return !(even == true);
                 }
             }
         """)
