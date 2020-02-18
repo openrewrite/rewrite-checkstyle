@@ -4,17 +4,18 @@ import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
 import com.puppycrawl.tools.checkstyle.ConfigurationLoader;
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 import com.puppycrawl.tools.checkstyle.api.Configuration;
-import org.gradle.rewrite.checkstyle.check.CovariantEquals;
-import org.gradle.rewrite.checkstyle.check.DefaultComesLast;
-import org.gradle.rewrite.checkstyle.check.SimplifyBooleanExpression;
-import org.gradle.rewrite.checkstyle.check.SimplifyBooleanReturn;
+import org.gradle.rewrite.checkstyle.check.*;
+import org.gradle.rewrite.checkstyle.policy.BlockPolicy;
+import org.gradle.rewrite.checkstyle.policy.Token;
 import org.xml.sax.InputSource;
 
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 public class RewriteCheckstyle {
     public static List<RefactorVisitor> fromConfiguration(InputStream reader) {
@@ -48,6 +49,13 @@ public class RewriteCheckstyle {
                                         return new SimplifyBooleanExpression();
                                     case "SimplifyBooleanReturn":
                                         return new SimplifyBooleanReturn();
+                                    case "EmptyBlock":
+                                        String option = m.prop("option", "statement");
+                                        return EmptyBlock.builder()
+                                                .block(BlockPolicy.valueOf(option.substring(0, 1).toUpperCase() + option.substring(1)))
+                                                .tokens(Arrays.stream(m.prop("tokens", "LITERAL_WHILE, LITERAL_TRY, LITERAL_FINALLY, LITERAL_DO, LITERAL_IF, LITERAL_ELSE, LITERAL_FOR, INSTANCE_INIT, STATIC_INIT, LITERAL_SWITCH, LITERAL_SYNCHRONIZED")
+                                                        .split("\\s*,\\s*")).map(Token::valueOf).collect(toSet()))
+                                                .build();
                                     default:
                                         return null;
                                 }
@@ -78,6 +86,10 @@ public class RewriteCheckstyle {
         public boolean prop(String key, boolean defaultValue) {
             return properties.containsKey(key) ? Boolean.parseBoolean(properties.get(key))
                     : defaultValue;
+        }
+
+        public String prop(String key, String defaultValue) {
+            return properties.getOrDefault(key, defaultValue);
         }
     }
 }

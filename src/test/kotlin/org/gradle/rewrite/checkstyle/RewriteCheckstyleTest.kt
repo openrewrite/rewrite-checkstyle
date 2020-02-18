@@ -30,6 +30,7 @@ class RewriteCheckstyleTest {
                     <module name="DefaultComesLast"/>
                     <module name="SimplifyBooleanExpression"/>
                     <module name="SimplifyBooleanReturn"/>
+                    <module name="EmptyBlock"/>
                 </module>
             </module>
         """.trimIndent()
