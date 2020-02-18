@@ -1,11 +1,13 @@
 package org.gradle.rewrite.checkstyle
 
-import com.puppycrawl.tools.checkstyle.ConfigurationLoader
 import org.assertj.core.api.Assertions.assertThat
+import org.gradle.rewrite.checkstyle.check.CovariantEquals
+import org.gradle.rewrite.checkstyle.check.DefaultComesLast
+import org.gradle.rewrite.checkstyle.check.SimplifyBooleanExpression
+import org.gradle.rewrite.checkstyle.check.SimplifyBooleanReturn
 import org.junit.jupiter.api.Test
-import org.xml.sax.InputSource
 
-class ConfigLoadingTest {
+class RewriteCheckstyleTest {
     @Test
     fun deserializeConfig() {
         val checkstyleConfig = """
@@ -24,13 +26,20 @@ class ConfigLoadingTest {
                     <module name="UnusedImports">
                         <property name="processJavadoc" value="true" />
                     </module>
+                    <module name="CovariantEquals"/>
+                    <module name="DefaultComesLast"/>
+                    <module name="SimplifyBooleanExpression"/>
+                    <module name="SimplifyBooleanReturn"/>
                 </module>
             </module>
         """.trimIndent()
 
-        val config = ConfigurationLoader.loadConfiguration(InputSource(checkstyleConfig.reader()), System::getProperty,
-                ConfigurationLoader.IgnoredModulesOptions.OMIT)
+        val visitors = RewriteCheckstyle.fromConfiguration(checkstyleConfig.byteInputStream())
 
-        assertThat(config.children[0].children).hasSize(2)
+        assertThat(visitors)
+                .hasAtLeastOneElementOfType(CovariantEquals::class.java)
+                .hasAtLeastOneElementOfType(DefaultComesLast::class.java)
+                .hasAtLeastOneElementOfType(SimplifyBooleanExpression::class.java)
+                .hasAtLeastOneElementOfType(SimplifyBooleanReturn::class.java)
     }
 }

@@ -24,23 +24,15 @@ public class RewriteCheckstyle {
                     ConfigurationLoader.IgnoredModulesOptions.OMIT);
 
             for (Configuration firstLevelChild : config.getChildren()) {
-                if ("TreeWalker".equals(firstLevelChild.getAttribute("name"))) {
+                if ("TreeWalker".equals(firstLevelChild.getName())) {
                     return Arrays.stream(firstLevelChild.getChildren())
                             .map(child -> {
                                 try {
-                                    if (!child.getName().equals("module")) {
-                                        return null;
-                                    }
-
                                     Map<String, String> properties = new HashMap<>();
-                                    for (Configuration property : child.getChildren()) {
-                                        if (property.getName().equals("property")) {
-                                            properties.put(property.getAttribute("name"),
-                                                    property.getAttribute("value"));
-                                        }
+                                    for (String propertyName : child.getAttributeNames()) {
+                                        properties.put(propertyName, child.getAttribute(propertyName));
                                     }
-
-                                    return new Module(child.getAttribute("name"), properties);
+                                    return new Module(child.getName(), properties);
                                 } catch (CheckstyleException e) {
                                     return null;
                                 }
