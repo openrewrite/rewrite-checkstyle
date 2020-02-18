@@ -19,12 +19,13 @@ public class FinalClass extends RefactorVisitor {
 
     @Override
     public List<AstTransform> visitClassDecl(Tr.ClassDecl classDecl) {
-        return maybeTransform(classDecl.getBody().getStatements().stream()
+        return maybeTransform(classDecl,
+                classDecl.getBody().getStatements().stream()
                         .noneMatch(s -> s instanceof Tr.MethodDecl &&
                                 ((Tr.MethodDecl) s).isConstructor() &&
                                 !((Tr.MethodDecl) s).hasModifier("private")),
-                super.visitClassDecl(classDecl),
-                transform(classDecl, cd -> {
+                super::visitClassDecl,
+                cd -> {
                     List<Tr.Modifier> modifiers = cd.getModifiers();
 
                     int insertPosition = 0;
@@ -44,7 +45,7 @@ public class FinalClass extends RefactorVisitor {
                     modifiers.add(insertPosition, new Tr.Modifier.Final(randomId(), format));
 
                     return cd.withModifiers(modifiers);
-                })
+                }
         );
     }
 }

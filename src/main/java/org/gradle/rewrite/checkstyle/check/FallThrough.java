@@ -51,44 +51,35 @@ public class FallThrough extends RefactorVisitor {
 
         @Override
         public List<AstTransform> visitCase(Tr.Case caze) {
-            if (!isInScope(caze)) {
-                return super.visitCase(caze);
-            }
-
-            Tr.Block<Tr.Case> switchBlock = getCursor().getParentOrThrow().getTree();
-
-            Optional<Statement> lastStatement = caze.getStatements().stream()
-                    .reduce((s1, s2) -> s2);
-
-            if (lastStatement.map(s -> s instanceof Tr.Block).orElse(false)) {
-                return super.visitCase(caze);
-            }
-
-            return transform(caze, c -> {
-                List<Statement> statements = caze.getStatements();
-                statements.add(new Tr.Break(randomId(), null, formatter().format(switchBlock)));
-                return c.withStatements(statements);
-            });
+            return maybeTransform(caze,
+                    caze.getId().equals(scope) && caze.getStatements().stream()
+                            .reduce((s1, s2) -> s2)
+                            .map(s -> !(s instanceof Tr.Block))
+                            .orElse(true),
+                    super::visitCase,
+                    (c, cursor) -> {
+                        List<Statement> statements = caze.getStatements();
+                        Tr.Block<Tr.Case> switchBlock = cursor.getParentOrThrow().getTree();
+                        statements.add(new Tr.Break(randomId(), null, formatter().format(switchBlock)));
+                        return c.withStatements(statements);
+                    }
+            );
         }
 
         @Override
         public List<AstTransform> visitBlock(Tr.Block<Tree> block) {
-            if (!isInScope(block)) {
-                return super.visitBlock(block);
-            }
-
-            Optional<Tree> lastTree = block.getStatements().stream()
-                    .reduce((s1, s2) -> s2);
-
-            if (lastTree.map(s -> s instanceof Tr.Block).orElse(false)) {
-                return super.visitBlock(block);
-            }
-
-            return transform(block, b -> {
-                List<Tree> statements = b.getStatements();
-                statements.add(new Tr.Break(randomId(), null, formatter().format(b)));
-                return b.withStatements(statements);
-            });
+            return maybeTransform(block,
+                    isInScope(block) && block.getStatements().stream()
+                            .reduce((s1, s2) -> s2)
+                            .map(s -> !(s instanceof Tr.Block))
+                            .orElse(true),
+                    super::visitBlock,
+                    b -> {
+                        List<Tree> statements = b.getStatements();
+                        statements.add(new Tr.Break(randomId(), null, formatter().format(b)));
+                        return b.withStatements(statements);
+                    }
+            );
         }
     }
 

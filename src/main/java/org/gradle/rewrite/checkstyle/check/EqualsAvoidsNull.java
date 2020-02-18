@@ -1,6 +1,9 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.*;
+import com.netflix.rewrite.tree.Expression;
+import com.netflix.rewrite.tree.Tr;
+import com.netflix.rewrite.tree.Tree;
+import com.netflix.rewrite.tree.Type;
 import com.netflix.rewrite.tree.visitor.MethodMatcher;
 import com.netflix.rewrite.tree.visitor.refactor.AstTransform;
 import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
@@ -8,7 +11,6 @@ import com.netflix.rewrite.tree.visitor.refactor.ScopedRefactorVisitor;
 import com.netflix.rewrite.tree.visitor.refactor.op.UnwrapParentheses;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,10 +47,11 @@ public class EqualsAvoidsNull extends RefactorVisitor {
                 }
             }
 
-            return maybeTransform(true,
-                    super.visitMethodInvocation(method),
-                    transform(method, m -> m.withSelect(m.getArgs().getArgs().get(0).withFormatting(m.getSelect().getFormatting()))
-                            .withArgs(m.getArgs().withArgs(singletonList(m.getSelect().withFormatting(EMPTY)))))
+            return maybeTransform(method,
+                    true,
+                    super::visitMethodInvocation,
+                    m -> m.withSelect(m.getArgs().getArgs().get(0).withFormatting(m.getSelect().getFormatting()))
+                            .withArgs(m.getArgs().withArgs(singletonList(m.getSelect().withFormatting(EMPTY))))
             );
         }
 
@@ -75,9 +78,11 @@ public class EqualsAvoidsNull extends RefactorVisitor {
                 andThen(new UnwrapParentheses(parent.getId()));
             }
 
-            return maybeTransform(binary.getId().equals(scope),
-                    super.visitBinary(binary),
-                    transform(Expression.class, binary, b -> stripPrefix(b.getRight()))
+            return maybeTransform(binary,
+                    binary.getId().equals(scope),
+                    super::visitBinary,
+                    b -> (Expression) b,
+                    b -> stripPrefix(((Tr.Binary) b).getRight())
             );
         }
     }

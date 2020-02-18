@@ -28,18 +28,19 @@ public class FinalLocalVariable extends RefactorVisitor {
             super.visitMultiVariable(multiVariable);
         }
 
-        return maybeTransform(!multiVariable.hasModifier("final") && multiVariable.getVars().stream()
+        return maybeTransform(multiVariable,
+                !multiVariable.hasModifier("final") && multiVariable.getVars().stream()
                         .anyMatch(variable -> new FindReferencesToVariable(variable.getName()).visit(variableScope).size() +
                                 (variable.getInitializer() == null ? -1 : 0) <= 0),
-                super.visitMultiVariable(multiVariable),
-                transform(multiVariable, mv -> {
+                super::visitMultiVariable,
+                mv -> {
                     List<Tr.Modifier> modifiers = new ArrayList<>();
                     modifiers.add(new Tr.Modifier.Final(randomId(), mv.getTypeExpr() == null ? EMPTY :
                             format(mv.getTypeExpr().getFormatting().getPrefix())));
                     modifiers.addAll(formatFirstPrefix(mv.getModifiers(), " "));
 
                     return mv.withModifiers(modifiers).withTypeExpr(mv.getTypeExpr().withPrefix(" "));
-                })
+                }
         );
     }
 }

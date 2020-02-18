@@ -10,7 +10,6 @@ import org.gradle.rewrite.checkstyle.policy.Token;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import static com.netflix.rewrite.tree.Formatting.EMPTY;
@@ -53,49 +52,56 @@ public class EmptyBlock extends RefactorVisitor {
     @SuppressWarnings("unchecked")
     @Override
     public List<AstTransform> visitWhileLoop(Tr.WhileLoop whileLoop) {
-        return maybeTransform(tokens.contains(LITERAL_WHILE) && isEmptyBlock(whileLoop.getBody()),
-                super.visitWhileLoop(whileLoop),
-                transform(whileLoop.getBody(), b -> {
+        return maybeTransform(whileLoop,
+                tokens.contains(LITERAL_WHILE) && isEmptyBlock(whileLoop.getBody()),
+                super::visitWhileLoop,
+                Tr.WhileLoop::getBody,
+                b -> {
                     Tr.Block<Tree> block = (Tr.Block<Tree>) b;
                     return block.withStatements(
                             singletonList(new Tr.Continue(randomId(), null, formatter().format(block))));
-                })
+                }
         );
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public List<AstTransform> visitDoWhileLoop(Tr.DoWhileLoop doWhileLoop) {
-        return maybeTransform(tokens.contains(LITERAL_DO) && isEmptyBlock(doWhileLoop.getBody()),
-                super.visitDoWhileLoop(doWhileLoop),
-                transform(doWhileLoop.getBody(), b -> {
+        return maybeTransform(doWhileLoop,
+                tokens.contains(LITERAL_DO) && isEmptyBlock(doWhileLoop.getBody()),
+                super::visitDoWhileLoop,
+                Tr.DoWhileLoop::getBody,
+                b -> {
                     Tr.Block<Tree> block = (Tr.Block<Tree>) b;
                     return block.withStatements(
                             singletonList(new Tr.Continue(randomId(), null, formatter().format(block))));
-                })
+                }
         );
     }
 
     @Override
     public List<AstTransform> visitBlock(Tr.Block<Tree> block) {
-        return Optional.ofNullable(getCursor().getParentOrThrow().getParent())
-                .map(Cursor::getTree)
-                .filter(t -> t instanceof Tr.ClassDecl && isEmptyBlock(block))
-                .filter(t -> (tokens.contains(STATIC_INIT) && block.getStatic() != null) ||
-                        (tokens.contains(INSTANCE_INIT) && block.getStatic() == null))
-                .map(t -> maybeTransform(true, super.visitBlock(block),
-                        transform(((Tr.ClassDecl) t).getBody(), body -> body
-                                .withStatements(body.getStatements().stream()
-                                        .filter(s -> s != block)
-                                        .collect(toList())))))
-                .orElse(super.visitBlock(block));
+        Cursor containing = getCursor().getParentOrThrow();
+        return maybeTransform(block,
+                containing.getParent() != null &&
+                        containing.getParent().getTree() instanceof Tr.ClassDecl &&
+                        isEmptyBlock(block) &&
+                        ((tokens.contains(STATIC_INIT) && block.getStatic() != null) ||
+                                (tokens.contains(INSTANCE_INIT) && block.getStatic() == null)),
+                super::visitBlock,
+                b -> (Tr.Block<?>) containing.getTree(),
+                body -> body.withStatements(body.getStatements().stream()
+                        .filter(s -> s != block)
+                        .collect(toList()))
+        );
     }
 
     @Override
     public List<AstTransform> visitCatch(Tr.Try.Catch catzh) {
-        return maybeTransform(tokens.contains(LITERAL_CATCH) && isEmptyBlock(catzh.getBody()),
-                super.visitCatch(catzh),
-                transform(catzh, c -> {
+        return maybeTransform(catzh,
+                tokens.contains(LITERAL_CATCH) && isEmptyBlock(catzh.getBody()),
+                super::visitCatch,
+                c -> {
                     var exceptionType = c.getParam().getTree().getTypeExpr();
                     var exceptionClassType = exceptionType == null ? null : TypeUtils.asClass(exceptionType.getType());
 
@@ -127,7 +133,8 @@ public class EmptyBlock extends RefactorVisitor {
                                             formatter().format(c.getBody())))
                             )
                     );
-                }));
+                }
+        );
     }
 
     @Override
@@ -214,18 +221,16 @@ public class EmptyBlock extends RefactorVisitor {
             var containing = cursor.getParentOrThrow().getTree();
             Statement elseStatement = i.getElsePart().getStatement();
             List<Tree> elseStatementBody;
-            if(elseStatement instanceof Tr.Block) {
+            if (elseStatement instanceof Tr.Block) {
                 // any else statements should already be at the correct indentation level
                 elseStatementBody = ((Tr.Block<Tree>) elseStatement).getStatements();
-            }
-            else if(elseStatement instanceof Tr.If) {
+            } else if (elseStatement instanceof Tr.If) {
                 // Tr.If will typically just have a format of one space (the space between "else" and "if" in "else if")
                 // we want this to be on its own line now inside its containing if block
                 String prefix = "\n" + range(0, thenPart.getIndent()).mapToObj(n -> " ").collect(joining(""));
                 elseStatementBody = singletonList(elseStatement.withPrefix(prefix));
                 andThen(formatter().shiftRight(elseStatement, i.getThenPart(), containing));
-            }
-            else {
+            } else {
                 elseStatementBody = singletonList(elseStatement);
                 andThen(formatter().shiftRight(elseStatement, i.getThenPart(), containing));
             }
@@ -251,7 +256,7 @@ public class EmptyBlock extends RefactorVisitor {
 
     @Override
     public List<AstTransform> visitSwitch(Tr.Switch switzh) {
-        if(tokens.contains(LITERAL_SWITCH) && isEmptyBlock(switzh.getCases())) {
+        if (tokens.contains(LITERAL_SWITCH) && isEmptyBlock(switzh.getCases())) {
             deleteStatement(switzh);
         }
 

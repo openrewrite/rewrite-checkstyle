@@ -12,6 +12,7 @@ import org.gradle.rewrite.checkstyle.policy.PunctuationToken;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static com.netflix.rewrite.tree.Formatting.*;
@@ -38,58 +39,57 @@ public class NoWhitespaceAfter extends RefactorVisitor {
 
     @Override
     public List<AstTransform> visitTypeCast(Tr.TypeCast typeCast) {
-        return maybeTransform(tokens.contains(TYPECAST) && whitespaceInPrefix(typeCast.getExpr()),
-                super.visitTypeCast(typeCast),
-                transform(typeCast, tc -> tc.withExpr(stripPrefix(typeCast.getExpr())))
-        );
+        return maybeTransform(typeCast,
+                tokens.contains(TYPECAST) && whitespaceInPrefix(typeCast.getExpr()),
+                super::visitTypeCast,
+                tc -> tc.withExpr(stripPrefix(typeCast.getExpr())));
     }
 
     @Override
     public List<AstTransform> visitMemberReference(Tr.MemberReference memberRef) {
-        return maybeTransform(tokens.contains(METHOD_REF) && whitespaceInPrefix(memberRef.getReference()),
-                super.visitMemberReference(memberRef),
-                transform(memberRef, mr -> mr.withReference(stripPrefix(memberRef.getReference())))
-        );
+        return maybeTransform(memberRef,
+                tokens.contains(METHOD_REF) && whitespaceInPrefix(memberRef.getReference()),
+                super::visitMemberReference,
+                mr -> mr.withReference(stripPrefix(memberRef.getReference())));
     }
 
     @Override
     public List<AstTransform> visitMultiVariable(Tr.VariableDecls multiVariable) {
-        return maybeTransform(tokens.contains(ARRAY_DECLARATOR) && multiVariable.getDimensionsBeforeName().stream().anyMatch(this::whitespaceInPrefix),
-                super.visitMultiVariable(multiVariable),
-                transform(multiVariable, mv -> mv.withDimensionsBeforeName(mv.getDimensionsBeforeName().stream()
-                        .map(Formatting::stripPrefix).collect(toList())))
-        );
+        return maybeTransform(multiVariable,
+                tokens.contains(ARRAY_DECLARATOR) && multiVariable.getDimensionsBeforeName().stream().anyMatch(this::whitespaceInPrefix),
+                super::visitMultiVariable,
+                mv -> mv.withDimensionsBeforeName(mv.getDimensionsBeforeName().stream()
+                        .map(Formatting::stripPrefix).collect(toList())));
     }
 
     @Override
     public List<AstTransform> visitAnnotation(Tr.Annotation annotation) {
-        return maybeTransform(tokens.contains(AT) && whitespaceInPrefix(annotation.getAnnotationType()),
-                super.visitAnnotation(annotation),
-                transform(annotation, a -> a.withAnnotationType(stripPrefix(a.getAnnotationType())))
-        );
+        return maybeTransform(annotation,
+                tokens.contains(AT) && whitespaceInPrefix(annotation.getAnnotationType()),
+                super::visitAnnotation,
+                a -> a.withAnnotationType(stripPrefix(a.getAnnotationType())));
     }
 
     @Override
     public List<AstTransform> visitArrayType(Tr.ArrayType arrayType) {
-        return maybeTransform(tokens.contains(ARRAY_DECLARATOR) && arrayType.getDimensions().stream().anyMatch(this::whitespaceInPrefix),
-                super.visitArrayType(arrayType),
-                transform(arrayType, at -> at.withDimensions(at.getDimensions().stream()
-                        .map(Formatting::stripPrefix).collect(toList())))
-        );
+        return maybeTransform(arrayType,
+                tokens.contains(ARRAY_DECLARATOR) && arrayType.getDimensions().stream().anyMatch(this::whitespaceInPrefix),
+                super::visitArrayType,
+                at -> at.withDimensions(at.getDimensions().stream()
+                        .map(Formatting::stripPrefix).collect(toList())));
     }
 
     @Override
     public List<AstTransform> visitNewArray(Tr.NewArray newArray) {
-        if (newArray.getInitializer() == null) {
-            return super.visitNewArray(newArray);
-        }
-
-        List<Expression> init = newArray.getInitializer().getElements();
-
-        return maybeTransform(tokens.contains(ARRAY_INIT) && !init.isEmpty() &&
-                        (whitespaceInPrefix(init.get(0)) || whitespaceInSuffix(init.get(init.size() - 1))),
-                super.visitNewArray(newArray),
-                transform(newArray, na -> {
+        return maybeTransform(newArray,
+                tokens.contains(ARRAY_INIT) &&
+                        Optional.ofNullable(newArray.getInitializer())
+                                .map(Tr.NewArray.Initializer::getElements)
+                                .map(init -> !init.isEmpty() && (whitespaceInPrefix(init.get(0)) ||
+                                        whitespaceInSuffix(init.get(init.size() - 1))))
+                                .orElse(false),
+                super::visitNewArray,
+                na -> {
                     @SuppressWarnings("ConstantConditions") List<Expression> fixedInit =
                             new ArrayList<>(na.getInitializer().getElements());
 
@@ -101,16 +101,16 @@ public class NoWhitespaceAfter extends RefactorVisitor {
                     }
 
                     return na.withInitializer(na.getInitializer().withElements(fixedInit));
-                })
+                }
         );
     }
 
     @Override
     public List<AstTransform> visitArrayAccess(Tr.ArrayAccess arrayAccess) {
-        return maybeTransform(tokens.contains(INDEX_OP) && whitespaceInPrefix(arrayAccess.getDimension()),
-                super.visitArrayAccess(arrayAccess),
-                transform(arrayAccess, aa -> aa.withDimension(stripPrefix(aa.getDimension())))
-        );
+        return maybeTransform(arrayAccess,
+                tokens.contains(INDEX_OP) && whitespaceInPrefix(arrayAccess.getDimension()),
+                super::visitArrayAccess,
+                aa -> aa.withDimension(stripPrefix(aa.getDimension())));
     }
 
     @Override
@@ -122,14 +122,16 @@ public class NoWhitespaceAfter extends RefactorVisitor {
                 op instanceof Tr.Unary.Operator.Positive ||
                 op instanceof Tr.Unary.Operator.Complement ||
                 op instanceof Tr.Unary.Operator.Not) {
-            return maybeTransform((tokens.contains(DEC) ||
+
+            return maybeTransform(unary,
+                    (tokens.contains(DEC) ||
                             tokens.contains(INC) ||
                             tokens.contains(BNOT) ||
                             tokens.contains(LNOT) ||
                             tokens.contains(UNARY_PLUS) ||
                             tokens.contains(UNARY_MINUS)) && whitespaceInPrefix(unary.getExpr()),
-                    super.visitUnary(unary),
-                    transform(unary, u -> u.withExpr(stripPrefix(u.getExpr())))
+                    super::visitUnary,
+                    u -> u.withExpr(stripPrefix(u.getExpr()))
             );
         }
 
@@ -138,18 +140,18 @@ public class NoWhitespaceAfter extends RefactorVisitor {
 
     @Override
     public List<AstTransform> visitFieldAccess(Tr.FieldAccess fieldAccess) {
-        return maybeTransform(tokens.contains(DOT) && whitespaceInPrefix(fieldAccess.getName()),
-                super.visitFieldAccess(fieldAccess),
-                transform(fieldAccess, fa -> fa.withName(stripPrefix(fa.getName())))
-        );
+        return maybeTransform(fieldAccess,
+                tokens.contains(DOT) && whitespaceInPrefix(fieldAccess.getName()),
+                super::visitFieldAccess,
+                fa -> fa.withName(stripPrefix(fa.getName())));
     }
 
     @Override
     public List<AstTransform> visitMethodInvocation(Tr.MethodInvocation method) {
-        return maybeTransform(tokens.contains(DOT) && whitespaceInPrefix(method.getName()),
-                super.visitMethodInvocation(method),
-                transform(method, m -> m.withName(stripPrefix(m.getName())))
-        );
+        return maybeTransform(method,
+                tokens.contains(DOT) && whitespaceInPrefix(method.getName()),
+                super::visitMethodInvocation,
+                m -> m.withName(stripPrefix(m.getName())));
     }
 
     private boolean whitespaceInSuffix(@Nullable Tree t) {
@@ -157,7 +159,7 @@ public class NoWhitespaceAfter extends RefactorVisitor {
     }
 
     private boolean whitespaceInPrefix(@Nullable Tree t) {
-        if(t == null) {
+        if (t == null) {
             return false;
         }
         String prefix = t.getFormatting().getPrefix();

@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 
 open class EmptyForIteratorPadTest: Parser by OpenJdkParser() {
     @Test
-    fun noSpaceInitializerPadding() {
+    fun doesntChangeIfIteratorIsPresent() {
         val a = parse("""
             public class A {
                 {
@@ -21,7 +21,28 @@ open class EmptyForIteratorPadTest: Parser by OpenJdkParser() {
         assertRefactored(fixed, """
             public class A {
                 {
-                    for (int i = 0; i < 2; i++);
+                    for (int i = 0; i < 2; i++ );
+                }
+            }
+        """)
+    }
+
+    @Test
+    fun noSpaceInitializerPadding() {
+        val a = parse("""
+            public class A {
+                {
+                    for (int i = 0; i < 2; );
+                }
+            }
+        """.trimIndent())
+
+        val fixed = a.refactor().run(EmptyForIteratorPad()).fix()
+
+        assertRefactored(fixed, """
+            public class A {
+                {
+                    for (int i = 0; i < 2;);
                 }
             }
         """)
@@ -32,7 +53,7 @@ open class EmptyForIteratorPadTest: Parser by OpenJdkParser() {
         val a = parse("""
             public class A {
                 {
-                    for (int i = 0; i < 2; i++);
+                    for (int i = 0; i < 2;);
                 }
             }
         """.trimIndent())
@@ -42,7 +63,7 @@ open class EmptyForIteratorPadTest: Parser by OpenJdkParser() {
         assertRefactored(fixed, """
             public class A {
                 {
-                    for (int i = 0; i < 2; i++ );
+                    for (int i = 0; i < 2; );
                 }
             }
         """)

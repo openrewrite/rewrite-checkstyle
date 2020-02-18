@@ -63,9 +63,10 @@ public class LeftCurly extends RefactorVisitor {
         boolean spansMultipleLines = LeftCurlyPolicy.NLOW.equals(option) ?
                 new SpansMultipleLines(block).visit((Tree) containing.getTree().withFormatting(EMPTY)) : false;
 
-        return maybeTransform(!satisfiesPolicy(option, block, containing.getTree(), spansMultipleLines),
-                super.visitBlock(block),
-                transform(block, b -> formatCurly(option, b, spansMultipleLines, containing))
+        return maybeTransform(block,
+                !satisfiesPolicy(option, block, containing.getTree(), spansMultipleLines),
+                super::visitBlock,
+                b -> formatCurly(option, b, spansMultipleLines, containing)
         );
     }
 

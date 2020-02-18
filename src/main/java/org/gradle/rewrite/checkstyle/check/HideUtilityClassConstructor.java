@@ -17,34 +17,34 @@ public class HideUtilityClassConstructor extends RefactorVisitor {
 
     @Override
     public List<AstTransform> visitClassDecl(Tr.ClassDecl classDecl) {
-        return maybeTransform(classDecl.getBody().getStatements().stream()
+        return maybeTransform(classDecl,
+                classDecl.getBody().getStatements().stream()
                         .allMatch(s -> !(s instanceof Tr.MethodDecl) ||
                                 !((Tr.MethodDecl) s).isConstructor() ||
                                 !((Tr.MethodDecl) s).hasModifier("static")),
-                super.visitClassDecl(classDecl),
-                transform(classDecl.getBody(), body -> body.withStatements(
-                        body.getStatements().stream().map(s -> {
-                            Tr.MethodDecl ctor = (Tr.MethodDecl) s;
+                super::visitClassDecl,
+                Tr.ClassDecl::getBody,
+                body -> body.withStatements(body.getStatements().stream().map(s -> {
+                    Tr.MethodDecl ctor = (Tr.MethodDecl) s;
 
-                            if (ctor.isConstructor() && !ctor.hasModifier("private")) {
-                                List<Tr.Modifier> modifiers = ctor.getModifiers();
+                    if (ctor.isConstructor() && !ctor.hasModifier("private")) {
+                        List<Tr.Modifier> modifiers = ctor.getModifiers();
 
-                                int insertPosition = 0;
-                                for (int i = 0; i < modifiers.size(); i++) {
-                                    Tr.Modifier modifier = modifiers.get(i);
-                                    if (modifier instanceof Tr.Modifier.Public) {
-                                        insertPosition = i;
-                                    }
-                                }
-
-                                modifiers.set(insertPosition, new Tr.Modifier.Private(randomId(), modifiers.get(insertPosition).getFormatting()));
-
-                                return ctor.withModifiers(modifiers);
+                        int insertPosition = 0;
+                        for (int i = 0; i < modifiers.size(); i++) {
+                            Tr.Modifier modifier = modifiers.get(i);
+                            if (modifier instanceof Tr.Modifier.Public) {
+                                insertPosition = i;
                             }
+                        }
 
-                            return ctor;
-                        }).collect(toList()))
-                )
+                        modifiers.set(insertPosition, new Tr.Modifier.Private(randomId(), modifiers.get(insertPosition).getFormatting()));
+
+                        return ctor.withModifiers(modifiers);
+                    }
+
+                    return ctor;
+                }).collect(toList()))
         );
     }
 }

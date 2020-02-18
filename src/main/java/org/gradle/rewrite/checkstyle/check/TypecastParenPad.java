@@ -40,10 +40,10 @@ public class TypecastParenPad extends RefactorVisitor {
     @Override
     public List<AstTransform> visitTypeCast(Tr.TypeCast typeCast) {
         Formatting formatting = typeCast.getClazz().getTree().getFormatting();
-        return maybeTransform((option == NOSPACE) != formatting.equals(EMPTY),
-                super.visitTypeCast(typeCast),
-                transform(typeCast, tc -> tc.withClazz(tc.getClazz().withTree(tc.getClazz().getTree()
-                        .withFormatting(option == NOSPACE ? EMPTY : format(" ", " ")))))
-        );
+        return maybeTransform(typeCast,
+                (option == NOSPACE) != formatting.equals(EMPTY),
+                super::visitTypeCast,
+                tc -> tc.withClazz(tc.getClazz().withTree(tc.getClazz().getTree()
+                        .withFormatting(option == NOSPACE ? EMPTY : format(" ", " ")))));
     }
 }

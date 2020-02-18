@@ -191,16 +191,16 @@ public class HiddenField extends RefactorVisitor {
 
         @Override
         public List<AstTransform> visitVariable(Tr.VariableDecls.NamedVar variable) {
-            return maybeTransform(variable.getId().equals(scope),
-                    super.visitVariable(variable),
-                    transform(variable, (v, cursor) -> {
+            return transformIfScoped(variable,
+                    super::visitVariable,
+                    (v, cursor) -> {
                         String nextName = nextName(v.getSimpleName());
                         while (matchesSupertypeMember(nextName) ||
                                 new ShadowsName(cursor, nextName).visit(cursor.enclosingCompilationUnit())) {
                             nextName = nextName(nextName);
                         }
                         return v.withName(v.getName().withName(nextName));
-                    })
+                    }
             );
         }
 

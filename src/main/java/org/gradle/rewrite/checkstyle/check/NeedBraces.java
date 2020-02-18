@@ -39,22 +39,24 @@ public class NeedBraces extends RefactorVisitor {
 
     @Override
     public List<AstTransform> visitIf(Tr.If iff) {
-        return maybeTransform(tokens.contains(LITERAL_IF) &&
+        return maybeTransform(iff,
+                tokens.contains(LITERAL_IF) &&
                         !(iff.getThenPart() instanceof Tr.Block) &&
                         isNotAllowableSingleLine(),
-                super.visitIf(iff),
-                transform(iff.getThenPart(), this::addBraces)
-        );
+                super::visitIf,
+                Tr.If::getThenPart,
+                this::addBraces);
     }
 
     @Override
     public List<AstTransform> visitElse(Tr.If.Else elze) {
-        return maybeTransform(tokens.contains(LITERAL_IF) &&
+        return maybeTransform(elze,
+                tokens.contains(LITERAL_IF) &&
                         !(elze.getStatement() instanceof Tr.Block) &&
                         isNotAllowableSingleLine(),
-                super.visitElse(elze),
-                transform(elze.getStatement(), this::addBraces)
-        );
+                super::visitElse,
+                Tr.If.Else::getStatement,
+                this::addBraces);
     }
 
     @Override
@@ -64,22 +66,24 @@ public class NeedBraces extends RefactorVisitor {
                 body instanceof Tr.Empty || body instanceof Tr.Block :
                 body instanceof Tr.Block;
 
-        return maybeTransform(tokens.contains(LITERAL_WHILE) &&
+        return maybeTransform(whileLoop,
+                tokens.contains(LITERAL_WHILE) &&
                         !hasAllowableBodyType &&
                         isNotAllowableSingleLine(),
-                super.visitWhileLoop(whileLoop),
-                transform(body, this::addBraces)
-        );
+                super::visitWhileLoop,
+                Tr.WhileLoop::getBody,
+                this::addBraces);
     }
 
     @Override
     public List<AstTransform> visitDoWhileLoop(Tr.DoWhileLoop doWhileLoop) {
-        return maybeTransform(tokens.contains(LITERAL_DO) &&
+        return maybeTransform(doWhileLoop,
+                tokens.contains(LITERAL_DO) &&
                         !(doWhileLoop.getBody() instanceof Tr.Block) &&
                         isNotAllowableSingleLine(),
-                super.visitDoWhileLoop(doWhileLoop),
-                transform(doWhileLoop.getBody(), this::addBraces)
-        );
+                super::visitDoWhileLoop,
+                Tr.DoWhileLoop::getBody,
+                this::addBraces);
     }
 
     @Override
@@ -89,19 +93,20 @@ public class NeedBraces extends RefactorVisitor {
                 body instanceof Tr.Empty || body instanceof Tr.Block :
                 body instanceof Tr.Block;
 
-        return maybeTransform(tokens.contains(LITERAL_FOR) &&
+        return maybeTransform(forLoop,
+                tokens.contains(LITERAL_FOR) &&
                         !hasAllowableBodyType &&
                         isNotAllowableSingleLine(),
-                super.visitForLoop(forLoop),
-                transform(body, this::addBraces)
-        );
+                super::visitForLoop,
+                Tr.ForLoop::getBody,
+                this::addBraces);
     }
 
     private boolean isNotAllowableSingleLine() {
         return !allowSingleLineStatement || new SpansMultipleLines(null).visit((Tree) getCursor().getTree());
     }
 
-    private Tree addBraces(Tree body, Cursor cursor) {
+    private Statement addBraces(Statement body, Cursor cursor) {
         int enclosingIndent = cursor.getParentOrThrow().enclosingBlock().getIndent();
         Formatter.Result format = formatter().findIndent(enclosingIndent, cursor.getParentOrThrow().getTree());
 

@@ -40,9 +40,10 @@ public class RightCurly extends RefactorVisitor {
         boolean satisfiesPolicy = block.getEndOfBlockSuffix().contains("\n") ||
                 (option != ALONE && !new SpansMultipleLines(null).visit(block));
 
-        return maybeTransform(tokenMatches && !satisfiesPolicy && parentCursor.enclosingBlock() != null,
-                super.visitBlock(block),
-                transform(block, (b, cursor) -> {
+        return maybeTransform(block,
+                tokenMatches && !satisfiesPolicy && parentCursor.enclosingBlock() != null,
+                super::visitBlock,
+                (b, cursor) -> {
                     String suffix = formatter().findIndent(cursor.getParentOrThrow().enclosingBlock().getIndent(),
                                     cursor.getParentOrThrow().getTree()).getPrefix();
 
@@ -54,32 +55,32 @@ public class RightCurly extends RefactorVisitor {
                     }
 
                     return transformed;
-                })
+                }
         );
     }
 
     @Override
     public List<AstTransform> visitElse(Tr.If.Else elze) {
-        return maybeTransform(tokens.contains(LITERAL_ELSE) && !multiBlockSatisfiesPolicy(elze),
-                super.visitElse(elze),
-                transform(elze, this::formatMultiBlock)
-        );
+        return maybeTransform(elze,
+                tokens.contains(LITERAL_ELSE) && !multiBlockSatisfiesPolicy(elze),
+                super::visitElse,
+                this::formatMultiBlock);
     }
 
     @Override
     public List<AstTransform> visitFinally(Tr.Try.Finally finallie) {
-        return maybeTransform(tokens.contains(LITERAL_FINALLY) && !multiBlockSatisfiesPolicy(finallie),
-                super.visitFinally(finallie),
-                transform(finallie, this::formatMultiBlock)
-        );
+        return maybeTransform(finallie,
+                tokens.contains(LITERAL_FINALLY) && !multiBlockSatisfiesPolicy(finallie),
+                super::visitFinally,
+                this::formatMultiBlock);
     }
 
     @Override
     public List<AstTransform> visitCatch(Tr.Try.Catch catzh) {
-        return maybeTransform(tokens.contains(LITERAL_CATCH) && !multiBlockSatisfiesPolicy(catzh),
-                super.visitCatch(catzh),
-                transform(catzh, this::formatMultiBlock)
-        );
+        return maybeTransform(catzh,
+                tokens.contains(LITERAL_CATCH) && !multiBlockSatisfiesPolicy(catzh),
+                super::visitCatch,
+                this::formatMultiBlock);
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")

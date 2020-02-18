@@ -25,15 +25,16 @@ public class EmptyForInitializerPad extends RefactorVisitor {
     @Override
     public List<AstTransform> visitForLoop(Tr.ForLoop forLoop) {
         String prefix = forLoop.getControl().getInit().getFormatting().getPrefix();
-        return maybeTransform(!prefix.startsWith("\n") && option == PadPolicy.NOSPACE ?
-                        prefix.startsWith(" ") || prefix.startsWith("\t") :
-                        prefix.isEmpty(),
-                super.visitForLoop(forLoop),
-                transform(forLoop, f -> {
+        return maybeTransform(forLoop,
+                !prefix.startsWith("\n") &&
+                        (option == PadPolicy.NOSPACE ? prefix.startsWith(" ") || prefix.startsWith("\t") : prefix.isEmpty()) &&
+                        forLoop.getControl().getInit() instanceof Tr.Empty,
+                super::visitForLoop,
+                f -> {
                     Statement init = f.getControl().getInit();
                     String fixedPrefix = option == PadPolicy.NOSPACE ? "" : " ";
                     return f.withControl(f.getControl().withInit(init.withPrefix(fixedPrefix)));
-                })
+                }
         );
     }
 }

@@ -64,11 +64,12 @@ public class MethodParamPad extends RefactorVisitor {
                                                                                    Function<T, U> getter,
                                                                                    BiFunction<T, U, T> setter,
                                                                                    Token... tokensToMatch) {
-        return maybeTransform(Token.matchesOneOf(tokens, getCursor(), tokensToMatch) &&
+        return maybeTransform(t,
+                Token.matchesOneOf(tokens, getCursor(), tokensToMatch) &&
                         hasWrongSpacing(getter.apply(t)) &&
                         getter.apply(t) != null,
-                callSuper.apply(t),
-                transform(t, t2 -> setter.apply(t2, getter.apply(t2).withPrefix(option == NOSPACE ? "" : " ")))
+                callSuper,
+                t2 -> setter.apply(t2, getter.apply(t2).withPrefix(option == NOSPACE ? "" : " "))
         );
     }
 
