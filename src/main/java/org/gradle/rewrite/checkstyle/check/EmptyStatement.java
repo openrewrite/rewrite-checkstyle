@@ -10,6 +10,7 @@ import com.netflix.rewrite.tree.visitor.refactor.ScopedRefactorVisitor;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 import static java.util.stream.Collectors.toList;
 
@@ -24,16 +25,7 @@ public class EmptyStatement extends RefactorVisitor {
         return maybeTransform(iff,
                 isEmptyStatement(iff.getThenPart()),
                 super::visitIf,
-                (i, cursor) -> nextStatement(i, cursor)
-                        .map(s -> {
-                            andThen(new RemoveStatementFromParentBlock(cursor, s));
-                            return i.withThenPart(s);
-                        })
-                        .orElseGet(() -> {
-                            deleteStatement(i);
-                            return i;
-                        })
-        );
+                removeNextStatement(Tr.If::withThenPart));
     }
 
     @Override
@@ -41,16 +33,7 @@ public class EmptyStatement extends RefactorVisitor {
         return maybeTransform(forLoop,
                 isEmptyStatement(forLoop.getBody()),
                 super::visitForLoop,
-                (f, cursor) -> nextStatement(f, cursor)
-                        .map(s -> {
-                            andThen(new RemoveStatementFromParentBlock(cursor, s));
-                            return f.withBody(s);
-                        })
-                        .orElseGet(() -> {
-                            deleteStatement(f);
-                            return f;
-                        })
-        );
+                removeNextStatement(Tr.ForLoop::withBody));
     }
 
     @Override
@@ -58,16 +41,7 @@ public class EmptyStatement extends RefactorVisitor {
         return maybeTransform(forEachLoop,
                 isEmptyStatement(forEachLoop.getBody()),
                 super::visitForEachLoop,
-                (f, cursor) -> nextStatement(f, cursor)
-                        .map(s -> {
-                            andThen(new RemoveStatementFromParentBlock(cursor, s));
-                            return f.withBody(s);
-                        })
-                        .orElseGet(() -> {
-                            deleteStatement(f);
-                            return f;
-                        })
-        );
+                removeNextStatement(Tr.ForEachLoop::withBody));
     }
 
     @Override
@@ -75,16 +49,19 @@ public class EmptyStatement extends RefactorVisitor {
         return maybeTransform(whileLoop,
                 isEmptyStatement(whileLoop.getBody()),
                 super::visitWhileLoop,
-                (w, cursor) -> nextStatement(w, cursor)
-                        .map(s -> {
-                            andThen(new RemoveStatementFromParentBlock(cursor, s));
-                            return w.withBody(s);
-                        })
-                        .orElseGet(() -> {
-                            deleteStatement(w);
-                            return w;
-                        })
-        );
+                removeNextStatement(Tr.WhileLoop::withBody));
+    }
+
+    private <T extends Statement> BiFunction<T, Cursor, T> removeNextStatement(BiFunction<T, Statement, T> withStatement) {
+        return (T t, Cursor cursor) -> nextStatement(t, cursor)
+                .map(s -> {
+                    andThen(new RemoveStatementFromParentBlock(cursor, s));
+                    return withStatement.apply(t, s);
+                })
+                .orElseGet(() -> {
+                    deleteStatement(t);
+                    return t;
+                });
     }
 
     @SuppressWarnings("unchecked")
