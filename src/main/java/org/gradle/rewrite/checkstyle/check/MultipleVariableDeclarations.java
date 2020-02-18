@@ -16,6 +16,11 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
 public class MultipleVariableDeclarations extends RefactorVisitor {
+    @Override
+    public String getRuleName() {
+        return "MultipleVariableDeclarations";
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public List<AstTransform> visitMultiVariable(Tr.VariableDecls multiVariable) {
