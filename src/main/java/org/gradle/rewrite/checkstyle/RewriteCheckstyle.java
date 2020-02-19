@@ -18,6 +18,7 @@ import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.gradle.rewrite.checkstyle.policy.OperatorToken.*;
 import static org.gradle.rewrite.checkstyle.policy.PunctuationToken.*;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
 
@@ -131,6 +132,37 @@ public class RewriteCheckstyle {
                                                 .tokens(m.propAsPunctuationTokens(
                                                         Set.of(COMMA, SEMI, POST_INC, POST_DEC, ELLIPSIS)))
                                                 .build();
+                                    case "OperatorToken":
+                                        return OperatorWrap.builder()
+                                                .option(m.valueOfOrElse(WrapPolicy::valueOf, WrapPolicy.NL))
+                                                .tokens(m.propAsOperatorTokens(
+                                                        Set.of(
+                                                                QUESTION,
+                                                                COLON,
+                                                                EQUAL,
+                                                                NOT_EQUAL,
+                                                                DIV,
+                                                                PLUS,
+                                                                MINUS,
+                                                                STAR,
+                                                                MOD,
+                                                                SR,
+                                                                BSR,
+                                                                GE,
+                                                                GT,
+                                                                SL,
+                                                                LE,
+                                                                LT,
+                                                                BXOR,
+                                                                BOR,
+                                                                LOR,
+                                                                BAND,
+                                                                LAND,
+                                                                TYPE_EXTENSION_AND,
+                                                                LITERAL_INSTANCEOF
+                                                        )
+                                                ))
+                                                .build();
                                     case "RightCurly":
                                         return RightCurly.builder()
                                                 .option(m.valueOfOrElse(RightCurlyPolicy::valueOf, RightCurlyPolicy.SAME))
@@ -215,6 +247,21 @@ public class RewriteCheckstyle {
                             .map(token -> {
                                 try {
                                     return PunctuationToken.valueOf(token);
+                                } catch (Throwable t) {
+                                    return null;
+                                }
+                            })
+                            .filter(Objects::nonNull)
+                            .collect(toSet()) :
+                    defaultValue;
+        }
+
+        private Set<OperatorToken> propAsOperatorTokens(Set<OperatorToken> defaultValue) {
+            return properties.containsKey("tokens") ?
+                    stream(properties.get("tokens").split("\\s*,\\s*"))
+                            .map(token -> {
+                                try {
+                                    return OperatorToken.valueOf(token);
                                 } catch (Throwable t) {
                                     return null;
                                 }
