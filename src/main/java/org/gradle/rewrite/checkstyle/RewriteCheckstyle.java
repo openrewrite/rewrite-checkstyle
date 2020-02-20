@@ -19,6 +19,21 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.gradle.rewrite.checkstyle.policy.OperatorToken.*;
+import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.*;
+import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.ASSIGN;
+import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.BAND_ASSIGN;
+import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.BOR_ASSIGN;
+import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.BSR_ASSIGN;
+import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.BXOR_ASSIGN;
+import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.DIV_ASSIGN;
+import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.LAMBDA;
+import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.LITERAL_TRUE;
+import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.MINUS_ASSIGN;
+import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.MOD_ASSIGN;
+import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.PLUS_ASSIGN;
+import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.SL_ASSIGN;
+import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.SR_ASSIGN;
+import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.STAR_ASSIGN;
 import static org.gradle.rewrite.checkstyle.policy.PunctuationToken.*;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
 
@@ -53,7 +68,7 @@ public class RewriteCheckstyle {
                                     case "EmptyBlock":
                                         return EmptyBlock.builder()
                                                 .block(m.valueOfOrElse(BlockPolicy::valueOf, BlockPolicy.Statement))
-                                                .tokens(m.propAsTokens(Set.of(
+                                                .tokens(m.propAsTokens(Token.class, Set.of(
                                                         LITERAL_WHILE,
                                                         LITERAL_TRY,
                                                         LITERAL_FINALLY,
@@ -97,7 +112,7 @@ public class RewriteCheckstyle {
                                                 .ignoreSetter(m.prop("ignoreSetter", false))
                                                 .ignoreConstructorParameter(m.prop("ignoreConstructorParameter", false))
                                                 .setterCanReturnItsClass(m.prop("setterCanReturnItsClass", false))
-                                                .tokens(m.propAsTokens(Set.of(VARIABLE_DEF, PARAMETER_DEF, LAMBDA)))
+                                                .tokens(m.propAsTokens(Token.class, Set.of(VARIABLE_DEF, PARAMETER_DEF, Token.LAMBDA)))
                                                 .build();
                                     case "HideUtilityClassConstructor":
                                         return new HideUtilityClassConstructor();
@@ -123,19 +138,19 @@ public class RewriteCheckstyle {
                                     case "NoWhitespaceAfter":
                                         return NoWhitespaceAfter.builder()
                                                 .allowLineBreaks(m.prop("allowLineBreaks", false))
-                                                .tokens(m.propAsPunctuationTokens(
+                                                .tokens(m.propAsTokens(PunctuationToken.class,
                                                         Set.of(PunctuationToken.ARRAY_INIT, AT, INC, DEC, UNARY_MINUS, UNARY_PLUS, BNOT, LNOT, DOT, ARRAY_DECLARATOR, INDEX_OP)))
                                                 .build();
                                     case "NoWhitespaceBefore":
                                         return NoWhitespaceBefore.builder()
                                                 .allowLineBreaks(m.prop("allowLineBreaks", false))
-                                                .tokens(m.propAsPunctuationTokens(
+                                                .tokens(m.propAsTokens(PunctuationToken.class,
                                                         Set.of(COMMA, SEMI, POST_INC, POST_DEC, ELLIPSIS)))
                                                 .build();
                                     case "OperatorToken":
                                         return OperatorWrap.builder()
                                                 .option(m.valueOfOrElse(WrapPolicy::valueOf, WrapPolicy.NL))
-                                                .tokens(m.propAsOperatorTokens(
+                                                .tokens(m.propAsTokens(OperatorToken.class,
                                                         Set.of(
                                                                 QUESTION,
                                                                 COLON,
@@ -166,7 +181,7 @@ public class RewriteCheckstyle {
                                     case "RightCurly":
                                         return RightCurly.builder()
                                                 .option(m.valueOfOrElse(RightCurlyPolicy::valueOf, RightCurlyPolicy.SAME))
-                                                .tokens(m.propAsTokens(Set.of(LITERAL_TRY, LITERAL_CATCH, LITERAL_FINALLY, LITERAL_IF, LITERAL_ELSE)))
+                                                .tokens(m.propAsTokens(Token.class, Set.of(LITERAL_TRY, LITERAL_CATCH, LITERAL_FINALLY, LITERAL_IF, LITERAL_ELSE)))
                                                 .build();
                                     case "SimplifyBooleanExpression":
                                         return new SimplifyBooleanExpression();
@@ -184,6 +199,34 @@ public class RewriteCheckstyle {
                                     case "TypecastParenPad":
                                         return new TypecastParenPad(m.valueOfOrElse(PadPolicy::valueOf,
                                                 PadPolicy.NOSPACE));
+                                    case "UnnecessaryParentheses":
+                                        return UnnecessaryParentheses.builder()
+                                                .tokens(m.propAsTokens(ParenthesesToken.class, Set.of(
+                                                        EXPR,
+                                                        IDENT,
+                                                        NUM_DOUBLE,
+                                                        NUM_FLOAT,
+                                                        NUM_INT,
+                                                        NUM_LONG,
+                                                        STRING_LITERAL,
+                                                        LITERAL_NULL,
+                                                        LITERAL_FALSE,
+                                                        LITERAL_TRUE,
+                                                        ASSIGN,
+                                                        BAND_ASSIGN,
+                                                        BOR_ASSIGN,
+                                                        BSR_ASSIGN,
+                                                        BXOR_ASSIGN,
+                                                        DIV_ASSIGN,
+                                                        MINUS_ASSIGN,
+                                                        MOD_ASSIGN,
+                                                        PLUS_ASSIGN,
+                                                        SL_ASSIGN,
+                                                        SR_ASSIGN,
+                                                        STAR_ASSIGN,
+                                                        LAMBDA
+                                                )))
+                                                .build();
                                     default:
                                         return null;
                                 }
@@ -226,42 +269,12 @@ public class RewriteCheckstyle {
             return defaultValue;
         }
 
-        private Set<Token> propAsTokens(Set<Token> defaultValue) {
+        private <T extends Enum<T>> Set<T> propAsTokens(Class<T> enumType, Set<T> defaultValue) {
             return properties.containsKey("tokens") ?
                     stream(properties.get("tokens").split("\\s*,\\s*"))
                             .map(token -> {
                                 try {
-                                    return Token.valueOf(token);
-                                } catch (Throwable t) {
-                                    return null;
-                                }
-                            })
-                            .filter(Objects::nonNull)
-                            .collect(toSet()) :
-                    defaultValue;
-        }
-
-        private Set<PunctuationToken> propAsPunctuationTokens(Set<PunctuationToken> defaultValue) {
-            return properties.containsKey("tokens") ?
-                    stream(properties.get("tokens").split("\\s*,\\s*"))
-                            .map(token -> {
-                                try {
-                                    return PunctuationToken.valueOf(token);
-                                } catch (Throwable t) {
-                                    return null;
-                                }
-                            })
-                            .filter(Objects::nonNull)
-                            .collect(toSet()) :
-                    defaultValue;
-        }
-
-        private Set<OperatorToken> propAsOperatorTokens(Set<OperatorToken> defaultValue) {
-            return properties.containsKey("tokens") ?
-                    stream(properties.get("tokens").split("\\s*,\\s*"))
-                            .map(token -> {
-                                try {
-                                    return OperatorToken.valueOf(token);
+                                    return Enum.valueOf(enumType, token);
                                 } catch (Throwable t) {
                                     return null;
                                 }
