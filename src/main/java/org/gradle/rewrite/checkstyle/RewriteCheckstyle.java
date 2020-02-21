@@ -1,7 +1,7 @@
 package org.gradle.rewrite.checkstyle;
 
 import com.netflix.rewrite.internal.lang.Nullable;
-import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
+import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
 import com.puppycrawl.tools.checkstyle.ConfigurationLoader;
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 import com.puppycrawl.tools.checkstyle.api.Configuration;
@@ -20,20 +20,6 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.gradle.rewrite.checkstyle.policy.OperatorToken.*;
 import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.*;
-import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.ASSIGN;
-import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.BAND_ASSIGN;
-import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.BOR_ASSIGN;
-import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.BSR_ASSIGN;
-import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.BXOR_ASSIGN;
-import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.DIV_ASSIGN;
-import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.LAMBDA;
-import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.LITERAL_TRUE;
-import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.MINUS_ASSIGN;
-import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.MOD_ASSIGN;
-import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.PLUS_ASSIGN;
-import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.SL_ASSIGN;
-import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.SR_ASSIGN;
-import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.STAR_ASSIGN;
 import static org.gradle.rewrite.checkstyle.policy.PunctuationToken.*;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
 
@@ -212,19 +198,19 @@ public class RewriteCheckstyle {
                                                         LITERAL_NULL,
                                                         LITERAL_FALSE,
                                                         LITERAL_TRUE,
-                                                        ASSIGN,
-                                                        BAND_ASSIGN,
-                                                        BOR_ASSIGN,
-                                                        BSR_ASSIGN,
-                                                        BXOR_ASSIGN,
-                                                        DIV_ASSIGN,
-                                                        MINUS_ASSIGN,
-                                                        MOD_ASSIGN,
-                                                        PLUS_ASSIGN,
-                                                        SL_ASSIGN,
-                                                        SR_ASSIGN,
-                                                        STAR_ASSIGN,
-                                                        LAMBDA
+                                                        ParenthesesToken.ASSIGN,
+                                                        ParenthesesToken.BAND_ASSIGN,
+                                                        ParenthesesToken.BOR_ASSIGN,
+                                                        ParenthesesToken.BSR_ASSIGN,
+                                                        ParenthesesToken.BXOR_ASSIGN,
+                                                        ParenthesesToken.DIV_ASSIGN,
+                                                        ParenthesesToken.MINUS_ASSIGN,
+                                                        ParenthesesToken.MOD_ASSIGN,
+                                                        ParenthesesToken.PLUS_ASSIGN,
+                                                        ParenthesesToken.SL_ASSIGN,
+                                                        ParenthesesToken.SR_ASSIGN,
+                                                        ParenthesesToken.STAR_ASSIGN,
+                                                        ParenthesesToken.LAMBDA
                                                 )))
                                                 .build();
                                     default:

@@ -1,13 +1,12 @@
 package org.gradle.rewrite.checkstyle.check
 
-import com.netflix.rewrite.parse.OpenJdkParser
-import com.netflix.rewrite.parse.Parser
+import com.netflix.rewrite.Parser
 import com.netflix.rewrite.tree.Tr
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-class SpansMultipleLinesTest : Parser by OpenJdkParser() {
+class SpansMultipleLinesTest : Parser() {
     @Test
     fun spansMultipleLines() {
         val a = parse("""

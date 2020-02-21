@@ -3,7 +3,7 @@ package org.gradle.rewrite.checkstyle.check;
 import com.netflix.rewrite.internal.lang.Nullable;
 import com.netflix.rewrite.tree.Tr;
 import com.netflix.rewrite.tree.Tree;
-import com.netflix.rewrite.tree.visitor.AstVisitor;
+import com.netflix.rewrite.visitor.AstVisitor;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor

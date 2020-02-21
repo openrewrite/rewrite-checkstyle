@@ -5,8 +5,8 @@ import com.netflix.rewrite.tree.Expression;
 import com.netflix.rewrite.tree.Formatting;
 import com.netflix.rewrite.tree.Tr;
 import com.netflix.rewrite.tree.Tree;
-import com.netflix.rewrite.tree.visitor.refactor.AstTransform;
-import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
+import com.netflix.rewrite.visitor.refactor.AstTransform;
+import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.PunctuationToken;
 

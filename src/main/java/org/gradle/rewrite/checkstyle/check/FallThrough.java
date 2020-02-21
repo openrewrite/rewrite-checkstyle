@@ -3,15 +3,14 @@ package org.gradle.rewrite.checkstyle.check;
 import com.netflix.rewrite.tree.Statement;
 import com.netflix.rewrite.tree.Tr;
 import com.netflix.rewrite.tree.Tree;
-import com.netflix.rewrite.tree.visitor.AstVisitor;
-import com.netflix.rewrite.tree.visitor.refactor.AstTransform;
-import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
-import com.netflix.rewrite.tree.visitor.refactor.ScopedRefactorVisitor;
+import com.netflix.rewrite.visitor.AstVisitor;
+import com.netflix.rewrite.visitor.refactor.AstTransform;
+import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
+import com.netflix.rewrite.visitor.refactor.ScopedRefactorVisitor;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
 

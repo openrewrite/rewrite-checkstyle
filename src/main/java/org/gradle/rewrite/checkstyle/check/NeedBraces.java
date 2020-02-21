@@ -4,9 +4,9 @@ import com.netflix.rewrite.tree.Cursor;
 import com.netflix.rewrite.tree.Statement;
 import com.netflix.rewrite.tree.Tr;
 import com.netflix.rewrite.tree.Tree;
-import com.netflix.rewrite.tree.visitor.refactor.AstTransform;
-import com.netflix.rewrite.tree.visitor.refactor.Formatter;
-import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
+import com.netflix.rewrite.visitor.refactor.AstTransform;
+import com.netflix.rewrite.visitor.refactor.Formatter;
+import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.Token;
 

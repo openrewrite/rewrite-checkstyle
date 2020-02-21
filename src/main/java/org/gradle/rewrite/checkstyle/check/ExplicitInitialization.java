@@ -3,8 +3,8 @@ package org.gradle.rewrite.checkstyle.check;
 import com.netflix.rewrite.tree.Tr;
 import com.netflix.rewrite.tree.Type;
 import com.netflix.rewrite.tree.TypeUtils;
-import com.netflix.rewrite.tree.visitor.refactor.AstTransform;
-import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
+import com.netflix.rewrite.visitor.refactor.AstTransform;
+import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
 
 import java.util.List;
 import java.util.function.Function;

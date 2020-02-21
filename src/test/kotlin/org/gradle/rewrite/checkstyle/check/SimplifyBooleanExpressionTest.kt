@@ -1,10 +1,9 @@
 package org.gradle.rewrite.checkstyle.check
 
-import com.netflix.rewrite.parse.OpenJdkParser
-import com.netflix.rewrite.parse.Parser
+import com.netflix.rewrite.Parser
 import org.junit.jupiter.api.Test
 
-open class SimplifyBooleanExpressionTest : Parser by OpenJdkParser() {
+open class SimplifyBooleanExpressionTest : Parser() {
     @Test
     fun simplifyBooleanExpression() {
         val a = parse("""

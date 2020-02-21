@@ -1,9 +1,9 @@
 package org.gradle.rewrite.checkstyle.check;
 
 import com.netflix.rewrite.tree.*;
-import com.netflix.rewrite.tree.visitor.RetrieveTreeVisitor;
-import com.netflix.rewrite.tree.visitor.refactor.AstTransform;
-import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
+import com.netflix.rewrite.visitor.RetrieveTreeVisitor;
+import com.netflix.rewrite.visitor.refactor.AstTransform;
+import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.BlockPolicy;
 import org.gradle.rewrite.checkstyle.policy.Token;

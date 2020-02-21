@@ -1,10 +1,9 @@
 package org.gradle.rewrite.checkstyle.check
 
-import com.netflix.rewrite.parse.OpenJdkParser
-import com.netflix.rewrite.parse.Parser
+import com.netflix.rewrite.Parser
 import org.junit.jupiter.api.Test
 
-open class StringLiteralEqualityTest : Parser by OpenJdkParser() {
+open class StringLiteralEqualityTest : Parser() {
     @Test
     fun stringLiteralEqualityReplacedWithEquals() {
         val a = parse("""

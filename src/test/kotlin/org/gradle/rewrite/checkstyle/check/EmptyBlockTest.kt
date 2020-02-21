@@ -1,11 +1,10 @@
 package org.gradle.rewrite.checkstyle.check
 
-import com.netflix.rewrite.parse.OpenJdkParser
-import com.netflix.rewrite.parse.Parser
+import com.netflix.rewrite.Parser
 import org.gradle.rewrite.checkstyle.policy.Token.*
 import org.junit.jupiter.api.Test
 
-open class EmptyBlockTest : Parser by OpenJdkParser() {
+open class EmptyBlockTest : Parser() {
     @Test
     fun emptySwitch() {
         val a = parse("""

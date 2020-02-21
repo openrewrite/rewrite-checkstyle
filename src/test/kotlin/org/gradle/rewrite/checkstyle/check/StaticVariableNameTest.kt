@@ -1,11 +1,10 @@
 package org.gradle.rewrite.checkstyle.check
 
-import com.netflix.rewrite.parse.OpenJdkParser
-import com.netflix.rewrite.parse.Parser
-import org.junit.jupiter.api.Test
+import com.netflix.rewrite.Parser
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
 
-open class StaticVariableNameTest : Parser by OpenJdkParser() {
+open class StaticVariableNameTest : Parser() {
     @Test
     fun snakeName() {
         assertThat(StaticVariableName.snakeCaseToCamel("CAMEL_CASE_NAME_1")).isEqualTo("camelCaseName1")

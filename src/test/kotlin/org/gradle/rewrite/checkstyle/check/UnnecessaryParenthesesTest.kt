@@ -1,11 +1,9 @@
 package org.gradle.rewrite.checkstyle.check
 
-import com.netflix.rewrite.parse.OpenJdkParser
-import com.netflix.rewrite.parse.Parser
-import org.junit.jupiter.api.Assertions.assertEquals
+import com.netflix.rewrite.Parser
 import org.junit.jupiter.api.Test
 
-open class UnnecessaryParenthesesTest : Parser by OpenJdkParser() {
+open class UnnecessaryParenthesesTest : Parser() {
     @Test
     fun simpleUnwrapping() {
         val a = parse("""

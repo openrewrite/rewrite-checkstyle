@@ -2,10 +2,10 @@ package org.gradle.rewrite.checkstyle.check;
 
 import com.netflix.rewrite.internal.lang.Nullable;
 import com.netflix.rewrite.tree.*;
-import com.netflix.rewrite.tree.visitor.CursorAstVisitor;
-import com.netflix.rewrite.tree.visitor.refactor.AstTransform;
-import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
-import com.netflix.rewrite.tree.visitor.refactor.ScopedRefactorVisitor;
+import com.netflix.rewrite.visitor.CursorAstVisitor;
+import com.netflix.rewrite.visitor.refactor.AstTransform;
+import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
+import com.netflix.rewrite.visitor.refactor.ScopedRefactorVisitor;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.gradle.rewrite.checkstyle.policy.Token;

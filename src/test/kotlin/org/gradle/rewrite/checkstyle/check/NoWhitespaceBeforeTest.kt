@@ -1,11 +1,10 @@
 package org.gradle.rewrite.checkstyle.check
 
-import com.netflix.rewrite.parse.OpenJdkParser
-import com.netflix.rewrite.parse.Parser
+import com.netflix.rewrite.Parser
 import org.gradle.rewrite.checkstyle.policy.PunctuationToken.*
 import org.junit.jupiter.api.Test
 
-open class NoWhitespaceBeforeTest : Parser by OpenJdkParser() {
+open class NoWhitespaceBeforeTest : Parser() {
     @Test
     fun noWhitespaceBefore() {
         val a = parse("""

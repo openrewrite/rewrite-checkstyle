@@ -4,11 +4,11 @@ import com.netflix.rewrite.tree.Expression;
 import com.netflix.rewrite.tree.Tr;
 import com.netflix.rewrite.tree.Tree;
 import com.netflix.rewrite.tree.Type;
-import com.netflix.rewrite.tree.visitor.MethodMatcher;
-import com.netflix.rewrite.tree.visitor.refactor.AstTransform;
-import com.netflix.rewrite.tree.visitor.refactor.RefactorVisitor;
-import com.netflix.rewrite.tree.visitor.refactor.ScopedRefactorVisitor;
-import com.netflix.rewrite.tree.visitor.refactor.op.UnwrapParentheses;
+import com.netflix.rewrite.visitor.MethodMatcher;
+import com.netflix.rewrite.visitor.refactor.AstTransform;
+import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
+import com.netflix.rewrite.visitor.refactor.ScopedRefactorVisitor;
+import com.netflix.rewrite.visitor.refactor.op.UnwrapParentheses;
 
 import java.util.List;
 import java.util.UUID;

@@ -1,11 +1,10 @@
 package org.gradle.rewrite.checkstyle.check
 
-import com.netflix.rewrite.parse.OpenJdkParser
-import com.netflix.rewrite.parse.Parser
+import com.netflix.rewrite.Parser
 import org.gradle.rewrite.checkstyle.policy.LeftCurlyPolicy
 import org.junit.jupiter.api.Test
 
-open class LeftCurlyTest : Parser by OpenJdkParser() {
+open class LeftCurlyTest : Parser() {
     @Test
     fun eol() {
         val a = parse("""

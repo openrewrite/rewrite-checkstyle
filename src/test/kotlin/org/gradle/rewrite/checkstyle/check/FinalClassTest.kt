@@ -1,10 +1,9 @@
 package org.gradle.rewrite.checkstyle.check
 
-import com.netflix.rewrite.parse.OpenJdkParser
-import com.netflix.rewrite.parse.Parser
+import com.netflix.rewrite.Parser
 import org.junit.jupiter.api.Test
 
-open class FinalClassTest : Parser by OpenJdkParser() {
+open class FinalClassTest : Parser() {
     @Test
     fun shouldBeFinalClass() {
         val a = parse("""

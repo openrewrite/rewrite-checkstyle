@@ -1,11 +1,10 @@
 package org.gradle.rewrite.checkstyle.check
 
-import com.netflix.rewrite.parse.OpenJdkParser
-import com.netflix.rewrite.parse.Parser
+import com.netflix.rewrite.Parser
 import org.gradle.rewrite.checkstyle.policy.PadPolicy
 import org.junit.jupiter.api.Test
 
-open class MethodParamPadTest: Parser by OpenJdkParser() {
+open class MethodParamPadTest: Parser() {
     @Test
     fun noSpaceInitializerPadding() {
         val a = parse("""
