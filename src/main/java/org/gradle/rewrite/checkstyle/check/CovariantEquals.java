@@ -1,14 +1,14 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.*;
-import com.netflix.rewrite.visitor.refactor.AstTransform;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.tree.*;
+import org.openrewrite.visitor.refactor.AstTransform;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.netflix.rewrite.tree.Formatting.format;
-import static com.netflix.rewrite.tree.Tr.randomId;
+import static org.openrewrite.tree.Formatting.format;
+import static org.openrewrite.tree.J.randomId;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
@@ -19,7 +19,7 @@ public class CovariantEquals extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitMethod(Tr.MethodDecl method) {
+    public List<AstTransform> visitMethod(J.MethodDecl method) {
         Type.Class classType = TypeUtils.asClass(getCursor().enclosingClass().getType());
         return maybeTransform(method,
                 method.getSimpleName().equals("equals") &&
@@ -33,7 +33,7 @@ public class CovariantEquals extends RefactorVisitor {
                     String methodPrefix = methodFormattingPrefix(m);
                     String methodIndent = formatter().findIndent(cursor.enclosingBlock().getIndent(), method).getPrefix();
 
-                    Tr.MethodDecl fixedMethod = m;
+                    J.MethodDecl fixedMethod = m;
 
                     fixedMethod = maybeAddOverrideAnnotation(fixedMethod, methodPrefix, methodIndent);
 
@@ -41,9 +41,9 @@ public class CovariantEquals extends RefactorVisitor {
                         fixedMethod = fixedMethod.withModifiers(Formatting.formatFirstPrefix(fixedMethod.getModifiers(), methodIndent));
                     }
 
-                    Tr.VariableDecls.NamedVar oldParamName = ((Tr.VariableDecls) m.getParams().getParams().iterator().next())
+                    J.VariableDecls.NamedVar oldParamName = ((J.VariableDecls) m.getParams().getParams().iterator().next())
                             .getVars().iterator().next();
-                    Tr.VariableDecls.NamedVar paramName = oldParamName
+                    J.VariableDecls.NamedVar paramName = oldParamName
                             .withName(oldParamName.getName().withName("o".equals(oldParamName.getSimpleName()) ? "other" : "o"));
 
                     fixedMethod = changeParameterNameAndType(fixedMethod, paramName);
@@ -54,7 +54,7 @@ public class CovariantEquals extends RefactorVisitor {
         );
     }
 
-    private Tr.MethodDecl addEqualsBody(Tr.MethodDecl method, Cursor cursor, Tr.VariableDecls.NamedVar oldParamName, Tr.VariableDecls.NamedVar paramName) {
+    private J.MethodDecl addEqualsBody(J.MethodDecl method, Cursor cursor, J.VariableDecls.NamedVar oldParamName, J.VariableDecls.NamedVar paramName) {
         List<Statement> equalsBody = TreeBuilder.buildSnippet(cursor.enclosingCompilationUnit(), new Cursor(cursor, method.getBody()),
                 "if (this == {}) return true;\n" +
                         "if ({} == null || getClass() != {}.getClass()) return false;\n" +
@@ -69,18 +69,18 @@ public class CovariantEquals extends RefactorVisitor {
     /**
      * Change the parameter type to Object and the name to other 'other' or 'o'.
      */
-    private Tr.MethodDecl changeParameterNameAndType(Tr.MethodDecl method, Tr.VariableDecls.NamedVar paramName) {
+    private J.MethodDecl changeParameterNameAndType(J.MethodDecl method, J.VariableDecls.NamedVar paramName) {
         return method.withParams(method.getParams().withParams(method.getParams().getParams().stream()
-                .map(p -> ((Tr.VariableDecls) p)
+                .map(p -> ((J.VariableDecls) p)
                         .withVars(singletonList(paramName))
                         .withTypeExpr(TreeBuilder.buildName("Object")))
                 .collect(toList())));
     }
 
-    private Tr.MethodDecl maybeAddOverrideAnnotation(Tr.MethodDecl method, String methodPrefix, String methodIndent) {
+    private J.MethodDecl maybeAddOverrideAnnotation(J.MethodDecl method, String methodPrefix, String methodIndent) {
         if (method.getAnnotations().stream().noneMatch(ann -> TypeUtils.isOfClassType(ann.getType(), "java.lang.Override"))) {
-            List<Tr.Annotation> annotations = new ArrayList<>(method.getAnnotations());
-            annotations.add(new Tr.Annotation(randomId(), Tr.Ident.build(randomId(), "Override", Type.Class.build("java.lang.Override"), Formatting.EMPTY),
+            List<J.Annotation> annotations = new ArrayList<>(method.getAnnotations());
+            annotations.add(new J.Annotation(randomId(), J.Ident.build(randomId(), "Override", Type.Class.build("java.lang.Override"), Formatting.EMPTY),
                     null, method.getAnnotations().isEmpty() ? format(methodPrefix) : format(methodIndent)));
 
             return method.withAnnotations(annotations);
@@ -88,7 +88,7 @@ public class CovariantEquals extends RefactorVisitor {
         return method;
     }
 
-    private String methodFormattingPrefix(Tr.MethodDecl method) {
+    private String methodFormattingPrefix(J.MethodDecl method) {
         if (!method.getAnnotations().isEmpty()) {
             return method.getAnnotations().iterator().next().getFormatting().getPrefix();
         }

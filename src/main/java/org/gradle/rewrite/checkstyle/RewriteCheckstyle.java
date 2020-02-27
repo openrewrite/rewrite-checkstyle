@@ -1,12 +1,12 @@
 package org.gradle.rewrite.checkstyle;
 
-import com.netflix.rewrite.internal.lang.Nullable;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
 import com.puppycrawl.tools.checkstyle.ConfigurationLoader;
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 import com.puppycrawl.tools.checkstyle.api.Configuration;
 import org.gradle.rewrite.checkstyle.check.*;
 import org.gradle.rewrite.checkstyle.policy.*;
+import org.openrewrite.internal.lang.Nullable;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
 import org.xml.sax.InputSource;
 
 import java.io.InputStream;

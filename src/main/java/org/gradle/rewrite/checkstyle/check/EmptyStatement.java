@@ -1,12 +1,12 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.Cursor;
-import com.netflix.rewrite.tree.Statement;
-import com.netflix.rewrite.tree.Tr;
-import com.netflix.rewrite.tree.Tree;
-import com.netflix.rewrite.visitor.refactor.AstTransform;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
-import com.netflix.rewrite.visitor.refactor.ScopedRefactorVisitor;
+import org.openrewrite.tree.Cursor;
+import org.openrewrite.tree.J;
+import org.openrewrite.tree.Statement;
+import org.openrewrite.tree.Tree;
+import org.openrewrite.visitor.refactor.AstTransform;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.visitor.refactor.ScopedRefactorVisitor;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,35 +21,35 @@ public class EmptyStatement extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitIf(Tr.If iff) {
+    public List<AstTransform> visitIf(J.If iff) {
         return maybeTransform(iff,
                 isEmptyStatement(iff.getThenPart()),
                 super::visitIf,
-                removeNextStatement(Tr.If::withThenPart));
+                removeNextStatement(J.If::withThenPart));
     }
 
     @Override
-    public List<AstTransform> visitForLoop(Tr.ForLoop forLoop) {
+    public List<AstTransform> visitForLoop(J.ForLoop forLoop) {
         return maybeTransform(forLoop,
                 isEmptyStatement(forLoop.getBody()),
                 super::visitForLoop,
-                removeNextStatement(Tr.ForLoop::withBody));
+                removeNextStatement(J.ForLoop::withBody));
     }
 
     @Override
-    public List<AstTransform> visitForEachLoop(Tr.ForEachLoop forEachLoop) {
+    public List<AstTransform> visitForEachLoop(J.ForEachLoop forEachLoop) {
         return maybeTransform(forEachLoop,
                 isEmptyStatement(forEachLoop.getBody()),
                 super::visitForEachLoop,
-                removeNextStatement(Tr.ForEachLoop::withBody));
+                removeNextStatement(J.ForEachLoop::withBody));
     }
 
     @Override
-    public List<AstTransform> visitWhileLoop(Tr.WhileLoop whileLoop) {
+    public List<AstTransform> visitWhileLoop(J.WhileLoop whileLoop) {
         return maybeTransform(whileLoop,
                 isEmptyStatement(whileLoop.getBody()),
                 super::visitWhileLoop,
-                removeNextStatement(Tr.WhileLoop::withBody));
+                removeNextStatement(J.WhileLoop::withBody));
     }
 
     private <T extends Statement> BiFunction<T, Cursor, T> removeNextStatement(BiFunction<T, Statement, T> withStatement) {
@@ -67,8 +67,8 @@ public class EmptyStatement extends RefactorVisitor {
     @SuppressWarnings("unchecked")
     private Optional<Statement> nextStatement(Statement statement, Cursor cursor) {
         Tree parent = cursor.getParentOrThrow().getTree();
-        return parent instanceof Tr.Block ?
-                ((Tr.Block<Statement>) parent).getStatements().stream()
+        return parent instanceof J.Block ?
+                ((J.Block<Statement>) parent).getStatements().stream()
                         .dropWhile(s -> s != statement)
                         .skip(1)
                         .findFirst() :
@@ -76,7 +76,7 @@ public class EmptyStatement extends RefactorVisitor {
     }
 
     private boolean isEmptyStatement(Statement statement) {
-        return statement instanceof Tr.Empty;
+        return statement instanceof J.Empty;
     }
 
     private static class RemoveStatementFromParentBlock extends ScopedRefactorVisitor {
@@ -88,7 +88,7 @@ public class EmptyStatement extends RefactorVisitor {
         }
 
         @Override
-        public List<AstTransform> visitBlock(Tr.Block<Tree> block) {
+        public List<AstTransform> visitBlock(J.Block<Tree> block) {
             return maybeTransform(block,
                     block.getId().equals(scope),
                     super::visitBlock,

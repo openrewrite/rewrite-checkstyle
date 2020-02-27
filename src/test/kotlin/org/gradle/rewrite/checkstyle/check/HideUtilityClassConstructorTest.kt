@@ -1,6 +1,6 @@
 package org.gradle.rewrite.checkstyle.check
 
-import com.netflix.rewrite.Parser
+import org.openrewrite.Parser
 import org.junit.jupiter.api.Test
 
 open class HideUtilityClassConstructorTest : Parser() {

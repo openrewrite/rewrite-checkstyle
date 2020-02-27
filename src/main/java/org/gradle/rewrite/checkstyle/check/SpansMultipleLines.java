@@ -1,10 +1,10 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.internal.lang.Nullable;
-import com.netflix.rewrite.tree.Tr;
-import com.netflix.rewrite.tree.Tree;
-import com.netflix.rewrite.visitor.AstVisitor;
 import lombok.RequiredArgsConstructor;
+import org.openrewrite.internal.lang.Nullable;
+import org.openrewrite.tree.J;
+import org.openrewrite.tree.Tree;
+import org.openrewrite.visitor.AstVisitor;
 
 @RequiredArgsConstructor
 class SpansMultipleLines extends AstVisitor<Boolean> {
@@ -23,7 +23,7 @@ class SpansMultipleLines extends AstVisitor<Boolean> {
         if(!visitedScope) {
             visitedScope = true;
 
-            if(tree instanceof Tr.Block && ((Tr.Block<?>) tree).getEndOfBlockSuffix().contains("\n")) {
+            if(tree instanceof J.Block && ((J.Block<?>) tree).getEndOfBlockSuffix().contains("\n")) {
                 return true;
             }
             // don't look at the prefix of the scope that we are testing, we are interested in its contents

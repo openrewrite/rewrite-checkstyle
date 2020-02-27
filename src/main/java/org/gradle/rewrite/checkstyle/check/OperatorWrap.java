@@ -1,19 +1,19 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.Tr;
-import com.netflix.rewrite.tree.Tree;
-import com.netflix.rewrite.tree.TypeTree;
-import com.netflix.rewrite.visitor.refactor.AstTransform;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.OperatorToken;
 import org.gradle.rewrite.checkstyle.policy.WrapPolicy;
+import org.openrewrite.tree.J;
+import org.openrewrite.tree.Tree;
+import org.openrewrite.tree.TypeTree;
+import org.openrewrite.visitor.refactor.AstTransform;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
 
 import java.util.List;
 import java.util.Set;
 
-import static com.netflix.rewrite.tree.Formatting.*;
 import static org.gradle.rewrite.checkstyle.policy.OperatorToken.*;
+import static org.openrewrite.tree.Formatting.*;
 
 @Builder
 public class OperatorWrap extends RefactorVisitor {
@@ -53,29 +53,29 @@ public class OperatorWrap extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitBinary(Tr.Binary binary) {
+    public List<AstTransform> visitBinary(J.Binary binary) {
         List<AstTransform> changes = super.visitBinary(binary);
-        Tr.Binary.Operator op = binary.getOperator();
+        J.Binary.Operator op = binary.getOperator();
 
-        if ((tokens.contains(DIV) && op instanceof Tr.Binary.Operator.Division) ||
-                (tokens.contains(STAR) && op instanceof Tr.Binary.Operator.Multiplication) ||
-                (tokens.contains(PLUS) && op instanceof Tr.Binary.Operator.Addition) ||
-                (tokens.contains(MINUS) && op instanceof Tr.Binary.Operator.Subtraction) ||
-                (tokens.contains(MOD) && op instanceof Tr.Binary.Operator.Modulo) ||
-                (tokens.contains(SR) && op instanceof Tr.Binary.Operator.RightShift) ||
-                (tokens.contains(SL) && op instanceof Tr.Binary.Operator.LeftShift) ||
-                (tokens.contains(BSR) && op instanceof Tr.Binary.Operator.UnsignedRightShift) ||
-                (tokens.contains(EQUAL) && op instanceof Tr.Binary.Operator.Equal) ||
-                (tokens.contains(NOT_EQUAL) && op instanceof Tr.Binary.Operator.NotEqual) ||
-                (tokens.contains(GT) && op instanceof Tr.Binary.Operator.GreaterThan) ||
-                (tokens.contains(GE) && op instanceof Tr.Binary.Operator.GreaterThanOrEqual) ||
-                (tokens.contains(LT) && op instanceof Tr.Binary.Operator.LessThan) ||
-                (tokens.contains(LE) && op instanceof Tr.Binary.Operator.LessThanOrEqual) ||
-                (tokens.contains(BAND) && op instanceof Tr.Binary.Operator.BitAnd) ||
-                (tokens.contains(BXOR) && op instanceof Tr.Binary.Operator.BitXor) ||
-                (tokens.contains(BOR) && op instanceof Tr.Binary.Operator.BitOr) ||
-                (tokens.contains(LAND) && op instanceof Tr.Binary.Operator.And) ||
-                (tokens.contains(LOR) && op instanceof Tr.Binary.Operator.Or)) {
+        if ((tokens.contains(DIV) && op instanceof J.Binary.Operator.Division) ||
+                (tokens.contains(STAR) && op instanceof J.Binary.Operator.Multiplication) ||
+                (tokens.contains(PLUS) && op instanceof J.Binary.Operator.Addition) ||
+                (tokens.contains(MINUS) && op instanceof J.Binary.Operator.Subtraction) ||
+                (tokens.contains(MOD) && op instanceof J.Binary.Operator.Modulo) ||
+                (tokens.contains(SR) && op instanceof J.Binary.Operator.RightShift) ||
+                (tokens.contains(SL) && op instanceof J.Binary.Operator.LeftShift) ||
+                (tokens.contains(BSR) && op instanceof J.Binary.Operator.UnsignedRightShift) ||
+                (tokens.contains(EQUAL) && op instanceof J.Binary.Operator.Equal) ||
+                (tokens.contains(NOT_EQUAL) && op instanceof J.Binary.Operator.NotEqual) ||
+                (tokens.contains(GT) && op instanceof J.Binary.Operator.GreaterThan) ||
+                (tokens.contains(GE) && op instanceof J.Binary.Operator.GreaterThanOrEqual) ||
+                (tokens.contains(LT) && op instanceof J.Binary.Operator.LessThan) ||
+                (tokens.contains(LE) && op instanceof J.Binary.Operator.LessThanOrEqual) ||
+                (tokens.contains(BAND) && op instanceof J.Binary.Operator.BitAnd) ||
+                (tokens.contains(BXOR) && op instanceof J.Binary.Operator.BitXor) ||
+                (tokens.contains(BOR) && op instanceof J.Binary.Operator.BitOr) ||
+                (tokens.contains(LAND) && op instanceof J.Binary.Operator.And) ||
+                (tokens.contains(LOR) && op instanceof J.Binary.Operator.Or)) {
 
             if (option == WrapPolicy.NL) {
                 if (binary.getRight().getFormatting().getPrefix().contains("\n")) {
@@ -94,7 +94,7 @@ public class OperatorWrap extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitTypeParameter(Tr.TypeParameter typeParam) {
+    public List<AstTransform> visitTypeParameter(J.TypeParameter typeParam) {
         List<AstTransform> changes = super.visitTypeParameter(typeParam);
 
         if (tokens.contains(TYPE_EXTENSION_AND) && typeParam.getBounds() != null) {
@@ -119,7 +119,7 @@ public class OperatorWrap extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitInstanceOf(Tr.InstanceOf instanceOf) {
+    public List<AstTransform> visitInstanceOf(J.InstanceOf instanceOf) {
         List<AstTransform> changes = super.visitInstanceOf(instanceOf);
 
         if (tokens.contains(LITERAL_INSTANCEOF)) {
@@ -140,7 +140,7 @@ public class OperatorWrap extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitTernary(Tr.Ternary ternary) {
+    public List<AstTransform> visitTernary(J.Ternary ternary) {
         List<AstTransform> changes = super.visitTernary(ternary);
 
         if (tokens.contains(QUESTION)) {
@@ -175,22 +175,22 @@ public class OperatorWrap extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitAssignOp(Tr.AssignOp assignOp) {
+    public List<AstTransform> visitAssignOp(J.AssignOp assignOp) {
         List<AstTransform> changes = super.visitAssignOp(assignOp);
 
-        Tr.AssignOp.Operator op = assignOp.getOperator();
+        J.AssignOp.Operator op = assignOp.getOperator();
 
-        if ((tokens.contains(PLUS_ASSIGN) && op instanceof Tr.AssignOp.Operator.Addition) ||
-                (tokens.contains(MINUS_ASSIGN) && op instanceof Tr.AssignOp.Operator.Subtraction) ||
-                (tokens.contains(STAR_ASSIGN) && op instanceof Tr.AssignOp.Operator.Multiplication) ||
-                (tokens.contains(DIV_ASSIGN) && op instanceof Tr.AssignOp.Operator.Division) ||
-                (tokens.contains(MOD_ASSIGN) && op instanceof Tr.AssignOp.Operator.Modulo) ||
-                (tokens.contains(SR_ASSIGN) && op instanceof Tr.AssignOp.Operator.RightShift) ||
-                (tokens.contains(SL_ASSIGN) && op instanceof Tr.AssignOp.Operator.LeftShift) ||
-                (tokens.contains(BSR_ASSIGN) && op instanceof Tr.AssignOp.Operator.UnsignedRightShift) ||
-                (tokens.contains(BAND_ASSIGN) && op instanceof Tr.AssignOp.Operator.BitAnd) ||
-                (tokens.contains(BXOR_ASSIGN) && op instanceof Tr.AssignOp.Operator.BitXor) ||
-                (tokens.contains(BOR_ASSIGN) && op instanceof Tr.AssignOp.Operator.BitOr)) {
+        if ((tokens.contains(PLUS_ASSIGN) && op instanceof J.AssignOp.Operator.Addition) ||
+                (tokens.contains(MINUS_ASSIGN) && op instanceof J.AssignOp.Operator.Subtraction) ||
+                (tokens.contains(STAR_ASSIGN) && op instanceof J.AssignOp.Operator.Multiplication) ||
+                (tokens.contains(DIV_ASSIGN) && op instanceof J.AssignOp.Operator.Division) ||
+                (tokens.contains(MOD_ASSIGN) && op instanceof J.AssignOp.Operator.Modulo) ||
+                (tokens.contains(SR_ASSIGN) && op instanceof J.AssignOp.Operator.RightShift) ||
+                (tokens.contains(SL_ASSIGN) && op instanceof J.AssignOp.Operator.LeftShift) ||
+                (tokens.contains(BSR_ASSIGN) && op instanceof J.AssignOp.Operator.UnsignedRightShift) ||
+                (tokens.contains(BAND_ASSIGN) && op instanceof J.AssignOp.Operator.BitAnd) ||
+                (tokens.contains(BXOR_ASSIGN) && op instanceof J.AssignOp.Operator.BitXor) ||
+                (tokens.contains(BOR_ASSIGN) && op instanceof J.AssignOp.Operator.BitOr)) {
 
             if (option == WrapPolicy.NL) {
                 if (assignOp.getAssignment().getFormatting().getPrefix().contains("\n")) {
@@ -209,7 +209,7 @@ public class OperatorWrap extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitMemberReference(Tr.MemberReference memberRef) {
+    public List<AstTransform> visitMemberReference(J.MemberReference memberRef) {
         List<AstTransform> changes = super.visitMemberReference(memberRef);
 
         if (tokens.contains(METHOD_REF)) {
@@ -230,7 +230,7 @@ public class OperatorWrap extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitAssign(Tr.Assign assign) {
+    public List<AstTransform> visitAssign(J.Assign assign) {
         List<AstTransform> changes = super.visitAssign(assign);
 
         if (tokens.contains(ASSIGN)) {
@@ -252,7 +252,7 @@ public class OperatorWrap extends RefactorVisitor {
 
     @SuppressWarnings("ConstantConditions")
     @Override
-    public List<AstTransform> visitVariable(Tr.VariableDecls.NamedVar variable) {
+    public List<AstTransform> visitVariable(J.VariableDecls.NamedVar variable) {
         List<AstTransform> changes = super.visitVariable(variable);
 
         if (tokens.contains(ASSIGN) && variable.getInitializer() != null) {
@@ -275,7 +275,7 @@ public class OperatorWrap extends RefactorVisitor {
         return changes;
     }
 
-    private Tree lastTreeBeforeInitializer(Tr.VariableDecls.NamedVar var) {
+    private Tree lastTreeBeforeInitializer(J.VariableDecls.NamedVar var) {
         if (!var.getDimensionsAfterName().isEmpty()) {
             return var.getDimensionsAfterName().get(var.getDimensionsAfterName().size() - 1);
         }

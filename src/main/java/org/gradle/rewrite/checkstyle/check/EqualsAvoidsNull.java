@@ -1,21 +1,21 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.Expression;
-import com.netflix.rewrite.tree.Tr;
-import com.netflix.rewrite.tree.Tree;
-import com.netflix.rewrite.tree.Type;
-import com.netflix.rewrite.visitor.MethodMatcher;
-import com.netflix.rewrite.visitor.refactor.AstTransform;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
-import com.netflix.rewrite.visitor.refactor.ScopedRefactorVisitor;
-import com.netflix.rewrite.visitor.refactor.op.UnwrapParentheses;
+import org.openrewrite.tree.Expression;
+import org.openrewrite.tree.J;
+import org.openrewrite.tree.Tree;
+import org.openrewrite.tree.Type;
+import org.openrewrite.visitor.MethodMatcher;
+import org.openrewrite.visitor.refactor.AstTransform;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.visitor.refactor.ScopedRefactorVisitor;
+import org.openrewrite.visitor.refactor.op.UnwrapParentheses;
 
 import java.util.List;
 import java.util.UUID;
 
-import static com.netflix.rewrite.tree.Formatting.EMPTY;
-import static com.netflix.rewrite.tree.Formatting.stripPrefix;
 import static java.util.Collections.singletonList;
+import static org.openrewrite.tree.Formatting.EMPTY;
+import static org.openrewrite.tree.Formatting.stripPrefix;
 
 public class EqualsAvoidsNull extends RefactorVisitor {
     private static final MethodMatcher STRING_EQUALS = new MethodMatcher("String equals(java.lang.Object)");
@@ -38,15 +38,15 @@ public class EqualsAvoidsNull extends RefactorVisitor {
 
     @SuppressWarnings("ConstantConditions")
     @Override
-    public List<AstTransform> visitMethodInvocation(Tr.MethodInvocation method) {
+    public List<AstTransform> visitMethodInvocation(J.MethodInvocation method) {
         if ((STRING_EQUALS.matches(method) || (!ignoreEqualsIgnoreCase && STRING_EQUALS_IGNORE_CASE.matches(method))) &&
-                method.getArgs().getArgs().get(0) instanceof Tr.Literal &&
-                !(method.getSelect() instanceof Tr.Literal)) {
+                method.getArgs().getArgs().get(0) instanceof J.Literal &&
+                !(method.getSelect() instanceof J.Literal)) {
             Tree parent = getCursor().getParentOrThrow().getTree();
-            if (parent instanceof Tr.Binary) {
-                Tr.Binary binary = (Tr.Binary) parent;
-                if (binary.getOperator() instanceof Tr.Binary.Operator.And && binary.getLeft() instanceof Tr.Binary) {
-                    Tr.Binary potentialNullCheck = (Tr.Binary) binary.getLeft();
+            if (parent instanceof J.Binary) {
+                J.Binary binary = (J.Binary) parent;
+                if (binary.getOperator() instanceof J.Binary.Operator.And && binary.getLeft() instanceof J.Binary) {
+                    J.Binary potentialNullCheck = (J.Binary) binary.getLeft();
                     if ((isNullLiteral(potentialNullCheck.getLeft()) && matchesSelect(potentialNullCheck.getRight(), method.getSelect())) ||
                             (isNullLiteral(potentialNullCheck.getRight()) && matchesSelect(potentialNullCheck.getLeft(), method.getSelect()))) {
                         andThen(new RemoveUnnecessaryNullCheck(binary.getId()));
@@ -66,7 +66,7 @@ public class EqualsAvoidsNull extends RefactorVisitor {
     }
 
     private boolean isNullLiteral(Expression expression) {
-        return expression instanceof Tr.Literal && ((Tr.Literal) expression).getType() == Type.Primitive.Null;
+        return expression instanceof J.Literal && ((J.Literal) expression).getType() == Type.Primitive.Null;
     }
 
     private boolean matchesSelect(Expression expression, Expression select) {
@@ -79,9 +79,9 @@ public class EqualsAvoidsNull extends RefactorVisitor {
         }
 
         @Override
-        public List<AstTransform> visitBinary(Tr.Binary binary) {
+        public List<AstTransform> visitBinary(J.Binary binary) {
             Tree parent = getCursor().getParentOrThrow().getTree();
-            if (parent instanceof Tr.Parentheses) {
+            if (parent instanceof J.Parentheses) {
                 andThen(new UnwrapParentheses(parent.getId()));
             }
 
@@ -89,7 +89,7 @@ public class EqualsAvoidsNull extends RefactorVisitor {
                     binary.getId().equals(scope),
                     super::visitBinary,
                     b -> (Expression) b,
-                    b -> stripPrefix(((Tr.Binary) b).getRight())
+                    b -> stripPrefix(((J.Binary) b).getRight())
             );
         }
     }

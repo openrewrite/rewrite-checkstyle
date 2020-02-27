@@ -1,23 +1,23 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.internal.lang.Nullable;
-import com.netflix.rewrite.tree.Expression;
-import com.netflix.rewrite.tree.Formatting;
-import com.netflix.rewrite.tree.Tr;
-import com.netflix.rewrite.tree.Tree;
-import com.netflix.rewrite.visitor.refactor.AstTransform;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.PunctuationToken;
+import org.openrewrite.internal.lang.Nullable;
+import org.openrewrite.tree.Expression;
+import org.openrewrite.tree.Formatting;
+import org.openrewrite.tree.J;
+import org.openrewrite.tree.Tree;
+import org.openrewrite.visitor.refactor.AstTransform;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static com.netflix.rewrite.tree.Formatting.*;
 import static java.util.stream.Collectors.toList;
 import static org.gradle.rewrite.checkstyle.policy.PunctuationToken.*;
+import static org.openrewrite.tree.Formatting.*;
 
 @Builder
 public class NoWhitespaceAfter extends RefactorVisitor {
@@ -38,7 +38,7 @@ public class NoWhitespaceAfter extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitTypeCast(Tr.TypeCast typeCast) {
+    public List<AstTransform> visitTypeCast(J.TypeCast typeCast) {
         return maybeTransform(typeCast,
                 tokens.contains(TYPECAST) && whitespaceInPrefix(typeCast.getExpr()),
                 super::visitTypeCast,
@@ -46,7 +46,7 @@ public class NoWhitespaceAfter extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitMemberReference(Tr.MemberReference memberRef) {
+    public List<AstTransform> visitMemberReference(J.MemberReference memberRef) {
         return maybeTransform(memberRef,
                 tokens.contains(METHOD_REF) && whitespaceInPrefix(memberRef.getReference()),
                 super::visitMemberReference,
@@ -54,7 +54,7 @@ public class NoWhitespaceAfter extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitMultiVariable(Tr.VariableDecls multiVariable) {
+    public List<AstTransform> visitMultiVariable(J.VariableDecls multiVariable) {
         return maybeTransform(multiVariable,
                 tokens.contains(ARRAY_DECLARATOR) && multiVariable.getDimensionsBeforeName().stream().anyMatch(this::whitespaceInPrefix),
                 super::visitMultiVariable,
@@ -63,7 +63,7 @@ public class NoWhitespaceAfter extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitAnnotation(Tr.Annotation annotation) {
+    public List<AstTransform> visitAnnotation(J.Annotation annotation) {
         return maybeTransform(annotation,
                 tokens.contains(AT) && whitespaceInPrefix(annotation.getAnnotationType()),
                 super::visitAnnotation,
@@ -71,7 +71,7 @@ public class NoWhitespaceAfter extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitArrayType(Tr.ArrayType arrayType) {
+    public List<AstTransform> visitArrayType(J.ArrayType arrayType) {
         return maybeTransform(arrayType,
                 tokens.contains(ARRAY_DECLARATOR) && arrayType.getDimensions().stream().anyMatch(this::whitespaceInPrefix),
                 super::visitArrayType,
@@ -80,11 +80,11 @@ public class NoWhitespaceAfter extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitNewArray(Tr.NewArray newArray) {
+    public List<AstTransform> visitNewArray(J.NewArray newArray) {
         return maybeTransform(newArray,
                 tokens.contains(ARRAY_INIT) &&
                         Optional.ofNullable(newArray.getInitializer())
-                                .map(Tr.NewArray.Initializer::getElements)
+                                .map(J.NewArray.Initializer::getElements)
                                 .map(init -> !init.isEmpty() && (whitespaceInPrefix(init.get(0)) ||
                                         whitespaceInSuffix(init.get(init.size() - 1))))
                                 .orElse(false),
@@ -106,7 +106,7 @@ public class NoWhitespaceAfter extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitArrayAccess(Tr.ArrayAccess arrayAccess) {
+    public List<AstTransform> visitArrayAccess(J.ArrayAccess arrayAccess) {
         return maybeTransform(arrayAccess,
                 tokens.contains(INDEX_OP) && whitespaceInPrefix(arrayAccess.getDimension()),
                 super::visitArrayAccess,
@@ -114,14 +114,14 @@ public class NoWhitespaceAfter extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitUnary(Tr.Unary unary) {
-        Tr.Unary.Operator op = unary.getOperator();
-        if (op instanceof Tr.Unary.Operator.PreDecrement ||
-                op instanceof Tr.Unary.Operator.PreIncrement ||
-                op instanceof Tr.Unary.Operator.Negative ||
-                op instanceof Tr.Unary.Operator.Positive ||
-                op instanceof Tr.Unary.Operator.Complement ||
-                op instanceof Tr.Unary.Operator.Not) {
+    public List<AstTransform> visitUnary(J.Unary unary) {
+        J.Unary.Operator op = unary.getOperator();
+        if (op instanceof J.Unary.Operator.PreDecrement ||
+                op instanceof J.Unary.Operator.PreIncrement ||
+                op instanceof J.Unary.Operator.Negative ||
+                op instanceof J.Unary.Operator.Positive ||
+                op instanceof J.Unary.Operator.Complement ||
+                op instanceof J.Unary.Operator.Not) {
 
             return maybeTransform(unary,
                     (tokens.contains(DEC) ||
@@ -139,7 +139,7 @@ public class NoWhitespaceAfter extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitFieldAccess(Tr.FieldAccess fieldAccess) {
+    public List<AstTransform> visitFieldAccess(J.FieldAccess fieldAccess) {
         return maybeTransform(fieldAccess,
                 tokens.contains(DOT) && whitespaceInPrefix(fieldAccess.getName()),
                 super::visitFieldAccess,
@@ -147,7 +147,7 @@ public class NoWhitespaceAfter extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitMethodInvocation(Tr.MethodInvocation method) {
+    public List<AstTransform> visitMethodInvocation(J.MethodInvocation method) {
         return maybeTransform(method,
                 tokens.contains(DOT) && whitespaceInPrefix(method.getName()),
                 super::visitMethodInvocation,

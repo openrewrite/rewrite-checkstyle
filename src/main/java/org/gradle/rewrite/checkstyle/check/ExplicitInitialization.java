@@ -1,16 +1,16 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.Tr;
-import com.netflix.rewrite.tree.Type;
-import com.netflix.rewrite.tree.TypeUtils;
-import com.netflix.rewrite.visitor.refactor.AstTransform;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.tree.J;
+import org.openrewrite.tree.Type;
+import org.openrewrite.tree.TypeUtils;
+import org.openrewrite.visitor.refactor.AstTransform;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
 
 import java.util.List;
 import java.util.function.Function;
 
-import static com.netflix.rewrite.tree.Formatting.formatLastSuffix;
-import static com.netflix.rewrite.tree.Formatting.stripSuffix;
+import static org.openrewrite.tree.Formatting.formatLastSuffix;
+import static org.openrewrite.tree.Formatting.stripSuffix;
 
 public class ExplicitInitialization extends RefactorVisitor {
     private final boolean onlyObjectReferences;
@@ -29,23 +29,23 @@ public class ExplicitInitialization extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitVariable(Tr.VariableDecls.NamedVar variable) {
+    public List<AstTransform> visitVariable(J.VariableDecls.NamedVar variable) {
         List<AstTransform> changes = super.visitVariable(variable);
 
-        if(!(getCursor().getParentOrThrow() // Tr.VariableDecls
-                .getParentOrThrow() // maybe Tr.Block
-                .getParentOrThrow() // maybe Tr.ClassDecl
-                .getTree() instanceof Tr.ClassDecl)) {
+        if(!(getCursor().getParentOrThrow() // J.VariableDecls
+                .getParentOrThrow() // maybe J.Block
+                .getParentOrThrow() // maybe J.ClassDecl
+                .getTree() instanceof J.ClassDecl)) {
             return changes;
         }
 
         Type.Primitive primitive = TypeUtils.asPrimitive(variable.getType());
         Type.Array array = TypeUtils.asArray(variable.getType());
 
-        Tr.Literal literalInit = variable.getInitializer() instanceof Tr.Literal ? (Tr.Literal) variable.getInitializer() : null;
+        J.Literal literalInit = variable.getInitializer() instanceof J.Literal ? (J.Literal) variable.getInitializer() : null;
 
         if (literalInit != null) {
-            Function<Tr.VariableDecls.NamedVar, Tr.VariableDecls.NamedVar> removeInitializer = v -> v.withInitializer(null)
+            Function<J.VariableDecls.NamedVar, J.VariableDecls.NamedVar> removeInitializer = v -> v.withInitializer(null)
                     .withName(stripSuffix(v.getName()));
 
             if (TypeUtils.asClass(variable.getType()) != null && Type.Primitive.Null.equals(literalInit.getType())) {

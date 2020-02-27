@@ -1,21 +1,21 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.Cursor;
-import com.netflix.rewrite.tree.Tr;
-import com.netflix.rewrite.tree.Tree;
-import com.netflix.rewrite.visitor.refactor.AstTransform;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.LeftCurlyPolicy;
 import org.gradle.rewrite.checkstyle.policy.Token;
+import org.openrewrite.tree.Cursor;
+import org.openrewrite.tree.J;
+import org.openrewrite.tree.Tree;
+import org.openrewrite.visitor.refactor.AstTransform;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
 
 import java.util.List;
 import java.util.Set;
 
-import static com.netflix.rewrite.tree.Formatting.EMPTY;
 import static org.gradle.rewrite.checkstyle.policy.LeftCurlyPolicy.EOL;
 import static org.gradle.rewrite.checkstyle.policy.LeftCurlyPolicy.NL;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
+import static org.openrewrite.tree.Formatting.EMPTY;
 
 @Builder
 public class LeftCurly extends RefactorVisitor {
@@ -57,7 +57,7 @@ public class LeftCurly extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitBlock(Tr.Block<Tree> block) {
+    public List<AstTransform> visitBlock(J.Block<Tree> block) {
         Cursor containing = getCursor().getParentOrThrow();
 
         boolean spansMultipleLines = LeftCurlyPolicy.NLOW.equals(option) ?
@@ -70,10 +70,10 @@ public class LeftCurly extends RefactorVisitor {
         );
     }
 
-    private boolean satisfiesPolicy(LeftCurlyPolicy option, Tr.Block<Tree> block, Tree containing, boolean spansMultipleLines) {
+    private boolean satisfiesPolicy(LeftCurlyPolicy option, J.Block<Tree> block, Tree containing, boolean spansMultipleLines) {
         switch (option) {
             case EOL:
-                return (ignoreEnums && containing instanceof Tr.Case) || !block.getFormatting().getPrefix().contains("\n");
+                return (ignoreEnums && containing instanceof J.Case) || !block.getFormatting().getPrefix().contains("\n");
             case NL:
                 return block.getFormatting().getPrefix().contains("\n");
             case NLOW:
@@ -83,10 +83,10 @@ public class LeftCurly extends RefactorVisitor {
         }
     }
 
-    private static Tr.Block<Tree> formatCurly(LeftCurlyPolicy option, Tr.Block<Tree> block, boolean spansMultipleLines, Cursor containing) {
+    private static J.Block<Tree> formatCurly(LeftCurlyPolicy option, J.Block<Tree> block, boolean spansMultipleLines, Cursor containing) {
         switch (option) {
             case EOL:
-                return containing.getParentOrThrow().getTree() instanceof Tr.ClassDecl && block.getStatic() == null ?
+                return containing.getParentOrThrow().getTree() instanceof J.ClassDecl && block.getStatic() == null ?
                         block : block.withPrefix(" ");
             case NL:
                 return block.withPrefix(block.getEndOfBlockSuffix());

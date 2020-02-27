@@ -1,17 +1,17 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.*;
-import com.netflix.rewrite.visitor.refactor.AstTransform;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.tree.*;
+import org.openrewrite.visitor.refactor.AstTransform;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
 
 import java.util.List;
 import java.util.Optional;
 
-import static com.netflix.rewrite.tree.Formatting.EMPTY;
-import static com.netflix.rewrite.tree.Formatting.format;
-import static com.netflix.rewrite.tree.Tr.randomId;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
+import static org.openrewrite.tree.Formatting.EMPTY;
+import static org.openrewrite.tree.Formatting.format;
+import static org.openrewrite.tree.J.randomId;
 
 public class SimplifyBooleanReturn extends RefactorVisitor {
     @Override
@@ -20,19 +20,19 @@ public class SimplifyBooleanReturn extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitIf(Tr.If iff) {
+    public List<AstTransform> visitIf(J.If iff) {
         return maybeTransform(iff,
                 thenHasOnlyReturnStatement(iff) && singleFollowingStatement(getCursor())
-                        .flatMap(stat -> Optional.ofNullable(stat instanceof Tr.Return ? (Tr.Return) stat : null))
-                        .map(Tr.Return::getExpr)
+                        .flatMap(stat -> Optional.ofNullable(stat instanceof J.Return ? (J.Return) stat : null))
+                        .map(J.Return::getExpr)
                         .map(r -> isLiteralFalse(r) || isLiteralTrue(r))
                         .orElse(true),
                 super::visitIf,
                 i -> (Statement) i,
                 (i, cursor) -> {
-                    Tr.If iff2 = (Tr.If) i;
-                    Tr.Return retrn = getReturnIfOnlyStatementInThen(iff).orElseThrow();
-                    Expression ifCondition = ((Tr.If) i).getIfCondition().getTree();
+                    J.If iff2 = (J.If) i;
+                    J.Return retrn = getReturnIfOnlyStatementInThen(iff).orElseThrow();
+                    Expression ifCondition = ((J.If) i).getIfCondition().getTree();
 
                     if (isLiteralTrue(retrn.getExpr()) && getReturnExprIfOnlyStatementInElseThen(iff2)
                             .map(this::isLiteralFalse).orElse(true)) {
@@ -55,12 +55,12 @@ public class SimplifyBooleanReturn extends RefactorVisitor {
 
                         //  we need to NOT the expression inside the if condition
 
-                        var maybeParenthesizedCondition = ifCondition instanceof Tr.Binary ?
-                                new Tr.Parentheses<>(randomId(), ifCondition, EMPTY) :
+                        var maybeParenthesizedCondition = ifCondition instanceof J.Binary ?
+                                new J.Parentheses<>(randomId(), ifCondition, EMPTY) :
                                 ifCondition;
 
                         return retrn
-                                .withExpr(new Tr.Unary(randomId(), new Tr.Unary.Operator.Not(randomId(), EMPTY),
+                                .withExpr(new J.Unary(randomId(), new J.Unary.Operator.Not(randomId(), EMPTY),
                                         maybeParenthesizedCondition, Type.Primitive.Boolean, format(" ")))
                                 .withFormatting(i.getFormatting());
                     }
@@ -69,44 +69,44 @@ public class SimplifyBooleanReturn extends RefactorVisitor {
         );
     }
 
-    private boolean thenHasOnlyReturnStatement(Tr.If iff) {
+    private boolean thenHasOnlyReturnStatement(J.If iff) {
         return getReturnIfOnlyStatementInThen(iff)
                 .map(retrn -> isLiteralFalse(retrn.getExpr()) || isLiteralTrue(retrn.getExpr()))
                 .orElse(false);
     }
 
     private Optional<Statement> singleFollowingStatement(Cursor cursor) {
-        Tr.Block<Statement> block = cursor.getParentOrThrow().getTree();
+        J.Block<Statement> block = cursor.getParentOrThrow().getTree();
         List<Statement> following = block.getStatements().stream().dropWhile(s -> s != cursor.getTree())
                 .skip(1).collect(toList());
         return Optional.ofNullable(following.size() != 1 ? null : following.get(0));
     }
 
     private boolean isLiteralTrue(Expression expression) {
-        return expression instanceof Tr.Literal && ((Tr.Literal) expression).getValue() == Boolean.valueOf(true);
+        return expression instanceof J.Literal && ((J.Literal) expression).getValue() == Boolean.valueOf(true);
     }
 
     private boolean isLiteralFalse(Expression expression) {
-        return expression instanceof Tr.Literal && ((Tr.Literal) expression).getValue() == Boolean.valueOf(false);
+        return expression instanceof J.Literal && ((J.Literal) expression).getValue() == Boolean.valueOf(false);
     }
 
-    private Optional<Tr.Return> getReturnIfOnlyStatementInThen(Tr.If iff) {
-        if (iff.getThenPart() instanceof Tr.Return) {
-            return Optional.of((Tr.Return) iff.getThenPart());
+    private Optional<J.Return> getReturnIfOnlyStatementInThen(J.If iff) {
+        if (iff.getThenPart() instanceof J.Return) {
+            return Optional.of((J.Return) iff.getThenPart());
         }
-        if (iff.getThenPart() instanceof Tr.Block) {
-            Tr.Block<?> then = (Tr.Block<?>) iff.getThenPart();
-            if (then.getStatements().size() == 1 && then.getStatements().get(0) instanceof Tr.Return) {
-                return Optional.of((Tr.Return) then.getStatements().get(0));
+        if (iff.getThenPart() instanceof J.Block) {
+            J.Block<?> then = (J.Block<?>) iff.getThenPart();
+            if (then.getStatements().size() == 1 && then.getStatements().get(0) instanceof J.Return) {
+                return Optional.of((J.Return) then.getStatements().get(0));
             }
         }
         return Optional.empty();
     }
 
-    private Optional<Expression> getReturnExprIfOnlyStatementInElseThen(Tr.If iff2) {
+    private Optional<Expression> getReturnExprIfOnlyStatementInElseThen(J.If iff2) {
         return ofNullable(iff2.getElsePart())
-                .flatMap(elze -> ofNullable(elze.getStatement() instanceof Tr.If ? (Tr.If) elze.getStatement() : null))
+                .flatMap(elze -> ofNullable(elze.getStatement() instanceof J.If ? (J.If) elze.getStatement() : null))
                 .flatMap(this::getReturnIfOnlyStatementInThen)
-                .map(Tr.Return::getExpr);
+                .map(J.Return::getExpr);
     }
 }

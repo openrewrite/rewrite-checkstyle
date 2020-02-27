@@ -1,15 +1,15 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.Formatting;
-import com.netflix.rewrite.tree.Tr;
-import com.netflix.rewrite.visitor.refactor.AstTransform;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.tree.Formatting;
+import org.openrewrite.tree.J;
+import org.openrewrite.visitor.refactor.AstTransform;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
 
 import java.util.List;
 
-import static com.netflix.rewrite.tree.Formatting.format;
-import static com.netflix.rewrite.tree.Formatting.formatFirstPrefix;
-import static com.netflix.rewrite.tree.Tr.randomId;
+import static org.openrewrite.tree.Formatting.format;
+import static org.openrewrite.tree.Formatting.formatFirstPrefix;
+import static org.openrewrite.tree.J.randomId;
 
 public class FinalClass extends RefactorVisitor {
     @Override
@@ -18,20 +18,25 @@ public class FinalClass extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitClassDecl(Tr.ClassDecl classDecl) {
+    public boolean isSingleRun() {
+        return true;
+    }
+
+    @Override
+    public List<AstTransform> visitClassDecl(J.ClassDecl classDecl) {
         return maybeTransform(classDecl,
                 classDecl.getBody().getStatements().stream()
-                        .noneMatch(s -> s instanceof Tr.MethodDecl &&
-                                ((Tr.MethodDecl) s).isConstructor() &&
-                                !((Tr.MethodDecl) s).hasModifier("private")),
+                        .noneMatch(s -> s instanceof J.MethodDecl &&
+                                ((J.MethodDecl) s).isConstructor() &&
+                                !((J.MethodDecl) s).hasModifier("private")),
                 super::visitClassDecl,
                 cd -> {
-                    List<Tr.Modifier> modifiers = cd.getModifiers();
+                    List<J.Modifier> modifiers = cd.getModifiers();
 
                     int insertPosition = 0;
                     for (int i = 0; i < modifiers.size(); i++) {
-                        Tr.Modifier modifier = modifiers.get(i);
-                        if (modifier instanceof Tr.Modifier.Public || modifier instanceof Tr.Modifier.Static) {
+                        J.Modifier modifier = modifiers.get(i);
+                        if (modifier instanceof J.Modifier.Public || modifier instanceof J.Modifier.Static) {
                             insertPosition = i + 1;
                         }
                     }
@@ -42,7 +47,7 @@ public class FinalClass extends RefactorVisitor {
                         formatFirstPrefix(modifiers, " ");
                     }
 
-                    modifiers.add(insertPosition, new Tr.Modifier.Final(randomId(), format));
+                    modifiers.add(insertPosition, new J.Modifier.Final(randomId(), format));
 
                     return cd.withModifiers(modifiers);
                 }

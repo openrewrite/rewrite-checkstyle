@@ -1,9 +1,9 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.*;
-import com.netflix.rewrite.visitor.RetrieveTreeVisitor;
-import com.netflix.rewrite.visitor.refactor.AstTransform;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.tree.*;
+import org.openrewrite.visitor.RetrieveTreeVisitor;
+import org.openrewrite.visitor.refactor.AstTransform;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.BlockPolicy;
 import org.gradle.rewrite.checkstyle.policy.Token;
@@ -12,9 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static com.netflix.rewrite.tree.Formatting.EMPTY;
-import static com.netflix.rewrite.tree.Formatting.format;
-import static com.netflix.rewrite.tree.Tr.randomId;
+import static org.openrewrite.tree.Formatting.EMPTY;
+import static org.openrewrite.tree.Formatting.format;
+import static org.openrewrite.tree.J.randomId;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -51,45 +51,45 @@ public class EmptyBlock extends RefactorVisitor {
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<AstTransform> visitWhileLoop(Tr.WhileLoop whileLoop) {
+    public List<AstTransform> visitWhileLoop(J.WhileLoop whileLoop) {
         return maybeTransform(whileLoop,
                 tokens.contains(LITERAL_WHILE) && isEmptyBlock(whileLoop.getBody()),
                 super::visitWhileLoop,
-                Tr.WhileLoop::getBody,
+                J.WhileLoop::getBody,
                 b -> {
-                    Tr.Block<Tree> block = (Tr.Block<Tree>) b;
+                    J.Block<Tree> block = (J.Block<Tree>) b;
                     return block.withStatements(
-                            singletonList(new Tr.Continue(randomId(), null, formatter().format(block))));
+                            singletonList(new J.Continue(randomId(), null, formatter().format(block))));
                 }
         );
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<AstTransform> visitDoWhileLoop(Tr.DoWhileLoop doWhileLoop) {
+    public List<AstTransform> visitDoWhileLoop(J.DoWhileLoop doWhileLoop) {
         return maybeTransform(doWhileLoop,
                 tokens.contains(LITERAL_DO) && isEmptyBlock(doWhileLoop.getBody()),
                 super::visitDoWhileLoop,
-                Tr.DoWhileLoop::getBody,
+                J.DoWhileLoop::getBody,
                 b -> {
-                    Tr.Block<Tree> block = (Tr.Block<Tree>) b;
+                    J.Block<Tree> block = (J.Block<Tree>) b;
                     return block.withStatements(
-                            singletonList(new Tr.Continue(randomId(), null, formatter().format(block))));
+                            singletonList(new J.Continue(randomId(), null, formatter().format(block))));
                 }
         );
     }
 
     @Override
-    public List<AstTransform> visitBlock(Tr.Block<Tree> block) {
+    public List<AstTransform> visitBlock(J.Block<Tree> block) {
         Cursor containing = getCursor().getParentOrThrow();
         return maybeTransform(block,
                 containing.getParent() != null &&
-                        containing.getParent().getTree() instanceof Tr.ClassDecl &&
+                        containing.getParent().getTree() instanceof J.ClassDecl &&
                         isEmptyBlock(block) &&
                         ((tokens.contains(STATIC_INIT) && block.getStatic() != null) ||
                                 (tokens.contains(INSTANCE_INIT) && block.getStatic() == null)),
                 super::visitBlock,
-                b -> (Tr.Block<?>) containing.getTree(),
+                b -> (J.Block<?>) containing.getTree(),
                 body -> body.withStatements(body.getStatements().stream()
                         .filter(s -> s != block)
                         .collect(toList()))
@@ -97,7 +97,7 @@ public class EmptyBlock extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitCatch(Tr.Try.Catch catzh) {
+    public List<AstTransform> visitCatch(J.Try.Catch catzh) {
         return maybeTransform(catzh,
                 tokens.contains(LITERAL_CATCH) && isEmptyBlock(catzh.getBody()),
                 super::visitCatch,
@@ -119,11 +119,11 @@ public class EmptyBlock extends RefactorVisitor {
 
                     return c.withBody(
                             c.getBody().withStatements(
-                                    singletonList(new Tr.Throw(randomId(),
-                                            new Tr.NewClass(randomId(),
-                                                    Tr.Ident.build(randomId(), throwName, throwClass, format(" ")),
-                                                    new Tr.NewClass.Arguments(randomId(),
-                                                            singletonList(Tr.Ident.build(randomId(), c.getParam().getTree().getVars().iterator().next().getSimpleName(),
+                                    singletonList(new J.Throw(randomId(),
+                                            new J.NewClass(randomId(),
+                                                    J.Ident.build(randomId(), throwName, throwClass, format(" ")),
+                                                    new J.NewClass.Arguments(randomId(),
+                                                            singletonList(J.Ident.build(randomId(), c.getParam().getTree().getVars().iterator().next().getSimpleName(),
                                                                     exceptionType == null ? null : exceptionType.getType(), EMPTY)),
                                                             EMPTY),
                                                     null,
@@ -138,7 +138,7 @@ public class EmptyBlock extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitTry(Tr.Try tryable) {
+    public List<AstTransform> visitTry(J.Try tryable) {
         List<AstTransform> changes = super.visitTry(tryable);
 
         if (tokens.contains(LITERAL_TRY) && isEmptyBlock(tryable.getBody())) {
@@ -152,7 +152,7 @@ public class EmptyBlock extends RefactorVisitor {
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<AstTransform> visitIf(Tr.If iff) {
+    public List<AstTransform> visitIf(J.If iff) {
         List<AstTransform> changes = super.visitIf(iff);
 
         if (!tokens.contains(LITERAL_IF) || !isEmptyBlock(iff.getThenPart())) {
@@ -162,9 +162,9 @@ public class EmptyBlock extends RefactorVisitor {
         if (iff.getElsePart() == null) {
             // extract side effects from condition (if there are any).
             changes.addAll(transform(getCursor().getParentOrThrow().getTree(), enclosing -> {
-                        if (enclosing instanceof Tr.Block) {
-                            Tr.Block<Tree> enclosingBlock = (Tr.Block<Tree>) enclosing;
-                            Tr.If iff2 = (Tr.If) new RetrieveTreeVisitor(iff.getId()).visit(enclosing);
+                        if (enclosing instanceof J.Block) {
+                            J.Block<Tree> enclosingBlock = (J.Block<Tree>) enclosing;
+                            J.If iff2 = (J.If) new RetrieveTreeVisitor(iff.getId()).visit(enclosing);
 
                             List<Tree> statements = new ArrayList<>(enclosingBlock.getStatements().size());
                             for (Tree statement : enclosingBlock.getStatements()) {
@@ -189,23 +189,23 @@ public class EmptyBlock extends RefactorVisitor {
 
         // invert top-level if
         changes.addAll(transform(iff.getIfCondition(), cond -> {
-            if (cond.getTree() instanceof Tr.Binary) {
-                Tr.Binary binary = (Tr.Binary) cond.getTree();
+            if (cond.getTree() instanceof J.Binary) {
+                J.Binary binary = (J.Binary) cond.getTree();
 
                 // only boolean operators are valid for if conditions
-                Tr.Binary.Operator op = binary.getOperator();
-                if (op instanceof Tr.Binary.Operator.Equal) {
-                    return cond.withTree(binary.withOperator(new Tr.Binary.Operator.NotEqual(op.getId(), op.getFormatting())));
-                } else if (op instanceof Tr.Binary.Operator.NotEqual) {
-                    return cond.withTree(binary.withOperator(new Tr.Binary.Operator.Equal(op.getId(), op.getFormatting())));
-                } else if (op instanceof Tr.Binary.Operator.LessThan) {
-                    return cond.withTree(binary.withOperator(new Tr.Binary.Operator.GreaterThanOrEqual(op.getId(), op.getFormatting())));
-                } else if (op instanceof Tr.Binary.Operator.LessThanOrEqual) {
-                    return cond.withTree(binary.withOperator(new Tr.Binary.Operator.GreaterThan(op.getId(), op.getFormatting())));
-                } else if (op instanceof Tr.Binary.Operator.GreaterThan) {
-                    return cond.withTree(binary.withOperator(new Tr.Binary.Operator.LessThanOrEqual(op.getId(), op.getFormatting())));
-                } else if (op instanceof Tr.Binary.Operator.GreaterThanOrEqual) {
-                    return cond.withTree(binary.withOperator(new Tr.Binary.Operator.LessThan(op.getId(), op.getFormatting())));
+                J.Binary.Operator op = binary.getOperator();
+                if (op instanceof J.Binary.Operator.Equal) {
+                    return cond.withTree(binary.withOperator(new J.Binary.Operator.NotEqual(op.getId(), op.getFormatting())));
+                } else if (op instanceof J.Binary.Operator.NotEqual) {
+                    return cond.withTree(binary.withOperator(new J.Binary.Operator.Equal(op.getId(), op.getFormatting())));
+                } else if (op instanceof J.Binary.Operator.LessThan) {
+                    return cond.withTree(binary.withOperator(new J.Binary.Operator.GreaterThanOrEqual(op.getId(), op.getFormatting())));
+                } else if (op instanceof J.Binary.Operator.LessThanOrEqual) {
+                    return cond.withTree(binary.withOperator(new J.Binary.Operator.GreaterThan(op.getId(), op.getFormatting())));
+                } else if (op instanceof J.Binary.Operator.GreaterThan) {
+                    return cond.withTree(binary.withOperator(new J.Binary.Operator.LessThanOrEqual(op.getId(), op.getFormatting())));
+                } else if (op instanceof J.Binary.Operator.GreaterThanOrEqual) {
+                    return cond.withTree(binary.withOperator(new J.Binary.Operator.LessThan(op.getId(), op.getFormatting())));
                 }
             }
             return cond;
@@ -213,19 +213,19 @@ public class EmptyBlock extends RefactorVisitor {
 
         changes.addAll(transform(iff, (i, cursor) -> {
             if (i.getElsePart() == null) {
-                return i.withThenPart(new Tr.Empty(randomId(), EMPTY)).withElsePart(null);
+                return i.withThenPart(new J.Empty(randomId(), EMPTY)).withElsePart(null);
             }
 
-            Tr.Block<Tree> thenPart = (Tr.Block<Tree>) i.getThenPart();
+            J.Block<Tree> thenPart = (J.Block<Tree>) i.getThenPart();
 
             var containing = cursor.getParentOrThrow().getTree();
             Statement elseStatement = i.getElsePart().getStatement();
             List<Tree> elseStatementBody;
-            if (elseStatement instanceof Tr.Block) {
+            if (elseStatement instanceof J.Block) {
                 // any else statements should already be at the correct indentation level
-                elseStatementBody = ((Tr.Block<Tree>) elseStatement).getStatements();
-            } else if (elseStatement instanceof Tr.If) {
-                // Tr.If will typically just have a format of one space (the space between "else" and "if" in "else if")
+                elseStatementBody = ((J.Block<Tree>) elseStatement).getStatements();
+            } else if (elseStatement instanceof J.If) {
+                // J.If will typically just have a format of one space (the space between "else" and "if" in "else if")
                 // we want this to be on its own line now inside its containing if block
                 String prefix = "\n" + range(0, thenPart.getIndent()).mapToObj(n -> " ").collect(joining(""));
                 elseStatementBody = singletonList(elseStatement.withPrefix(prefix));
@@ -237,7 +237,7 @@ public class EmptyBlock extends RefactorVisitor {
 
             return i
                     .withThenPart(
-                            // NOTE: then part MUST be a Tr.Block, because otherwise impossible to have an empty if condition followed by else-if/else chain
+                            // NOTE: then part MUST be a J.Block, because otherwise impossible to have an empty if condition followed by else-if/else chain
                             thenPart.withStatements(elseStatementBody))
                     .withElsePart(null);
         }));
@@ -246,7 +246,7 @@ public class EmptyBlock extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitSynchronized(Tr.Synchronized synch) {
+    public List<AstTransform> visitSynchronized(J.Synchronized synch) {
         if (tokens.contains(LITERAL_SYNCHRONIZED) && isEmptyBlock(synch.getBody())) {
             deleteStatement(synch);
         }
@@ -255,7 +255,7 @@ public class EmptyBlock extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitSwitch(Tr.Switch switzh) {
+    public List<AstTransform> visitSwitch(J.Switch switzh) {
         if (tokens.contains(LITERAL_SWITCH) && isEmptyBlock(switzh.getCases())) {
             deleteStatement(switzh);
         }
@@ -265,7 +265,7 @@ public class EmptyBlock extends RefactorVisitor {
 
     private boolean isEmptyBlock(Statement blockNode) {
         return block.equals(BlockPolicy.Statement) &&
-                blockNode instanceof Tr.Block &&
-                ((Tr.Block<?>) blockNode).getStatements().isEmpty();
+                blockNode instanceof J.Block &&
+                ((J.Block<?>) blockNode).getStatements().isEmpty();
     }
 }

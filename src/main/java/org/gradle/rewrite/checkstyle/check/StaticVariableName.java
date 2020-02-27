@@ -1,11 +1,11 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.Tr;
-import com.netflix.rewrite.tree.Type;
-import com.netflix.rewrite.tree.TypeUtils;
-import com.netflix.rewrite.visitor.refactor.AstTransform;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
 import lombok.Builder;
+import org.openrewrite.tree.J;
+import org.openrewrite.tree.Type;
+import org.openrewrite.tree.TypeUtils;
+import org.openrewrite.visitor.refactor.AstTransform;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
 
 import java.util.List;
 import java.util.function.Function;
@@ -39,8 +39,8 @@ public class StaticVariableName extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitVariable(Tr.VariableDecls.NamedVar variable) {
-        Tr.VariableDecls multiVariable = getCursor().getParentOrThrow().getTree();
+    public List<AstTransform> visitVariable(J.VariableDecls.NamedVar variable) {
+        J.VariableDecls multiVariable = getCursor().getParentOrThrow().getTree();
         if(multiVariable.hasModifier("static") && (
                 (applyToPublic && multiVariable.hasModifier("public")) ||
                         (applyToProtected && multiVariable.hasModifier("protected")) ||

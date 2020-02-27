@@ -1,17 +1,17 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.Formatting;
-import com.netflix.rewrite.tree.Tr;
-import com.netflix.rewrite.visitor.refactor.AstTransform;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
 import lombok.RequiredArgsConstructor;
 import org.gradle.rewrite.checkstyle.policy.PadPolicy;
+import org.openrewrite.tree.Formatting;
+import org.openrewrite.tree.J;
+import org.openrewrite.visitor.refactor.AstTransform;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
 
 import java.util.List;
 
-import static com.netflix.rewrite.tree.Formatting.EMPTY;
-import static com.netflix.rewrite.tree.Formatting.format;
 import static org.gradle.rewrite.checkstyle.policy.PadPolicy.NOSPACE;
+import static org.openrewrite.tree.Formatting.EMPTY;
+import static org.openrewrite.tree.Formatting.format;
 
 @RequiredArgsConstructor
 public class TypecastParenPad extends RefactorVisitor {
@@ -27,7 +27,7 @@ public class TypecastParenPad extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitTypeCast(Tr.TypeCast typeCast) {
+    public List<AstTransform> visitTypeCast(J.TypeCast typeCast) {
         Formatting formatting = typeCast.getClazz().getTree().getFormatting();
         return maybeTransform(typeCast,
                 (option == NOSPACE) != formatting.equals(EMPTY),

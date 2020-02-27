@@ -11,6 +11,7 @@ group = "org.gradle"
 description = "Refactor checkstyle automatically"
 
 repositories {
+    mavenLocal()
     maven { url = uri("https://oss.jfrog.org/artifactory/oss-snapshot-local") }
     mavenCentral()
 }
@@ -23,7 +24,7 @@ configurations.all {
 }
 
 dependencies {
-    implementation("com.netflix.devinsight.rewrite:rewrite-core:latest.integration")
+    implementation("com.netflix.devinsight.rewrite:rewrite-java:latest.integration")
 
     implementation("com.puppycrawl.tools:checkstyle:latest.release")
 

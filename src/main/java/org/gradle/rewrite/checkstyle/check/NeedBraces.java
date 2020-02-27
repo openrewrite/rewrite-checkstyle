@@ -1,23 +1,23 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.Cursor;
-import com.netflix.rewrite.tree.Statement;
-import com.netflix.rewrite.tree.Tr;
-import com.netflix.rewrite.tree.Tree;
-import com.netflix.rewrite.visitor.refactor.AstTransform;
-import com.netflix.rewrite.visitor.refactor.Formatter;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.Token;
+import org.openrewrite.tree.Cursor;
+import org.openrewrite.tree.J;
+import org.openrewrite.tree.Statement;
+import org.openrewrite.tree.Tree;
+import org.openrewrite.visitor.refactor.AstTransform;
+import org.openrewrite.visitor.refactor.Formatter;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
 
 import java.util.List;
 import java.util.Set;
 
-import static com.netflix.rewrite.tree.Formatting.format;
-import static com.netflix.rewrite.tree.Tr.randomId;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
+import static org.openrewrite.tree.Formatting.format;
+import static org.openrewrite.tree.J.randomId;
 
 @Builder
 public class NeedBraces extends RefactorVisitor {
@@ -38,67 +38,67 @@ public class NeedBraces extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitIf(Tr.If iff) {
+    public List<AstTransform> visitIf(J.If iff) {
         return maybeTransform(iff,
                 tokens.contains(LITERAL_IF) &&
-                        !(iff.getThenPart() instanceof Tr.Block) &&
+                        !(iff.getThenPart() instanceof J.Block) &&
                         isNotAllowableSingleLine(),
                 super::visitIf,
-                Tr.If::getThenPart,
+                J.If::getThenPart,
                 this::addBraces);
     }
 
     @Override
-    public List<AstTransform> visitElse(Tr.If.Else elze) {
+    public List<AstTransform> visitElse(J.If.Else elze) {
         return maybeTransform(elze,
                 tokens.contains(LITERAL_IF) &&
-                        !(elze.getStatement() instanceof Tr.Block) &&
+                        !(elze.getStatement() instanceof J.Block) &&
                         isNotAllowableSingleLine(),
                 super::visitElse,
-                Tr.If.Else::getStatement,
+                J.If.Else::getStatement,
                 this::addBraces);
     }
 
     @Override
-    public List<AstTransform> visitWhileLoop(Tr.WhileLoop whileLoop) {
+    public List<AstTransform> visitWhileLoop(J.WhileLoop whileLoop) {
         Statement body = whileLoop.getBody();
         boolean hasAllowableBodyType = allowEmptyLoopBody ?
-                body instanceof Tr.Empty || body instanceof Tr.Block :
-                body instanceof Tr.Block;
+                body instanceof J.Empty || body instanceof J.Block :
+                body instanceof J.Block;
 
         return maybeTransform(whileLoop,
                 tokens.contains(LITERAL_WHILE) &&
                         !hasAllowableBodyType &&
                         isNotAllowableSingleLine(),
                 super::visitWhileLoop,
-                Tr.WhileLoop::getBody,
+                J.WhileLoop::getBody,
                 this::addBraces);
     }
 
     @Override
-    public List<AstTransform> visitDoWhileLoop(Tr.DoWhileLoop doWhileLoop) {
+    public List<AstTransform> visitDoWhileLoop(J.DoWhileLoop doWhileLoop) {
         return maybeTransform(doWhileLoop,
                 tokens.contains(LITERAL_DO) &&
-                        !(doWhileLoop.getBody() instanceof Tr.Block) &&
+                        !(doWhileLoop.getBody() instanceof J.Block) &&
                         isNotAllowableSingleLine(),
                 super::visitDoWhileLoop,
-                Tr.DoWhileLoop::getBody,
+                J.DoWhileLoop::getBody,
                 this::addBraces);
     }
 
     @Override
-    public List<AstTransform> visitForLoop(Tr.ForLoop forLoop) {
+    public List<AstTransform> visitForLoop(J.ForLoop forLoop) {
         Statement body = forLoop.getBody();
         boolean hasAllowableBodyType = allowEmptyLoopBody ?
-                body instanceof Tr.Empty || body instanceof Tr.Block :
-                body instanceof Tr.Block;
+                body instanceof J.Empty || body instanceof J.Block :
+                body instanceof J.Block;
 
         return maybeTransform(forLoop,
                 tokens.contains(LITERAL_FOR) &&
                         !hasAllowableBodyType &&
                         isNotAllowableSingleLine(),
                 super::visitForLoop,
-                Tr.ForLoop::getBody,
+                J.ForLoop::getBody,
                 this::addBraces);
     }
 
@@ -112,9 +112,9 @@ public class NeedBraces extends RefactorVisitor {
 
         String originalBodySuffix = body.getFormatting().getSuffix();
 
-        return new Tr.Block<>(randomId(),
+        return new J.Block<>(randomId(),
                 null,
-                body instanceof Tr.Empty ?
+                body instanceof J.Empty ?
                         emptyList() :
                         singletonList(body.withFormatting(format(format.getPrefix(1)))),
                 format(" ", originalBodySuffix),

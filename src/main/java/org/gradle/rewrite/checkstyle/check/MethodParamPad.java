@@ -1,12 +1,12 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.Tr.EnumValue;
-import com.netflix.rewrite.tree.Tr.MethodDecl;
-import com.netflix.rewrite.tree.Tr.MethodInvocation;
-import com.netflix.rewrite.tree.Tr.NewClass;
-import com.netflix.rewrite.tree.Tree;
-import com.netflix.rewrite.visitor.refactor.AstTransform;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.tree.J.EnumValue;
+import org.openrewrite.tree.J.MethodDecl;
+import org.openrewrite.tree.J.MethodInvocation;
+import org.openrewrite.tree.J.NewClass;
+import org.openrewrite.tree.Tree;
+import org.openrewrite.visitor.refactor.AstTransform;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.PadPolicy;
 import org.gradle.rewrite.checkstyle.policy.Token;

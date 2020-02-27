@@ -1,16 +1,16 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.Tr;
-import com.netflix.rewrite.tree.Tree;
-import com.netflix.rewrite.visitor.refactor.AstTransform;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
-import com.netflix.rewrite.visitor.search.FindReferencesToVariable;
+import org.openrewrite.tree.J;
+import org.openrewrite.tree.Tree;
+import org.openrewrite.visitor.refactor.AstTransform;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.visitor.search.FindReferencesToVariable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.netflix.rewrite.tree.Formatting.*;
-import static com.netflix.rewrite.tree.Tr.randomId;
+import static org.openrewrite.tree.Formatting.*;
+import static org.openrewrite.tree.J.randomId;
 
 public class FinalLocalVariable extends RefactorVisitor {
     @Override
@@ -19,10 +19,10 @@ public class FinalLocalVariable extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitMultiVariable(Tr.VariableDecls multiVariable) {
+    public List<AstTransform> visitMultiVariable(J.VariableDecls multiVariable) {
         Tree variableScope = getCursor().getParentOrThrow().getTree();
 
-        if (variableScope instanceof Tr.ClassDecl) {
+        if (variableScope instanceof J.ClassDecl) {
             // we don't care about fields here
             super.visitMultiVariable(multiVariable);
         }
@@ -33,8 +33,8 @@ public class FinalLocalVariable extends RefactorVisitor {
                                 (variable.getInitializer() == null ? -1 : 0) <= 0),
                 super::visitMultiVariable,
                 mv -> {
-                    List<Tr.Modifier> modifiers = new ArrayList<>();
-                    modifiers.add(new Tr.Modifier.Final(randomId(), mv.getTypeExpr() == null ? EMPTY :
+                    List<J.Modifier> modifiers = new ArrayList<>();
+                    modifiers.add(new J.Modifier.Final(randomId(), mv.getTypeExpr() == null ? EMPTY :
                             format(mv.getTypeExpr().getFormatting().getPrefix())));
                     modifiers.addAll(formatFirstPrefix(mv.getModifiers(), " "));
 

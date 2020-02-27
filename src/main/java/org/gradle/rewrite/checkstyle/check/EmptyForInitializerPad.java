@@ -1,11 +1,11 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.Statement;
-import com.netflix.rewrite.tree.Tr;
-import com.netflix.rewrite.visitor.refactor.AstTransform;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
 import lombok.RequiredArgsConstructor;
 import org.gradle.rewrite.checkstyle.policy.PadPolicy;
+import org.openrewrite.tree.J;
+import org.openrewrite.tree.Statement;
+import org.openrewrite.visitor.refactor.AstTransform;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
 
 import java.util.List;
 
@@ -23,12 +23,12 @@ public class EmptyForInitializerPad extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitForLoop(Tr.ForLoop forLoop) {
+    public List<AstTransform> visitForLoop(J.ForLoop forLoop) {
         String prefix = forLoop.getControl().getInit().getFormatting().getPrefix();
         return maybeTransform(forLoop,
                 !prefix.startsWith("\n") &&
                         (option == PadPolicy.NOSPACE ? prefix.startsWith(" ") || prefix.startsWith("\t") : prefix.isEmpty()) &&
-                        forLoop.getControl().getInit() instanceof Tr.Empty,
+                        forLoop.getControl().getInit() instanceof J.Empty,
                 super::visitForLoop,
                 f -> {
                     Statement init = f.getControl().getInit();

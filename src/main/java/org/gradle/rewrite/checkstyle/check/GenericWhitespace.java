@@ -1,14 +1,14 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.Formatting;
-import com.netflix.rewrite.tree.Tr;
-import com.netflix.rewrite.tree.Tree;
-import com.netflix.rewrite.visitor.refactor.AstTransform;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.tree.Formatting;
+import org.openrewrite.tree.J;
+import org.openrewrite.tree.Tree;
+import org.openrewrite.visitor.refactor.AstTransform;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
 
 import java.util.List;
 
-import static com.netflix.rewrite.tree.Formatting.EMPTY;
+import static org.openrewrite.tree.Formatting.EMPTY;
 
 public class GenericWhitespace extends RefactorVisitor {
     @Override
@@ -17,18 +17,18 @@ public class GenericWhitespace extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitTypeParameters(Tr.TypeParameters typeParams) {
+    public List<AstTransform> visitTypeParameters(J.TypeParameters typeParams) {
         Tree tree = getCursor().getParentOrThrow().getTree();
         return maybeTransform(typeParams,
-                !(tree instanceof Tr.MethodDecl) && !typeParams.getFormatting().getPrefix().isEmpty(),
+                !(tree instanceof J.MethodDecl) && !typeParams.getFormatting().getPrefix().isEmpty(),
                 super::visitTypeParameters,
                 tp -> tp.withFormatting(EMPTY)
         );
     }
 
     @Override
-    public List<AstTransform> visitTypeParameter(Tr.TypeParameter typeParam) {
-        List<Tr.TypeParameter> params = ((Tr.TypeParameters) getCursor().getParentOrThrow().getTree()).getParams();
+    public List<AstTransform> visitTypeParameter(J.TypeParameter typeParam) {
+        List<J.TypeParameter> params = ((J.TypeParameters) getCursor().getParentOrThrow().getTree()).getParams();
 
         if (params.isEmpty()) {
             return super.visitTypeParameter(typeParam);

@@ -1,13 +1,13 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import com.netflix.rewrite.tree.Cursor;
-import com.netflix.rewrite.tree.Tr;
-import com.netflix.rewrite.tree.Tree;
-import com.netflix.rewrite.visitor.refactor.AstTransform;
-import com.netflix.rewrite.visitor.refactor.RefactorVisitor;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.RightCurlyPolicy;
 import org.gradle.rewrite.checkstyle.policy.Token;
+import org.openrewrite.tree.Cursor;
+import org.openrewrite.tree.J;
+import org.openrewrite.tree.Tree;
+import org.openrewrite.visitor.refactor.AstTransform;
+import org.openrewrite.visitor.refactor.RefactorVisitor;
 
 import java.util.List;
 import java.util.Set;
@@ -31,11 +31,11 @@ public class RightCurly extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitBlock(Tr.Block<Tree> block) {
+    public List<AstTransform> visitBlock(J.Block<Tree> block) {
         Cursor parentCursor = getCursor().getParentOrThrow();
         boolean tokenMatches = tokens.stream().anyMatch(t -> t.getMatcher().matches(getCursor())) ||
                 (option != ALONE_OR_SINGLELINE && tokens.stream().anyMatch(t -> t.getMatcher().matches(parentCursor))) ||
-                parentCursor.getTree() instanceof Tr.Block;
+                parentCursor.getTree() instanceof J.Block;
 
         boolean satisfiesPolicy = block.getEndOfBlockSuffix().contains("\n") ||
                 (option != ALONE && !new SpansMultipleLines(null).visit(block));
@@ -47,7 +47,7 @@ public class RightCurly extends RefactorVisitor {
                     String suffix = formatter().findIndent(cursor.getParentOrThrow().enclosingBlock().getIndent(),
                                     cursor.getParentOrThrow().getTree()).getPrefix();
 
-                    Tr.Block<Tree> transformed = b.withEndOfBlockSuffix(suffix);
+                    J.Block<Tree> transformed = b.withEndOfBlockSuffix(suffix);
 
                     if(transformed.getStatements().size() == 1) {
                         transformed.getStatements().set(0, transformed.getStatements().get(0)
@@ -60,7 +60,7 @@ public class RightCurly extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitElse(Tr.If.Else elze) {
+    public List<AstTransform> visitElse(J.If.Else elze) {
         return maybeTransform(elze,
                 tokens.contains(LITERAL_ELSE) && !multiBlockSatisfiesPolicy(elze),
                 super::visitElse,
@@ -68,7 +68,7 @@ public class RightCurly extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitFinally(Tr.Try.Finally finallie) {
+    public List<AstTransform> visitFinally(J.Try.Finally finallie) {
         return maybeTransform(finallie,
                 tokens.contains(LITERAL_FINALLY) && !multiBlockSatisfiesPolicy(finallie),
                 super::visitFinally,
@@ -76,7 +76,7 @@ public class RightCurly extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitCatch(Tr.Try.Catch catzh) {
+    public List<AstTransform> visitCatch(J.Try.Catch catzh) {
         return maybeTransform(catzh,
                 tokens.contains(LITERAL_CATCH) && !multiBlockSatisfiesPolicy(catzh),
                 super::visitCatch,
