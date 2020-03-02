@@ -8,6 +8,7 @@ import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.TypeTree;
 import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -95,21 +96,33 @@ public class OperatorWrap extends JavaRefactorVisitor {
     public J visitTypeParameter(J.TypeParameter typeParam) {
         J.TypeParameter t = refactor(typeParam, super::visitTypeParameter);
 
-        if (tokens.contains(TYPE_EXTENSION_AND) && typeParam.getBounds() != null) {
-            List<TypeTree> types = typeParam.getBounds().getTypes();
+        if (tokens.contains(TYPE_EXTENSION_AND) && t.getBounds() != null) {
+            List<TypeTree> types = new ArrayList<>(t.getBounds().getTypes());
+            boolean changed = false;
+
             for (int i = 0; i < types.size() - 1; i++) {
                 TypeTree tp1 = types.get(i);
                 TypeTree tp2 = types.get(i + 1);
 
                 if (option == WrapPolicy.NL) {
                     if (tp2.getFormatting().getPrefix().contains("\n")) {
-                        t = t.withSuffix(tp2.getFormatting().getPrefix());
-                        t = t.withPrefix(" ");
+                        tp1 = tp1.withSuffix(tp2.getFormatting().getPrefix());
+                        tp2 = tp2.withPrefix(" ");
+                        changed = true;
+                        types.set(i, tp1);
+                        types.set(i + 1, tp2);
                     }
                 } else if (tp1.getFormatting().getSuffix().contains("\n")) {
-                    t = t.withSuffix(" ");
-                    t = t.withPrefix(tp1.getFormatting().getSuffix());
+                    tp2 = tp2.withPrefix(tp1.getFormatting().getSuffix());
+                    tp1 = tp1.withSuffix(" ");
+                    changed = true;
+                    types.set(i, tp1);
+                    types.set(i + 1, tp2);
                 }
+            }
+
+            if (changed) {
+                t = t.withBounds(t.getBounds().withTypes(types));
             }
         }
 

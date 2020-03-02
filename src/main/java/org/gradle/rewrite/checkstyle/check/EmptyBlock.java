@@ -11,7 +11,10 @@ import org.openrewrite.java.visitor.refactor.ScopedJavaRefactorVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
@@ -86,18 +89,28 @@ public class EmptyBlock extends JavaRefactorVisitor {
     @Override
     public J visitBlock(J.Block<J> block) {
         J.Block<J> b = refactor(block, super::visitBlock);
-        Cursor containing = getCursor().getParentOrThrow();
-        if (containing.getParent() != null &&
-                containing.getParent().getTree() instanceof J.ClassDecl &&
-                isEmptyBlock(b) &&
-                ((tokens.contains(STATIC_INIT) && b.getStatic() != null) ||
-                        (tokens.contains(INSTANCE_INIT) && b.getStatic() == null))) {
-            b = b.withStatements(b.getStatements().stream()
-                    .filter(s -> s != block)
-                    .collect(toList()));
-        }
 
-        return b;
+        AtomicBoolean filtered = new AtomicBoolean(false);
+        List<J> statements = b.getStatements().stream()
+                .map(s -> {
+                    if(!(s instanceof J.Block)) {
+                        return s;
+                    }
+
+                    J.Block<?> nestedBlock = (J.Block<?>) s;
+                    if (isEmptyBlock(nestedBlock) &&
+                            ((tokens.contains(STATIC_INIT) && nestedBlock.getStatic() != null) ||
+                                    (tokens.contains(INSTANCE_INIT) && nestedBlock.getStatic() == null))) {
+                        filtered.set(true);
+                        return null;
+                    }
+
+                    return nestedBlock;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        return filtered.get() ? b.withStatements(statements) : b;
     }
 
     @Override

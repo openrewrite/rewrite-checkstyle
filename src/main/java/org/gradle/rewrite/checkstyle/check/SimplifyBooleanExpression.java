@@ -1,11 +1,9 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import org.openrewrite.Tree;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
-import org.openrewrite.java.visitor.refactor.UnwrapParentheses;
 
 import static org.openrewrite.Tree.randomId;
 
@@ -105,15 +103,12 @@ public class SimplifyBooleanExpression extends JavaRefactorVisitor {
     }
 
     private Expression binaryRightAndUnwrap(J.Binary binary) {
-        maybeUnwrapParentheses();
+        maybeUnwrapParentheses(getCursor().getParent());
         return binary.getRight().withFormatting(binary.getFormatting());
     }
 
     private void maybeUnwrapParentheses() {
-        Tree tree = getCursor().getParentOrThrow().getTree();
-        if (tree instanceof J.Parentheses) {
-            andThen(new UnwrapParentheses(tree.getId()));
-        }
+        maybeUnwrapParentheses(getCursor().getParent());
     }
 
     private boolean isLiteralTrue(Expression expression) {

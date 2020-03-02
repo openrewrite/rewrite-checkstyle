@@ -37,7 +37,7 @@ public class GenericWhitespace extends JavaRefactorVisitor {
         List<J.TypeParameter> params = ((J.TypeParameters) getCursor().getParentOrThrow().getTree()).getParams();
 
         if (params.isEmpty()) {
-            return super.visitTypeParameter(typeParam);
+            return t;
         } else if (params.size() == 1) {
             if (!typeParam.getFormatting().equals(EMPTY)) {
                 t = t.withFormatting(EMPTY);

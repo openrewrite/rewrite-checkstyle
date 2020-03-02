@@ -2,12 +2,12 @@ package org.gradle.rewrite.checkstyle.check;
 
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.ParenthesesToken;
+import org.openrewrite.Cursor;
 import org.openrewrite.Tree;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
-import org.openrewrite.java.visitor.refactor.UnwrapParentheses;
 
 import java.util.Set;
 
@@ -56,7 +56,7 @@ public class UnnecessaryParentheses extends JavaRefactorVisitor {
     public <T extends J> J visitParentheses(J.Parentheses<T> parens) {
         T insideParens = parens.getTree();
         if (insideParens instanceof J.Ident && tokens.contains(IDENT)) {
-            andThen(new UnwrapParentheses(parens.getId()));
+            maybeUnwrapParentheses(getCursor());
         } else if (insideParens instanceof J.Literal) {
             J.Literal tree = (J.Literal) insideParens;
             JavaType.Primitive type = tree.getType();
@@ -67,14 +67,13 @@ public class UnnecessaryParentheses extends JavaRefactorVisitor {
                     (tokens.contains(STRING_LITERAL) && type == JavaType.Primitive.String) ||
                     (tokens.contains(LITERAL_FALSE) && type == JavaType.Primitive.Boolean && tree.getValue() == Boolean.valueOf(false)) ||
                     (tokens.contains(LITERAL_TRUE) && type == JavaType.Primitive.Boolean && tree.getValue() == Boolean.valueOf(true))) {
-
-                andThen(new UnwrapParentheses(parens.getId()));
+                maybeUnwrapParentheses(getCursor());
             }
         } else if (insideParens instanceof J.Binary && tokens.contains(EXPR)) {
             Tree parent = getCursor().getParentOrThrow().getTree();
             if (!(parent instanceof J.Binary || parent instanceof J.InstanceOf || parent instanceof J.Unary) ||
                     (isSameOperator(parent, insideParens) || getPrecedence(parent) > getPrecedence(insideParens))) {
-                andThen(new UnwrapParentheses(parens.getId()));
+                maybeUnwrapParentheses(getCursor());
             }
         }
 
@@ -161,7 +160,7 @@ public class UnnecessaryParentheses extends JavaRefactorVisitor {
                 (tokens.contains(STAR_ASSIGN) && op instanceof J.AssignOp.Operator.Multiplication) ||
                 (tokens.contains(MOD_ASSIGN) && op instanceof J.AssignOp.Operator.Modulo))) {
 
-            andThen(new UnwrapParentheses(assignment.getId()));
+            maybeUnwrapParentheses(new Cursor(getCursor(), assignment));
         }
 
         return super.visitAssignOp(assignOp);

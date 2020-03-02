@@ -1,7 +1,7 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
+import org.openrewrite.java.JavaParser
 
 open class UnnecessaryParenthesesTest : JavaParser() {
     @Test
@@ -29,7 +29,7 @@ open class UnnecessaryParenthesesTest : JavaParser() {
         """.trimIndent())
 
         val fixed = a.refactor().visit(UnnecessaryParentheses.builder()
-                .build()).fix().fixed
+                .build()).fix(1).fixed
 
         assertRefactored(fixed, """
             import java.util.*;
@@ -61,6 +61,7 @@ open class UnnecessaryParenthesesTest : JavaParser() {
 
         val a = parse("""
             public class A {
+                int a, b, c;
                 {
                     int x = 1;
                     int y = (a + b) * x;
@@ -75,6 +76,7 @@ open class UnnecessaryParenthesesTest : JavaParser() {
 
         assertRefactored(fixed, """
             public class A {
+                int a, b, c;
                 {
                     int x = 1;
                     int y = (a + b) * x;

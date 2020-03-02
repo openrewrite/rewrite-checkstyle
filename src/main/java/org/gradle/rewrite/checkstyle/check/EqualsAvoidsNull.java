@@ -1,5 +1,6 @@
 package org.gradle.rewrite.checkstyle.check;
 
+import org.openrewrite.Cursor;
 import org.openrewrite.Tree;
 import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.tree.Expression;
@@ -81,11 +82,7 @@ public class EqualsAvoidsNull extends JavaRefactorVisitor {
 
         @Override
         public J visitBinary(J.Binary binary) {
-            Tree parent = getCursor().getParentOrThrow().getTree();
-
-            if (parent instanceof J.Parentheses) {
-                andThen(new UnwrapParentheses(parent.getId()));
-            }
+            maybeUnwrapParentheses(getCursor().getParent());
 
             if (isScope()) {
                 return stripPrefix(binary.getRight());

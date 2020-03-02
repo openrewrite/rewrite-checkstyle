@@ -7,7 +7,10 @@ import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.JavaSourceVisitor;
 import org.openrewrite.java.tree.J;
 
+import java.util.Spliterators;
 import java.util.UUID;
+
+import static java.util.stream.StreamSupport.stream;
 
 class SpansMultipleLines extends JavaSourceVisitor<Boolean> implements ScopedVisitorSupport {
     @Getter
@@ -34,20 +37,27 @@ class SpansMultipleLines extends JavaSourceVisitor<Boolean> implements ScopedVis
     @Override
     public Boolean visitTree(Tree tree) {
         if (isScope()) {
-            // don't look at the prefix of the scope that we are testing, we are interested in its contents
-            return super.visitTree(tree);
-        } else if (isScopeInCursorPath()) {
             if (tree instanceof J.Block && ((J.Block<?>) tree).getEndOfBlockSuffix().contains("\n")) {
                 return true;
             }
 
-            if (tree == skip) {
-                return false;
+            // don't look at the prefix of the scope that we are testing, we are interested in its contents
+            return super.visitTree(tree);
+        } else if (isScopeInCursorPath() && !isSkipInCursorPath()) {
+            if (tree instanceof J.Block && ((J.Block<?>) tree).getEndOfBlockSuffix().contains("\n")) {
+                return true;
             }
 
             return tree != null && tree.getFormatting().getPrefix().contains("\n") || super.visitTree(tree);
         } else {
             return false;
         }
+    }
+
+    private boolean isSkipInCursorPath() {
+        Tree t = getCursor().getTree();
+        return skip != null && ((t != null && t.getId().equals(skip.getId())) ||
+                stream(Spliterators.spliteratorUnknownSize(getCursor().getPath(), 0), false)
+                        .anyMatch(p -> p.getId().equals(skip.getId())));
     }
 }
