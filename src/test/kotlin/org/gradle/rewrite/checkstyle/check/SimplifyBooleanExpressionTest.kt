@@ -1,9 +1,9 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
 
-open class SimplifyBooleanExpressionTest : Parser() {
+open class SimplifyBooleanExpressionTest : JavaParser() {
     @Test
     fun simplifyBooleanExpression() {
         val a = parse("""

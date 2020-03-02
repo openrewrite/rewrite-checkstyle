@@ -1,13 +1,14 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
 
-open class FallThroughTest : Parser() {
+open class FallThroughTest : JavaParser() {
     @Test
     fun addBreaksFallthroughCases() {
         val a = parse("""
             public class A {
+                int i;
                 {
                     switch (i) {
                     case 0:
@@ -45,6 +46,7 @@ open class FallThroughTest : Parser() {
 
         assertRefactored(fixed, """
             public class A {
+                int i;
                 {
                     switch (i) {
                     case 0:

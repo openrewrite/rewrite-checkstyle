@@ -1,75 +1,79 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import org.openrewrite.tree.Cursor;
-import org.openrewrite.tree.J;
-import org.openrewrite.tree.Statement;
-import org.openrewrite.tree.Tree;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
-import org.openrewrite.visitor.refactor.ScopedRefactorVisitor;
+import org.openrewrite.Cursor;
+import org.openrewrite.Tree;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.tree.Statement;
+import org.openrewrite.java.visitor.refactor.DeleteStatement;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
+import org.openrewrite.java.visitor.refactor.ScopedJavaRefactorVisitor;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.function.BiFunction;
 
 import static java.util.stream.Collectors.toList;
 
-public class EmptyStatement extends RefactorVisitor {
+public class EmptyStatement extends JavaRefactorVisitor {
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.EmptyStatement";
     }
 
     @Override
-    public List<AstTransform> visitIf(J.If iff) {
-        return maybeTransform(iff,
-                isEmptyStatement(iff.getThenPart()),
-                super::visitIf,
-                removeNextStatement(J.If::withThenPart));
+    public boolean isCursored() {
+        return true;
     }
 
     @Override
-    public List<AstTransform> visitForLoop(J.ForLoop forLoop) {
-        return maybeTransform(forLoop,
-                isEmptyStatement(forLoop.getBody()),
-                super::visitForLoop,
-                removeNextStatement(J.ForLoop::withBody));
+    public J visitIf(J.If iff) {
+        J.If i = refactor(iff, super::visitIf);
+        return i.withThenPart(removeEmptyStatement(i.getThenPart()));
     }
 
     @Override
-    public List<AstTransform> visitForEachLoop(J.ForEachLoop forEachLoop) {
-        return maybeTransform(forEachLoop,
-                isEmptyStatement(forEachLoop.getBody()),
-                super::visitForEachLoop,
-                removeNextStatement(J.ForEachLoop::withBody));
+    public J visitForLoop(J.ForLoop forLoop) {
+        J.ForLoop f = refactor(forLoop, super::visitForLoop);
+        return f.withBody(removeEmptyStatement(f.getBody()));
     }
 
     @Override
-    public List<AstTransform> visitWhileLoop(J.WhileLoop whileLoop) {
-        return maybeTransform(whileLoop,
-                isEmptyStatement(whileLoop.getBody()),
-                super::visitWhileLoop,
-                removeNextStatement(J.WhileLoop::withBody));
+    public J visitForEachLoop(J.ForEachLoop forEachLoop) {
+        J.ForEachLoop f = refactor(forEachLoop, super::visitForEachLoop);
+        return f.withBody(removeEmptyStatement(f.getBody()));
     }
 
-    private <T extends Statement> BiFunction<T, Cursor, T> removeNextStatement(BiFunction<T, Statement, T> withStatement) {
-        return (T t, Cursor cursor) -> nextStatement(t, cursor)
+    @Override
+    public J visitWhileLoop(J.WhileLoop whileLoop) {
+        J.WhileLoop w = refactor(whileLoop, super::visitWhileLoop);
+        return w.withBody(removeEmptyStatement(w.getBody()));
+    }
+
+    private Statement removeEmptyStatement(Statement t) {
+        if (!isEmptyStatement(t)) {
+            return t;
+        }
+
+        return nextStatement()
                 .map(s -> {
-                    andThen(new RemoveStatementFromParentBlock(cursor, s));
-                    return withStatement.apply(t, s);
+                    // Remove the next statement's appearance in the parent block so it can be moved.
+                    andThen(new RemoveStatementFromParentBlock(getCursor(), s));
+
+                    // Move next statement in the parent block to be underneath this statement.
+                    return s;
                 })
                 .orElseGet(() -> {
-                    deleteStatement(t);
+                    // This is the last statement in the block. There is nothing that could
+                    // execute in the body of this statement, so just remove it.
+                    andThen(new DeleteStatement(getCursor().getTree()));
                     return t;
                 });
     }
 
     @SuppressWarnings("unchecked")
-    private Optional<Statement> nextStatement(Statement statement, Cursor cursor) {
-        Tree parent = cursor.getParentOrThrow().getTree();
+    private Optional<Statement> nextStatement() {
+        Tree parent = getCursor().getParentOrThrow().getTree();
         return parent instanceof J.Block ?
                 ((J.Block<Statement>) parent).getStatements().stream()
-                        .dropWhile(s -> s != statement)
+                        .dropWhile(s -> s != getCursor().getTree())
                         .skip(1)
                         .findFirst() :
                 Optional.empty();
@@ -79,7 +83,7 @@ public class EmptyStatement extends RefactorVisitor {
         return statement instanceof J.Empty;
     }
 
-    private static class RemoveStatementFromParentBlock extends ScopedRefactorVisitor {
+    private static class RemoveStatementFromParentBlock extends ScopedJavaRefactorVisitor {
         private final Statement statement;
 
         public RemoveStatementFromParentBlock(Cursor cursor, Statement statement) {
@@ -88,13 +92,14 @@ public class EmptyStatement extends RefactorVisitor {
         }
 
         @Override
-        public List<AstTransform> visitBlock(J.Block<Tree> block) {
-            return maybeTransform(block,
-                    block.getId().equals(scope),
-                    super::visitBlock,
-                    b -> b.withStatements(b.getStatements().stream()
-                            .filter(s -> s != statement)
-                            .collect(toList())));
+        public J visitBlock(J.Block<J> block) {
+            J.Block<J> b = refactor(block, super::visitBlock);
+            if (isScope()) {
+                b = b.withStatements(b.getStatements().stream()
+                        .filter(s -> s != statement)
+                        .collect(toList()));
+            }
+            return b;
         }
     }
 }

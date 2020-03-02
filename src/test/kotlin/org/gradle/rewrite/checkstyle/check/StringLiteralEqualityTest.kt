@@ -1,9 +1,9 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
 
-open class StringLiteralEqualityTest : Parser() {
+open class StringLiteralEqualityTest : JavaParser() {
     @Test
     fun stringLiteralEqualityReplacedWithEquals() {
         val a = parse("""

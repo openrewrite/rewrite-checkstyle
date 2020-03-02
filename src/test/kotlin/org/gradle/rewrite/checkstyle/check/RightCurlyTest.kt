@@ -1,11 +1,11 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.gradle.rewrite.checkstyle.policy.RightCurlyPolicy
 import org.gradle.rewrite.checkstyle.policy.Token.*
 import org.junit.jupiter.api.Test
 
-open class RightCurlyTest : Parser() {
+open class RightCurlyTest : JavaParser() {
     @Test
     fun alone() {
         val a = parse("""

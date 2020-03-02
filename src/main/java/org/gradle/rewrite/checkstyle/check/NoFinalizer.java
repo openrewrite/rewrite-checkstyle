@@ -1,32 +1,31 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import org.openrewrite.tree.J;
-import org.openrewrite.tree.Type;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
-
-import java.util.List;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.tree.JavaType;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
 import static java.util.stream.Collectors.toList;
 
-public class NoFinalizer extends RefactorVisitor {
+public class NoFinalizer extends JavaRefactorVisitor {
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.NoFinalizer";
     }
 
     @Override
-    public List<AstTransform> visitMethod(J.MethodDecl method) {
-        return maybeTransform(method,
-                method.getSimpleName().equals("finalize") &&
+    public J visitClassDecl(J.ClassDecl classDecl) {
+        J.ClassDecl c = refactor(classDecl, super::visitClassDecl);
+
+        return classDecl.getMethods().stream()
+                .filter(method -> method.getSimpleName().equals("finalize") &&
                         method.getReturnTypeExpr() != null &&
-                        Type.Primitive.Void.equals(method.getReturnTypeExpr().getType()) &&
-                        method.getParams().getParams().stream().allMatch(p -> p instanceof J.Empty),
-                super::visitMethod,
-                m -> (J.Block<?>) getCursor().getParentOrThrow().getTree(),
-                block -> block.withStatements(block.getStatements().stream()
-                    .filter(s -> !s.getId().equals(method.getId()))
-                    .collect(toList()))
-        );
+                        JavaType.Primitive.Void.equals(method.getReturnTypeExpr().getType()) &&
+                        method.getParams().getParams().stream().allMatch(p -> p instanceof J.Empty))
+                .findAny()
+                .map(m -> c.withBody(c.getBody().withStatements(c.getBody().getStatements().stream()
+                        .filter(s -> !s.getId().equals(m.getId()))
+                        .collect(toList())))
+                )
+                .orElse(c);
     }
 }

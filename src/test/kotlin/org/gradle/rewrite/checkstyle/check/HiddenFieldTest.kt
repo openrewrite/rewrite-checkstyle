@@ -1,10 +1,10 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
 import java.util.regex.Pattern
 
-open class HiddenFieldTest : Parser() {
+open class HiddenFieldTest : JavaParser() {
     @Test
     fun renameHiddenFields() {
         val b = """

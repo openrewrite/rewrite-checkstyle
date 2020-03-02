@@ -3,20 +3,19 @@ package org.gradle.rewrite.checkstyle.check;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.OperatorToken;
 import org.gradle.rewrite.checkstyle.policy.WrapPolicy;
-import org.openrewrite.tree.J;
-import org.openrewrite.tree.Tree;
-import org.openrewrite.tree.TypeTree;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.Tree;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.tree.TypeTree;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
 import java.util.List;
 import java.util.Set;
 
 import static org.gradle.rewrite.checkstyle.policy.OperatorToken.*;
-import static org.openrewrite.tree.Formatting.*;
+import static org.openrewrite.Formatting.*;
 
 @Builder
-public class OperatorWrap extends RefactorVisitor {
+public class OperatorWrap extends JavaRefactorVisitor {
     @Builder.Default
     private final WrapPolicy option = WrapPolicy.NL;
 
@@ -48,13 +47,13 @@ public class OperatorWrap extends RefactorVisitor {
     );
 
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "OperatorWrap{policy=" + option + "}";
     }
 
     @Override
-    public List<AstTransform> visitBinary(J.Binary binary) {
-        List<AstTransform> changes = super.visitBinary(binary);
+    public J visitBinary(J.Binary binary) {
+        J.Binary b = refactor(binary, super::visitBinary);
         J.Binary.Operator op = binary.getOperator();
 
         if ((tokens.contains(DIV) && op instanceof J.Binary.Operator.Division) ||
@@ -79,23 +78,22 @@ public class OperatorWrap extends RefactorVisitor {
 
             if (option == WrapPolicy.NL) {
                 if (binary.getRight().getFormatting().getPrefix().contains("\n")) {
-                    changes.addAll(transform(binary, b -> b
-                            .withOperator(b.getOperator().withPrefix(b.getRight().getFormatting().getPrefix()))
-                            .withRight(b.getRight().withPrefix(" "))));
+                    b = b.withOperator(b.getOperator().withPrefix(b.getRight().getFormatting().getPrefix()))
+                            .withRight(b.getRight().withPrefix(" "));
                 }
             } else if (op.getFormatting().getPrefix().contains("\n")) {
-                changes.addAll(transform(binary, b -> b
+                b = b
                         .withOperator(b.getOperator().withPrefix(" "))
-                        .withRight(b.getRight().withPrefix(op.getFormatting().getPrefix()))));
+                        .withRight(b.getRight().withPrefix(op.getFormatting().getPrefix()));
             }
         }
 
-        return changes;
+        return b;
     }
 
     @Override
-    public List<AstTransform> visitTypeParameter(J.TypeParameter typeParam) {
-        List<AstTransform> changes = super.visitTypeParameter(typeParam);
+    public J visitTypeParameter(J.TypeParameter typeParam) {
+        J.TypeParameter t = refactor(typeParam, super::visitTypeParameter);
 
         if (tokens.contains(TYPE_EXTENSION_AND) && typeParam.getBounds() != null) {
             List<TypeTree> types = typeParam.getBounds().getTypes();
@@ -105,79 +103,72 @@ public class OperatorWrap extends RefactorVisitor {
 
                 if (option == WrapPolicy.NL) {
                     if (tp2.getFormatting().getPrefix().contains("\n")) {
-                        changes.addAll(transform(tp1, t -> t.withSuffix(tp2.getFormatting().getPrefix())));
-                        changes.addAll(transform(tp2, t -> t.withPrefix(" ")));
+                        t = t.withSuffix(tp2.getFormatting().getPrefix());
+                        t = t.withPrefix(" ");
                     }
                 } else if (tp1.getFormatting().getSuffix().contains("\n")) {
-                    changes.addAll(transform(tp1, t -> t.withSuffix(" ")));
-                    changes.addAll(transform(tp2, t -> t.withPrefix(tp1.getFormatting().getSuffix())));
+                    t = t.withSuffix(" ");
+                    t = t.withPrefix(tp1.getFormatting().getSuffix());
                 }
             }
         }
 
-        return changes;
+        return t;
     }
 
     @Override
-    public List<AstTransform> visitInstanceOf(J.InstanceOf instanceOf) {
-        List<AstTransform> changes = super.visitInstanceOf(instanceOf);
+    public J visitInstanceOf(J.InstanceOf instanceOf) {
+        J.InstanceOf i = refactor(instanceOf, super::visitInstanceOf);
 
         if (tokens.contains(LITERAL_INSTANCEOF)) {
             if (option == WrapPolicy.NL) {
                 if (instanceOf.getClazz().getFormatting().getPrefix().contains("\n")) {
-                    changes.addAll(transform(instanceOf, i -> i
-                            .withExpr(i.getExpr().withSuffix(i.getClazz().getFormatting().getPrefix()))
-                            .withClazz(i.getClazz().withPrefix(" "))));
+                    i = i.withExpr(i.getExpr().withSuffix(i.getClazz().getFormatting().getPrefix()))
+                            .withClazz(i.getClazz().withPrefix(" "));
                 }
             } else if (instanceOf.getExpr().getFormatting().getSuffix().contains("\n")) {
-                changes.addAll(transform(instanceOf, i -> i
-                        .withExpr(i.getExpr().withSuffix(" "))
-                        .withClazz(i.getClazz().withPrefix(i.getExpr().getFormatting().getSuffix()))));
+                i = i.withExpr(i.getExpr().withSuffix(" "))
+                        .withClazz(i.getClazz().withPrefix(i.getExpr().getFormatting().getSuffix()));
             }
         }
 
-        return changes;
+        return i;
     }
 
     @Override
-    public List<AstTransform> visitTernary(J.Ternary ternary) {
-        List<AstTransform> changes = super.visitTernary(ternary);
+    public J visitTernary(J.Ternary ternary) {
+        J.Ternary t = refactor(ternary, super::visitTernary);
 
         if (tokens.contains(QUESTION)) {
             if (option == WrapPolicy.NL) {
                 if (ternary.getTruePart().getFormatting().getPrefix().contains("\n")) {
-                    changes.addAll(transform(ternary, t -> t
-                            .withCondition(t.getCondition().withSuffix(t.getTruePart().getFormatting().getPrefix()))
-                            .withTruePart(t.getTruePart().withPrefix(" "))));
+                    t = t.withCondition(t.getCondition().withSuffix(t.getTruePart().getFormatting().getPrefix()))
+                            .withTruePart(t.getTruePart().withPrefix(" "));
                 }
             } else if (ternary.getCondition().getFormatting().getSuffix().contains("\n")) {
-                changes.addAll(transform(ternary, t -> t
-                        .withCondition(t.getCondition().withSuffix(" "))
-                        .withTruePart(t.getTruePart().withPrefix(t.getCondition().getFormatting().getSuffix()))));
+                t = t.withCondition(t.getCondition().withSuffix(" "))
+                        .withTruePart(t.getTruePart().withPrefix(t.getCondition().getFormatting().getSuffix()));
             }
         }
 
         if (tokens.contains(COLON)) {
             if (option == WrapPolicy.NL) {
                 if (ternary.getFalsePart().getFormatting().getPrefix().contains("\n")) {
-                    changes.addAll(transform(ternary, t -> t
-                            .withTruePart(t.getTruePart().withSuffix(t.getFalsePart().getFormatting().getPrefix()))
-                            .withFalsePart(t.getFalsePart().withPrefix(" "))));
+                    t = t.withTruePart(t.getTruePart().withSuffix(t.getFalsePart().getFormatting().getPrefix()))
+                            .withFalsePart(t.getFalsePart().withPrefix(" "));
                 }
             } else if (ternary.getTruePart().getFormatting().getSuffix().contains("\n")) {
-                changes.addAll(transform(ternary, t -> t
-                        .withTruePart(t.getTruePart().withSuffix(" "))
-                        .withFalsePart(t.getFalsePart().withPrefix(t.getTruePart().getFormatting().getSuffix()))));
+                t = t.withTruePart(t.getTruePart().withSuffix(" "))
+                        .withFalsePart(t.getFalsePart().withPrefix(t.getTruePart().getFormatting().getSuffix()));
             }
         }
 
-        return changes;
+        return t;
     }
 
     @Override
-    public List<AstTransform> visitAssignOp(J.AssignOp assignOp) {
-        List<AstTransform> changes = super.visitAssignOp(assignOp);
-
+    public J visitAssignOp(J.AssignOp assignOp) {
+        J.AssignOp a = refactor(assignOp, super::visitAssignOp);
         J.AssignOp.Operator op = assignOp.getOperator();
 
         if ((tokens.contains(PLUS_ASSIGN) && op instanceof J.AssignOp.Operator.Addition) ||
@@ -194,85 +185,77 @@ public class OperatorWrap extends RefactorVisitor {
 
             if (option == WrapPolicy.NL) {
                 if (assignOp.getAssignment().getFormatting().getPrefix().contains("\n")) {
-                    changes.addAll(transform(assignOp, a -> a
-                            .withOperator(a.getOperator().withPrefix(a.getAssignment().getFormatting().getPrefix()))
-                            .withAssignment(a.getAssignment().withPrefix(" "))));
+                    a = a.withOperator(a.getOperator().withPrefix(a.getAssignment().getFormatting().getPrefix()))
+                            .withAssignment(a.getAssignment().withPrefix(" "));
                 }
             } else if (op.getFormatting().getPrefix().contains("\n")) {
-                changes.addAll(transform(assignOp, a -> a
-                        .withOperator(a.getOperator().withPrefix(" "))
-                        .withAssignment(a.getAssignment().withPrefix(op.getFormatting().getPrefix()))));
+                a = a.withOperator(a.getOperator().withPrefix(" "))
+                        .withAssignment(a.getAssignment().withPrefix(op.getFormatting().getPrefix()));
             }
         }
 
-        return changes;
+        return a;
     }
 
     @Override
-    public List<AstTransform> visitMemberReference(J.MemberReference memberRef) {
-        List<AstTransform> changes = super.visitMemberReference(memberRef);
+    public J visitMemberReference(J.MemberReference memberRef) {
+        J.MemberReference m = refactor(memberRef, super::visitMemberReference);
 
         if (tokens.contains(METHOD_REF)) {
             if (option == WrapPolicy.NL) {
                 if (memberRef.getReference().getFormatting().getPrefix().contains("\n")) {
-                    changes.addAll(transform(memberRef, mr -> mr
-                            .withContaining(mr.getContaining().withSuffix(mr.getReference().getFormatting().getPrefix()))
-                            .withReference(stripPrefix(mr.getReference()))));
+                    m = m.withContaining(m.getContaining().withSuffix(m.getReference().getFormatting().getPrefix()))
+                            .withReference(stripPrefix(m.getReference()));
                 }
             } else if (memberRef.getContaining().getFormatting().getSuffix().contains("\n")) {
-                changes.addAll(transform(memberRef, mr -> mr
-                        .withContaining(stripSuffix(mr.getContaining()))
-                        .withReference(mr.getReference().withPrefix(mr.getContaining().getFormatting().getSuffix()))));
+                m = m.withContaining(stripSuffix(m.getContaining()))
+                        .withReference(m.getReference().withPrefix(m.getContaining().getFormatting().getSuffix()));
             }
         }
 
-        return changes;
+        return m;
     }
 
     @Override
-    public List<AstTransform> visitAssign(J.Assign assign) {
-        List<AstTransform> changes = super.visitAssign(assign);
+    public J visitAssign(J.Assign assign) {
+        J.Assign a = refactor(assign, super::visitAssign);
 
         if (tokens.contains(ASSIGN)) {
             if (option == WrapPolicy.NL) {
                 if (assign.getAssignment().getFormatting().getPrefix().contains("\n")) {
-                    changes.addAll(transform(assign, a -> a
-                            .withVariable(a.getVariable().withSuffix(a.getAssignment().getFormatting().getPrefix()))
-                            .withAssignment(a.getAssignment().withPrefix(" "))));
+                    a = a.withVariable(a.getVariable().withSuffix(a.getAssignment().getFormatting().getPrefix()))
+                            .withAssignment(a.getAssignment().withPrefix(" "));
                 }
             } else if (assign.getVariable().getFormatting().getSuffix().contains("\n")) {
-                changes.addAll(transform(assign, a -> a
-                        .withVariable(a.getVariable().withSuffix(" "))
-                        .withAssignment(a.getAssignment().withPrefix(a.getVariable().getFormatting().getSuffix()))));
+                a = a.withVariable(a.getVariable().withSuffix(" "))
+                        .withAssignment(a.getAssignment().withPrefix(a.getVariable().getFormatting().getSuffix()));
             }
         }
 
-        return changes;
+        return a;
     }
 
     @SuppressWarnings("ConstantConditions")
     @Override
-    public List<AstTransform> visitVariable(J.VariableDecls.NamedVar variable) {
-        List<AstTransform> changes = super.visitVariable(variable);
+    public J visitVariable(J.VariableDecls.NamedVar variable) {
+        J.VariableDecls.NamedVar v = refactor(variable, super::visitVariable);
 
         if (tokens.contains(ASSIGN) && variable.getInitializer() != null) {
             if (option == WrapPolicy.NL) {
                 if (variable.getInitializer().getFormatting().getPrefix().contains("\n")) {
-                    changes.addAll(transform(variable, v -> v
-                            .withDimensionsAfterName(formatLastSuffix(v.getDimensionsAfterName(), v.getInitializer().getFormatting().getPrefix()))
+                    v = v.withDimensionsAfterName(formatLastSuffix(v.getDimensionsAfterName(), v.getInitializer().getFormatting().getPrefix()))
                             .withName(v.getDimensionsAfterName().isEmpty() ? v.getName().withSuffix(v.getInitializer().getFormatting().getPrefix()) :
                                     v.getName())
-                            .withInitializer(v.getInitializer().withPrefix(" "))));
+                            .withInitializer(v.getInitializer().withPrefix(" "));
                 }
             } else if (lastTreeBeforeInitializer(variable).getFormatting().getSuffix().contains("\n")) {
-                changes.addAll(transform(variable, v -> v
-                        .withDimensionsAfterName(formatLastSuffix(v.getDimensionsAfterName(), " "))
+                v = v.withDimensionsAfterName(formatLastSuffix(v.getDimensionsAfterName(), " "))
                         .withName(v.getDimensionsAfterName().isEmpty() ? v.getName().withSuffix(" ") : v.getName())
-                        .withInitializer(v.getInitializer().withPrefix(lastTreeBeforeInitializer(v).getFormatting().getSuffix()))));
+                        .withInitializer(v.getInitializer().withPrefix(lastTreeBeforeInitializer(v).getFormatting().getSuffix()));
             }
         }
 
-        return changes;
+        return v;
     }
 
     private Tree lastTreeBeforeInitializer(J.VariableDecls.NamedVar var) {

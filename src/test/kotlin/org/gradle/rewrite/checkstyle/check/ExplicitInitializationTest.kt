@@ -1,9 +1,9 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
 
-open class ExplicitInitializationTest : Parser() {
+open class ExplicitInitializationTest : JavaParser() {
     @Test
     fun removeExplicitInitialization() {
         val a = parse("""

@@ -1,11 +1,11 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.gradle.rewrite.checkstyle.policy.OperatorToken
 import org.gradle.rewrite.checkstyle.policy.WrapPolicy
 import org.junit.jupiter.api.Test
 
-open class OperatorWrapTest : Parser() {
+open class OperatorWrapTest : JavaParser() {
     @Test
     fun operatorOnNewline() {
         val a = parse("""

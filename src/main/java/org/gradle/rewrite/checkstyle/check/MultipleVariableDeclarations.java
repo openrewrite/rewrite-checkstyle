@@ -1,35 +1,40 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import org.openrewrite.tree.J;
-import org.openrewrite.tree.Tree;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
-import static org.openrewrite.tree.J.randomId;
+import static org.openrewrite.Tree.randomId;
 
-public class MultipleVariableDeclarations extends RefactorVisitor {
+public class MultipleVariableDeclarations extends JavaRefactorVisitor {
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.MultipleVariableDeclarations";
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public List<AstTransform> visitMultiVariable(J.VariableDecls multiVariable) {
-        return maybeTransform(multiVariable,
-                multiVariable.getVars().size() > 1 && getCursor().getParentOrThrow().getTree() instanceof J.Block,
-                super::visitMultiVariable,
-                mv -> (J.Block<Tree>) getCursor().getParentOrThrow().getTree(),
-                block -> block.withStatements(block.getStatements().stream()
-                        .flatMap(s -> {
-                            if (s == multiVariable) {
+    public boolean isCursored() {
+        return true;
+    }
+
+    @Override
+    public J visitBlock(J.Block<J> block) {
+        J.Block<J> b = refactor(block, super::visitBlock);
+
+        AtomicBoolean splitAtLeastOneVariable = new AtomicBoolean(false);
+
+        List<J> statements = block.getStatements().stream()
+                .flatMap(s -> s.whenType(J.VariableDecls.class)
+                        .map(multiVariable -> {
+                            if (multiVariable.getVars().size() > 1 && getCursor().getTree() instanceof J.Block) {
+                                splitAtLeastOneVariable.set(true);
                                 J.VariableDecls mv = (J.VariableDecls) s;
                                 return Stream.concat(
                                         Stream.of(mv.withVars(singletonList(mv.getVars().get(0)))),
@@ -43,13 +48,16 @@ public class MultipleVariableDeclarations extends RefactorVisitor {
                                                     null,
                                                     emptyList(),
                                                     singletonList(var.withDimensionsAfterName(dimensions)),
-                                                    formatter().format(block));
+                                                    formatter.format(block));
                                         })
                                 );
                             }
                             return Stream.of(s);
                         })
-                        .collect(toList()))
-        );
+                        .orElse(Stream.of(s))
+                )
+                .collect(toList());
+
+        return splitAtLeastOneVariable.get() ? b.withStatements(statements) : b;
     }
 }

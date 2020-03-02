@@ -15,29 +15,9 @@
  */
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.tree.Statement
-import org.openrewrite.tree.Type
-import org.openrewrite.tree.TypeUtils
 import org.assertj.core.api.Assertions.assertThat
-import org.openrewrite.tree.J
-
-/**
- * The first statement of the first method in the first class declaration
- */
-fun J.CompilationUnit.firstMethodStatement(): Statement =
-        classes[0].methods[0].body!!.statements[0]
-
-fun J.CompilationUnit.fields(ns: IntRange = 0..0) =
-        classes[0].fields.subList(ns.first, ns.last + 1)
+import org.openrewrite.java.tree.J
 
 fun assertRefactored(cu: J.CompilationUnit, refactored: String) {
     assertThat(cu.printTrimmed()).isEqualTo(refactored.trimIndent())
 }
-
-fun Type?.hasElementType(clazz: String) = TypeUtils.hasElementType(this, clazz)
-
-fun Type?.asClass(): Type.Class? = TypeUtils.asClass(this)
-
-fun Type?.asArray(): Type.Array? = TypeUtils.asArray(this)
-
-fun Type?.asGeneric(): Type.GenericTypeVariable? = TypeUtils.asGeneric(this)

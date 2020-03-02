@@ -1,17 +1,17 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import org.openrewrite.tree.J.EnumValue;
-import org.openrewrite.tree.J.MethodDecl;
-import org.openrewrite.tree.J.MethodInvocation;
-import org.openrewrite.tree.J.NewClass;
-import org.openrewrite.tree.Tree;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.PadPolicy;
 import org.gradle.rewrite.checkstyle.policy.Token;
+import org.openrewrite.Tree;
+import org.openrewrite.internal.lang.Nullable;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.tree.J.EnumValue;
+import org.openrewrite.java.tree.J.MethodDecl;
+import org.openrewrite.java.tree.J.MethodInvocation;
+import org.openrewrite.java.tree.J.NewClass;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
-import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -20,7 +20,7 @@ import static org.gradle.rewrite.checkstyle.policy.PadPolicy.NOSPACE;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
 
 @Builder
-public class MethodParamPad extends RefactorVisitor {
+public class MethodParamPad extends JavaRefactorVisitor {
     @Builder.Default
     private final boolean allowLineBreaks = false;
 
@@ -33,43 +33,47 @@ public class MethodParamPad extends RefactorVisitor {
     );
 
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.MethodParamPad";
     }
 
     @Override
-    public List<AstTransform> visitMethod(MethodDecl method) {
+    public boolean isCursored() {
+        return true;
+    }
+
+    @Override
+    public J visitMethod(MethodDecl method) {
         return maybeFixFormatting(method, super::visitMethod, MethodDecl::getParams, MethodDecl::withParams, METHOD_DEF);
     }
 
     @Override
-    public List<AstTransform> visitNewClass(NewClass newClass) {
+    public J visitNewClass(NewClass newClass) {
         return maybeFixFormatting(newClass, super::visitNewClass, NewClass::getArgs, NewClass::withArgs, LITERAL_NEW);
     }
 
     @Override
-    public List<AstTransform> visitEnumValue(EnumValue enoom) {
+    public J visitEnumValue(EnumValue enoom) {
         return maybeFixFormatting(enoom, super::visitEnumValue, EnumValue::getInitializer, EnumValue::withInitializer, ENUM_CONSTANT_DEF);
     }
 
     @Override
-    public List<AstTransform> visitMethodInvocation(MethodInvocation method) {
+    public J visitMethodInvocation(MethodInvocation method) {
         return maybeFixFormatting(method, super::visitMethodInvocation, MethodInvocation::getArgs, MethodInvocation::withArgs,
                 METHOD_CALL, SUPER_CTOR_CALL);
     }
 
-    private <T extends Tree, U extends Tree> List<AstTransform> maybeFixFormatting(T t,
-                                                                                   Function<T, List<AstTransform>> callSuper,
-                                                                                   Function<T, U> getter,
-                                                                                   BiFunction<T, U, T> setter,
-                                                                                   Token... tokensToMatch) {
-        return maybeTransform(t,
-                Token.matchesOneOf(tokens, getCursor(), tokensToMatch) &&
-                        hasWrongSpacing(getter.apply(t)) &&
-                        getter.apply(t) != null,
-                callSuper,
-                t2 -> setter.apply(t2, getter.apply(t2).withPrefix(option == NOSPACE ? "" : " "))
-        );
+    private <T extends J, U extends Tree> T maybeFixFormatting(@Nullable T t, Function<T, Tree> callSuper,
+                                                                Function<T, U> getter,
+                                                                BiFunction<T, U, T> setter,
+                                                                Token... tokensToMatch) {
+        t = refactor(t, callSuper);
+
+        if (getter.apply(t) != null && Token.matchesOneOf(tokens, getCursor(), tokensToMatch) && hasWrongSpacing(getter.apply(t))) {
+            t = setter.apply(t, getter.apply(t).withPrefix(option == NOSPACE ? "" : " "));
+        }
+
+        return t;
     }
 
     private boolean hasWrongSpacing(Tree t) {

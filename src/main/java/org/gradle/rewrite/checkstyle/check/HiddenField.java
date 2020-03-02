@@ -1,14 +1,15 @@
 package org.gradle.rewrite.checkstyle.check;
 
+import org.openrewrite.Cursor;
+import org.openrewrite.Tree;
 import org.openrewrite.internal.lang.Nullable;
-import org.openrewrite.tree.*;
-import org.openrewrite.visitor.CursorAstVisitor;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
-import org.openrewrite.visitor.refactor.ScopedRefactorVisitor;
+import org.openrewrite.java.JavaSourceVisitor;
+import org.openrewrite.java.tree.*;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.gradle.rewrite.checkstyle.policy.Token;
+import org.openrewrite.java.visitor.refactor.ScopedJavaRefactorVisitor;
 
 import java.util.List;
 import java.util.Set;
@@ -16,13 +17,13 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.openrewrite.tree.TypeUtils.getVisibleSupertypeMembers;
+import static org.openrewrite.java.tree.TypeUtils.getVisibleSupertypeMembers;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
 
 @Builder
-public class HiddenField extends RefactorVisitor {
+public class HiddenField extends JavaRefactorVisitor {
     private static final Pattern NAME_PATTERN = Pattern.compile("(.+)(\\d+)");
 
     @Builder.Default
@@ -45,16 +46,22 @@ public class HiddenField extends RefactorVisitor {
     Set<Token> tokens = Set.of(VARIABLE_DEF, PARAMETER_DEF, LAMBDA);
 
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.HiddenField";
     }
 
     @Override
-    public List<AstTransform> visitClassDecl(J.ClassDecl classDecl) {
-        List<Type.Var> visibleSupertypeMembers = getVisibleSupertypeMembers(classDecl.getType());
+    public boolean isCursored() {
+        return true;
+    }
+
+    @Override
+    public J visitClassDecl(J.ClassDecl classDecl) {
+        List<JavaType.Var> visibleSupertypeMembers = getVisibleSupertypeMembers(classDecl.getType());
         List<J.VariableDecls.NamedVar> shadows = visibleSupertypeMembers.stream()
                 .filter(member -> ignoreFormat == null || !ignoreFormat.matcher(member.getName()).matches())
-                .flatMap(member -> new FindNameShadows(member.getName(), getCursor().enclosingClass()).visit(classDecl.getBody()).stream())
+                .flatMap(member -> new FindNameShadows(member.getName(), enclosingClass())
+                        .visit(classDecl.getBody()).stream())
                 .collect(toList());
 
         if (!shadows.isEmpty()) {
@@ -65,7 +72,7 @@ public class HiddenField extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitVariable(J.VariableDecls.NamedVar variable) {
+    public J visitVariable(J.VariableDecls.NamedVar variable) {
         Cursor parent = getCursor()
                 .getParentOrThrow() // J.VariableDecls
                 .getParentOrThrow() // J.Block
@@ -73,7 +80,7 @@ public class HiddenField extends RefactorVisitor {
 
         if (parent.getTree() instanceof J.ClassDecl && (ignoreFormat == null || !ignoreFormat.matcher(variable.getSimpleName()).matches())) {
             J.ClassDecl classDecl = parent.getTree();
-            List<J.VariableDecls.NamedVar> shadows = new FindNameShadows(variable, getCursor().enclosingClass()).visit(getCursor().enclosingBlock());
+            List<J.VariableDecls.NamedVar> shadows = new FindNameShadows(variable, enclosingClass()).visit(enclosingBlock());
             if (!shadows.isEmpty()) {
                 shadows.forEach(shadow -> andThen(new RenameShadowedName(shadow.getId(), getVisibleSupertypeMembers(classDecl.getType()))));
             }
@@ -82,7 +89,7 @@ public class HiddenField extends RefactorVisitor {
         return super.visitVariable(variable);
     }
 
-    private class FindNameShadows extends CursorAstVisitor<List<J.VariableDecls.NamedVar>> {
+    private class FindNameShadows extends JavaSourceVisitor<List<J.VariableDecls.NamedVar>> {
         @Nullable
         private final J.VariableDecls.NamedVar thatLookLike;
 
@@ -99,6 +106,11 @@ public class HiddenField extends RefactorVisitor {
             this.enclosingClass = enclosingClass;
             this.thatLookLike = null;
             this.thatLookLikeName = thatLookLikeName;
+        }
+
+        @Override
+        public boolean isCursored() {
+            return true;
         }
 
         @Override
@@ -139,7 +151,7 @@ public class HiddenField extends RefactorVisitor {
                         methodDecl.getReturnTypeExpr() != null &&
                         (setterCanReturnItsClass ?
                                 enclosingClass.getType().equals(methodDecl.getReturnTypeExpr().getType()) :
-                                Type.Primitive.Void.equals(methodDecl.getReturnTypeExpr().getType())) &&
+                                JavaType.Primitive.Void.equals(methodDecl.getReturnTypeExpr().getType())) &&
                         (methodName.length() > 3 && variable.getSimpleName().equalsIgnoreCase(methodName.substring(3)));
             }
 
@@ -163,9 +175,14 @@ public class HiddenField extends RefactorVisitor {
     }
 
     @RequiredArgsConstructor
-    private static class ShadowsName extends CursorAstVisitor<Boolean> {
+    private static class ShadowsName extends JavaSourceVisitor<Boolean> {
         private final Cursor scope;
         private final String name;
+
+        @Override
+        public boolean isCursored() {
+            return true;
+        }
 
         @Override
         public Boolean defaultTo(Tree t) {
@@ -175,33 +192,34 @@ public class HiddenField extends RefactorVisitor {
         @Override
         public Boolean visitVariable(J.VariableDecls.NamedVar variable) {
             return (variable != scope.getTree() &&
-                    getCursor().isInSameNameScope(scope) &&
+                    isInSameNameScope(scope) &&
                     variable.getSimpleName().equals(name)
             ) || super.visitVariable(variable);
         }
     }
 
-    private static class RenameShadowedName extends ScopedRefactorVisitor {
-        private final List<Type.Var> supertypeMembers;
+    private static class RenameShadowedName extends ScopedJavaRefactorVisitor {
+        private final List<JavaType.Var> supertypeMembers;
 
-        public RenameShadowedName(UUID scope, List<Type.Var> supertypeMembers) {
+        public RenameShadowedName(UUID scope, List<JavaType.Var> supertypeMembers) {
             super(scope);
             this.supertypeMembers = supertypeMembers;
         }
 
         @Override
-        public List<AstTransform> visitVariable(J.VariableDecls.NamedVar variable) {
-            return transformIfScoped(variable,
-                    super::visitVariable,
-                    (v, cursor) -> {
-                        String nextName = nextName(v.getSimpleName());
-                        while (matchesSupertypeMember(nextName) ||
-                                new ShadowsName(cursor, nextName).visit(cursor.enclosingCompilationUnit())) {
-                            nextName = nextName(nextName);
-                        }
-                        return v.withName(v.getName().withName(nextName));
-                    }
-            );
+        public J visitVariable(J.VariableDecls.NamedVar variable) {
+            J.VariableDecls.NamedVar v = refactor(variable, super::visitVariable);
+
+            if(isScope()) {
+                String nextName = nextName(v.getSimpleName());
+                while (matchesSupertypeMember(nextName) ||
+                        new ShadowsName(getCursor(), nextName).visit(enclosingCompilationUnit())) {
+                    nextName = nextName(nextName);
+                }
+                v = v.withName(v.getName().withName(nextName));
+            }
+
+            return v;
         }
 
         private boolean matchesSupertypeMember(String nextName) {

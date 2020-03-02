@@ -1,18 +1,14 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import org.openrewrite.tree.J;
-import org.openrewrite.tree.Type;
-import org.openrewrite.tree.TypeUtils;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.tree.JavaType;
+import org.openrewrite.java.tree.TypeUtils;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
-import java.util.List;
-import java.util.function.Function;
+import static org.openrewrite.Formatting.formatLastSuffix;
+import static org.openrewrite.Formatting.stripSuffix;
 
-import static org.openrewrite.tree.Formatting.formatLastSuffix;
-import static org.openrewrite.tree.Formatting.stripSuffix;
-
-public class ExplicitInitialization extends RefactorVisitor {
+public class ExplicitInitialization extends JavaRefactorVisitor {
     private final boolean onlyObjectReferences;
 
     public ExplicitInitialization(boolean onlyObjectReferences) {
@@ -24,37 +20,39 @@ public class ExplicitInitialization extends RefactorVisitor {
     }
 
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.ExplicitInitialization";
     }
 
     @Override
-    public List<AstTransform> visitVariable(J.VariableDecls.NamedVar variable) {
-        List<AstTransform> changes = super.visitVariable(variable);
+    public boolean isCursored() {
+        return true;
+    }
 
-        if(!(getCursor().getParentOrThrow() // J.VariableDecls
+    @Override
+    public J visitVariable(J.VariableDecls.NamedVar variable) {
+        J.VariableDecls.NamedVar v = refactor(variable, super::visitVariable);
+
+        if (!(getCursor().getParentOrThrow() // J.VariableDecls
                 .getParentOrThrow() // maybe J.Block
                 .getParentOrThrow() // maybe J.ClassDecl
                 .getTree() instanceof J.ClassDecl)) {
-            return changes;
+            return v;
         }
 
-        Type.Primitive primitive = TypeUtils.asPrimitive(variable.getType());
-        Type.Array array = TypeUtils.asArray(variable.getType());
+        JavaType.Primitive primitive = TypeUtils.asPrimitive(variable.getType());
+        JavaType.Array array = TypeUtils.asArray(variable.getType());
 
         J.Literal literalInit = variable.getInitializer() instanceof J.Literal ? (J.Literal) variable.getInitializer() : null;
 
         if (literalInit != null) {
-            Function<J.VariableDecls.NamedVar, J.VariableDecls.NamedVar> removeInitializer = v -> v.withInitializer(null)
-                    .withName(stripSuffix(v.getName()));
-
-            if (TypeUtils.asClass(variable.getType()) != null && Type.Primitive.Null.equals(literalInit.getType())) {
-                changes.addAll(transform(variable, removeInitializer));
+            if (TypeUtils.asClass(variable.getType()) != null && JavaType.Primitive.Null.equals(literalInit.getType())) {
+                v = v.withInitializer(null).withName(stripSuffix(v.getName()));
             } else if (primitive != null && !onlyObjectReferences) {
                 switch (primitive) {
                     case Boolean:
                         if (literalInit.getValue() == Boolean.valueOf(false)) {
-                            changes.addAll(transform(variable, removeInitializer));
+                            v = v.withInitializer(null).withName(stripSuffix(v.getName()));
                         }
                         break;
                     case Char:
@@ -62,16 +60,16 @@ public class ExplicitInitialization extends RefactorVisitor {
                     case Long:
                     case Short:
                         if (literalInit.getValue() != null && ((Number) literalInit.getValue()).intValue() == 0) {
-                            changes.addAll(transform(variable, removeInitializer));
+                            v = v.withInitializer(null).withName(stripSuffix(v.getName()));
                         }
                         break;
                 }
-            } else if (array != null && Type.Primitive.Null.equals(literalInit.getType())) {
-                changes.addAll(transform(variable, v -> v.withInitializer(null)
-                        .withDimensionsAfterName(formatLastSuffix(v.getDimensionsAfterName(), ""))));
+            } else if (array != null && JavaType.Primitive.Null.equals(literalInit.getType())) {
+                v = v.withInitializer(null)
+                        .withDimensionsAfterName(formatLastSuffix(v.getDimensionsAfterName(), ""));
             }
         }
 
-        return changes;
+        return v;
     }
 }

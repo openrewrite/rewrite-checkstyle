@@ -1,10 +1,10 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.gradle.rewrite.checkstyle.policy.LeftCurlyPolicy
 import org.junit.jupiter.api.Test
 
-open class LeftCurlyTest : Parser() {
+open class LeftCurlyTest : JavaParser() {
     @Test
     fun eol() {
         val a = parse("""

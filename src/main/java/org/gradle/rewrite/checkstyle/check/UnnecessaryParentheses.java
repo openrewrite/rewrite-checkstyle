@@ -2,21 +2,19 @@ package org.gradle.rewrite.checkstyle.check;
 
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.ParenthesesToken;
-import org.openrewrite.tree.Expression;
-import org.openrewrite.tree.J;
-import org.openrewrite.tree.Tree;
-import org.openrewrite.tree.Type;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
-import org.openrewrite.visitor.refactor.op.UnwrapParentheses;
+import org.openrewrite.Tree;
+import org.openrewrite.java.tree.Expression;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.tree.JavaType;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
+import org.openrewrite.java.visitor.refactor.UnwrapParentheses;
 
-import java.util.List;
 import java.util.Set;
 
 import static org.gradle.rewrite.checkstyle.policy.ParenthesesToken.*;
 
 @Builder
-public class UnnecessaryParentheses extends RefactorVisitor {
+public class UnnecessaryParentheses extends JavaRefactorVisitor {
     @Builder.Default
     private final Set<ParenthesesToken> tokens = Set.of(
             EXPR,
@@ -45,25 +43,30 @@ public class UnnecessaryParentheses extends RefactorVisitor {
     );
 
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.UnnecessaryParentheses";
     }
 
     @Override
-    public <T extends Tree> List<AstTransform> visitParentheses(J.Parentheses<T> parens) {
+    public boolean isCursored() {
+        return true;
+    }
+
+    @Override
+    public <T extends J> J visitParentheses(J.Parentheses<T> parens) {
         T insideParens = parens.getTree();
         if (insideParens instanceof J.Ident && tokens.contains(IDENT)) {
             andThen(new UnwrapParentheses(parens.getId()));
         } else if (insideParens instanceof J.Literal) {
             J.Literal tree = (J.Literal) insideParens;
-            Type.Primitive type = tree.getType();
-            if ((tokens.contains(NUM_INT) && type == Type.Primitive.Int) ||
-                    (tokens.contains(NUM_DOUBLE) && type == Type.Primitive.Double) ||
-                    (tokens.contains(NUM_LONG) && type == Type.Primitive.Long) ||
-                    (tokens.contains(NUM_FLOAT) && type == Type.Primitive.Float) ||
-                    (tokens.contains(STRING_LITERAL) && type == Type.Primitive.String) ||
-                    (tokens.contains(LITERAL_FALSE) && type == Type.Primitive.Boolean && tree.getValue() == Boolean.valueOf(false)) ||
-                    (tokens.contains(LITERAL_TRUE) && type == Type.Primitive.Boolean && tree.getValue() == Boolean.valueOf(true))) {
+            JavaType.Primitive type = tree.getType();
+            if ((tokens.contains(NUM_INT) && type == JavaType.Primitive.Int) ||
+                    (tokens.contains(NUM_DOUBLE) && type == JavaType.Primitive.Double) ||
+                    (tokens.contains(NUM_LONG) && type == JavaType.Primitive.Long) ||
+                    (tokens.contains(NUM_FLOAT) && type == JavaType.Primitive.Float) ||
+                    (tokens.contains(STRING_LITERAL) && type == JavaType.Primitive.String) ||
+                    (tokens.contains(LITERAL_FALSE) && type == JavaType.Primitive.Boolean && tree.getValue() == Boolean.valueOf(false)) ||
+                    (tokens.contains(LITERAL_TRUE) && type == JavaType.Primitive.Boolean && tree.getValue() == Boolean.valueOf(true))) {
 
                 andThen(new UnwrapParentheses(parens.getId()));
             }
@@ -143,7 +146,7 @@ public class UnnecessaryParentheses extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitAssignOp(J.AssignOp assignOp) {
+    public J visitAssignOp(J.AssignOp assignOp) {
         Expression assignment = assignOp.getAssignment();
         J.AssignOp.Operator op = assignOp.getOperator();
         if (assignment instanceof J.Parentheses && ((tokens.contains(BAND_ASSIGN) && op instanceof J.AssignOp.Operator.BitAnd) ||
@@ -165,14 +168,14 @@ public class UnnecessaryParentheses extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitLambda(J.Lambda lambda) {
-        return maybeTransform(lambda,
-                lambda.getParamSet().getParams().size() == 1 &&
-                        lambda.getParamSet().isParenthesized() &&
-                        lambda.getParamSet().getParams().get(0) instanceof J.VariableDecls &&
-                        ((J.VariableDecls) lambda.getParamSet().getParams().get(0)).getTypeExpr() == null,
-                super::visitLambda,
-                l -> l.withParamSet(lambda.getParamSet().withParenthesized(false))
-        );
+    public J visitLambda(J.Lambda lambda) {
+        J.Lambda l = refactor(lambda, super::visitLambda);
+        if(lambda.getParamSet().getParams().size() == 1 &&
+                lambda.getParamSet().isParenthesized() &&
+                lambda.getParamSet().getParams().get(0) instanceof J.VariableDecls &&
+                ((J.VariableDecls) lambda.getParamSet().getParams().get(0)).getTypeExpr() == null) {
+            l = l.withParamSet(lambda.getParamSet().withParenthesized(false));
+        }
+        return l;
     }
 }

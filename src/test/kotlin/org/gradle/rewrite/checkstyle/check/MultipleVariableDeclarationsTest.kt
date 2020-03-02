@@ -1,11 +1,11 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
 
-open class MultipleVariableDeclarationsTest : Parser() {
+open class  MultipleVariableDeclarationsTest : JavaParser() {
     @Test
-    fun replaceWithNonCovariantEquals() {
+    fun replaceWithSingleVariableDeclarations() {
         val a = parse("""
             class Test {
                 int n = 0, m = 0;

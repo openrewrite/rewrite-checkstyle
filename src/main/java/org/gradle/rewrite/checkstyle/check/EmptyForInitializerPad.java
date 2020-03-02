@@ -2,15 +2,12 @@ package org.gradle.rewrite.checkstyle.check;
 
 import lombok.RequiredArgsConstructor;
 import org.gradle.rewrite.checkstyle.policy.PadPolicy;
-import org.openrewrite.tree.J;
-import org.openrewrite.tree.Statement;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
-
-import java.util.List;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.tree.Statement;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
 @RequiredArgsConstructor
-public class EmptyForInitializerPad extends RefactorVisitor {
+public class EmptyForInitializerPad extends JavaRefactorVisitor {
     private final PadPolicy option;
 
     public EmptyForInitializerPad() {
@@ -18,23 +15,23 @@ public class EmptyForInitializerPad extends RefactorVisitor {
     }
 
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.EmptyForInitializerPad";
     }
 
     @Override
-    public List<AstTransform> visitForLoop(J.ForLoop forLoop) {
+    public J visitForLoop(J.ForLoop forLoop) {
+        J.ForLoop f = refactor(forLoop, super::visitForLoop);
         String prefix = forLoop.getControl().getInit().getFormatting().getPrefix();
-        return maybeTransform(forLoop,
-                !prefix.startsWith("\n") &&
-                        (option == PadPolicy.NOSPACE ? prefix.startsWith(" ") || prefix.startsWith("\t") : prefix.isEmpty()) &&
-                        forLoop.getControl().getInit() instanceof J.Empty,
-                super::visitForLoop,
-                f -> {
-                    Statement init = f.getControl().getInit();
-                    String fixedPrefix = option == PadPolicy.NOSPACE ? "" : " ";
-                    return f.withControl(f.getControl().withInit(init.withPrefix(fixedPrefix)));
-                }
-        );
+
+        if (!prefix.startsWith("\n") &&
+                (option == PadPolicy.NOSPACE ? prefix.startsWith(" ") || prefix.startsWith("\t") : prefix.isEmpty()) &&
+                forLoop.getControl().getInit() instanceof J.Empty) {
+            Statement init = f.getControl().getInit();
+            String fixedPrefix = option == PadPolicy.NOSPACE ? "" : " ";
+            f = f.withControl(f.getControl().withInit(init.withPrefix(fixedPrefix)));
+        }
+
+        return f;
     }
 }

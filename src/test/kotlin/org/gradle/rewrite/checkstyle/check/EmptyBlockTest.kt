@@ -1,10 +1,10 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.gradle.rewrite.checkstyle.policy.Token.*
 import org.junit.jupiter.api.Test
 
-open class EmptyBlockTest : Parser() {
+open class EmptyBlockTest : JavaParser() {
     @Test
     fun emptySwitch() {
         val a = parse("""
@@ -329,7 +329,7 @@ open class EmptyBlockTest : Parser() {
 
         val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_IF))
-                .build()).fix().fixed
+                .build()).fix(1).fixed
 
         assertRefactored(fixed, """
             public class A {

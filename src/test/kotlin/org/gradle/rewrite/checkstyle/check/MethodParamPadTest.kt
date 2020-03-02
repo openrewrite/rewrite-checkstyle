@@ -1,10 +1,10 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.gradle.rewrite.checkstyle.policy.PadPolicy
 import org.junit.jupiter.api.Test
 
-open class MethodParamPadTest: Parser() {
+open class MethodParamPadTest: JavaParser() {
     @Test
     fun noSpaceInitializerPadding() {
         val a = parse("""

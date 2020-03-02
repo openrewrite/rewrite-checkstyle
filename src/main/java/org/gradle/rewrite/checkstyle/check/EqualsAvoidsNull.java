@@ -1,23 +1,21 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import org.openrewrite.tree.Expression;
-import org.openrewrite.tree.J;
-import org.openrewrite.tree.Tree;
-import org.openrewrite.tree.Type;
-import org.openrewrite.visitor.MethodMatcher;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
-import org.openrewrite.visitor.refactor.ScopedRefactorVisitor;
-import org.openrewrite.visitor.refactor.op.UnwrapParentheses;
+import org.openrewrite.Tree;
+import org.openrewrite.java.MethodMatcher;
+import org.openrewrite.java.tree.Expression;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.tree.JavaType;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
+import org.openrewrite.java.visitor.refactor.ScopedJavaRefactorVisitor;
+import org.openrewrite.java.visitor.refactor.UnwrapParentheses;
 
-import java.util.List;
 import java.util.UUID;
 
 import static java.util.Collections.singletonList;
-import static org.openrewrite.tree.Formatting.EMPTY;
-import static org.openrewrite.tree.Formatting.stripPrefix;
+import static org.openrewrite.Formatting.EMPTY;
+import static org.openrewrite.Formatting.stripPrefix;
 
-public class EqualsAvoidsNull extends RefactorVisitor {
+public class EqualsAvoidsNull extends JavaRefactorVisitor {
     private static final MethodMatcher STRING_EQUALS = new MethodMatcher("String equals(java.lang.Object)");
     private static final MethodMatcher STRING_EQUALS_IGNORE_CASE = new MethodMatcher("String equalsIgnoreCase(java.lang.String)");
 
@@ -32,65 +30,68 @@ public class EqualsAvoidsNull extends RefactorVisitor {
     }
 
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.EqualsAvoidsNull";
+    }
+
+    @Override
+    public boolean isCursored() {
+        return true;
     }
 
     @SuppressWarnings("ConstantConditions")
     @Override
-    public List<AstTransform> visitMethodInvocation(J.MethodInvocation method) {
-        if ((STRING_EQUALS.matches(method) || (!ignoreEqualsIgnoreCase && STRING_EQUALS_IGNORE_CASE.matches(method))) &&
-                method.getArgs().getArgs().get(0) instanceof J.Literal &&
-                !(method.getSelect() instanceof J.Literal)) {
+    public J visitMethodInvocation(J.MethodInvocation method) {
+        J.MethodInvocation m = refactor(method, super::visitMethodInvocation);
+
+        if ((STRING_EQUALS.matches(m) || (!ignoreEqualsIgnoreCase && STRING_EQUALS_IGNORE_CASE.matches(m))) &&
+                m.getArgs().getArgs().get(0) instanceof J.Literal &&
+                !(m.getSelect() instanceof J.Literal)) {
             Tree parent = getCursor().getParentOrThrow().getTree();
             if (parent instanceof J.Binary) {
                 J.Binary binary = (J.Binary) parent;
                 if (binary.getOperator() instanceof J.Binary.Operator.And && binary.getLeft() instanceof J.Binary) {
                     J.Binary potentialNullCheck = (J.Binary) binary.getLeft();
-                    if ((isNullLiteral(potentialNullCheck.getLeft()) && matchesSelect(potentialNullCheck.getRight(), method.getSelect())) ||
-                            (isNullLiteral(potentialNullCheck.getRight()) && matchesSelect(potentialNullCheck.getLeft(), method.getSelect()))) {
+                    if ((isNullLiteral(potentialNullCheck.getLeft()) && matchesSelect(potentialNullCheck.getRight(), m.getSelect())) ||
+                            (isNullLiteral(potentialNullCheck.getRight()) && matchesSelect(potentialNullCheck.getLeft(), m.getSelect()))) {
                         andThen(new RemoveUnnecessaryNullCheck(binary.getId()));
                     }
                 }
             }
 
-            return maybeTransform(method,
-                    true,
-                    super::visitMethodInvocation,
-                    m -> m.withSelect(m.getArgs().getArgs().get(0).withFormatting(m.getSelect().getFormatting()))
-                            .withArgs(m.getArgs().withArgs(singletonList(m.getSelect().withFormatting(EMPTY))))
-            );
+            m = m.withSelect(m.getArgs().getArgs().get(0).withFormatting(m.getSelect().getFormatting()))
+                    .withArgs(m.getArgs().withArgs(singletonList(m.getSelect().withFormatting(EMPTY))));
         }
 
-        return super.visitMethodInvocation(method);
+        return m;
     }
 
     private boolean isNullLiteral(Expression expression) {
-        return expression instanceof J.Literal && ((J.Literal) expression).getType() == Type.Primitive.Null;
+        return expression instanceof J.Literal && ((J.Literal) expression).getType() == JavaType.Primitive.Null;
     }
 
     private boolean matchesSelect(Expression expression, Expression select) {
         return expression.printTrimmed().replaceAll("\\s", "").equals(select.printTrimmed().replaceAll("\\s", ""));
     }
 
-    private static class RemoveUnnecessaryNullCheck extends ScopedRefactorVisitor {
+    private static class RemoveUnnecessaryNullCheck extends ScopedJavaRefactorVisitor {
         public RemoveUnnecessaryNullCheck(UUID scope) {
             super(scope);
         }
 
         @Override
-        public List<AstTransform> visitBinary(J.Binary binary) {
+        public J visitBinary(J.Binary binary) {
             Tree parent = getCursor().getParentOrThrow().getTree();
+
             if (parent instanceof J.Parentheses) {
                 andThen(new UnwrapParentheses(parent.getId()));
             }
 
-            return maybeTransform(binary,
-                    binary.getId().equals(scope),
-                    super::visitBinary,
-                    b -> (Expression) b,
-                    b -> stripPrefix(((J.Binary) b).getRight())
-            );
+            if (isScope()) {
+                return stripPrefix(binary.getRight());
+            }
+
+            return super.visitBinary(binary);
         }
     }
 }

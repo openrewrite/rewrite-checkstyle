@@ -1,9 +1,9 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
 
-open class EmptyStatementTest: Parser() {
+open class EmptyStatementTest: JavaParser() {
     @Test
     fun removeEmptyStatement() {
         val a = parse("""

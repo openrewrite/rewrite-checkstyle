@@ -1,17 +1,30 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import lombok.RequiredArgsConstructor;
+import lombok.Getter;
+import org.openrewrite.ScopedVisitorSupport;
+import org.openrewrite.Tree;
 import org.openrewrite.internal.lang.Nullable;
-import org.openrewrite.tree.J;
-import org.openrewrite.tree.Tree;
-import org.openrewrite.visitor.AstVisitor;
+import org.openrewrite.java.JavaSourceVisitor;
+import org.openrewrite.java.tree.J;
 
-@RequiredArgsConstructor
-class SpansMultipleLines extends AstVisitor<Boolean> {
-    private boolean visitedScope = false;
+import java.util.UUID;
+
+class SpansMultipleLines extends JavaSourceVisitor<Boolean> implements ScopedVisitorSupport {
+    @Getter
+    private final UUID scope;
 
     @Nullable
-    private final Tree skip;
+    private final J skip;
+
+    SpansMultipleLines(J scope, J skip) {
+        this.scope = scope.getId();
+        this.skip = skip;
+    }
+
+    @Override
+    public boolean isCursored() {
+        return true;
+    }
 
     @Override
     public Boolean defaultTo(Tree t) {
@@ -19,21 +32,22 @@ class SpansMultipleLines extends AstVisitor<Boolean> {
     }
 
     @Override
-    public Boolean visit(Tree tree) {
-        if(!visitedScope) {
-            visitedScope = true;
-
-            if(tree instanceof J.Block && ((J.Block<?>) tree).getEndOfBlockSuffix().contains("\n")) {
+    public Boolean visitTree(Tree tree) {
+        if (isScope()) {
+            // don't look at the prefix of the scope that we are testing, we are interested in its contents
+            return super.visitTree(tree);
+        } else if (isScopeInCursorPath()) {
+            if (tree instanceof J.Block && ((J.Block<?>) tree).getEndOfBlockSuffix().contains("\n")) {
                 return true;
             }
-            // don't look at the prefix of the scope that we are testing, we are interested in its contents
-            return super.visit(tree);
-        }
 
-        if(tree == skip) {
+            if (tree == skip) {
+                return false;
+            }
+
+            return tree != null && tree.getFormatting().getPrefix().contains("\n") || super.visitTree(tree);
+        } else {
             return false;
         }
-
-        return tree != null && tree.getFormatting().getPrefix().contains("\n") || super.visit(tree);
     }
 }

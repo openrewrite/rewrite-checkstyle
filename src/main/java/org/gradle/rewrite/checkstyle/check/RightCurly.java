@@ -3,20 +3,18 @@ package org.gradle.rewrite.checkstyle.check;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.RightCurlyPolicy;
 import org.gradle.rewrite.checkstyle.policy.Token;
-import org.openrewrite.tree.Cursor;
-import org.openrewrite.tree.J;
-import org.openrewrite.tree.Tree;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.Cursor;
+import org.openrewrite.Tree;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
-import java.util.List;
 import java.util.Set;
 
 import static org.gradle.rewrite.checkstyle.policy.RightCurlyPolicy.*;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
 
 @Builder
-public class RightCurly extends RefactorVisitor {
+public class RightCurly extends JavaRefactorVisitor {
     @Builder.Default
     private final RightCurlyPolicy option = ALONE;
 
@@ -26,61 +24,68 @@ public class RightCurly extends RefactorVisitor {
     );
 
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.RightCurly";
     }
 
     @Override
-    public List<AstTransform> visitBlock(J.Block<Tree> block) {
+    public boolean isCursored() {
+        return true;
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    @Override
+    public J visitBlock(J.Block<J> block) {
+        J.Block<J> b = refactor(block, super::visitBlock);
+
         Cursor parentCursor = getCursor().getParentOrThrow();
         boolean tokenMatches = tokens.stream().anyMatch(t -> t.getMatcher().matches(getCursor())) ||
                 (option != ALONE_OR_SINGLELINE && tokens.stream().anyMatch(t -> t.getMatcher().matches(parentCursor))) ||
                 parentCursor.getTree() instanceof J.Block;
 
         boolean satisfiesPolicy = block.getEndOfBlockSuffix().contains("\n") ||
-                (option != ALONE && !new SpansMultipleLines(null).visit(block));
+                (option != ALONE && !new SpansMultipleLines(block,null).visit(block));
 
-        return maybeTransform(block,
-                tokenMatches && !satisfiesPolicy && parentCursor.enclosingBlock() != null,
-                super::visitBlock,
-                (b, cursor) -> {
-                    String suffix = formatter().findIndent(cursor.getParentOrThrow().enclosingBlock().getIndent(),
-                                    cursor.getParentOrThrow().getTree()).getPrefix();
+        if (tokenMatches && !satisfiesPolicy && parentCursor.firstEnclosing(J.Block.class) != null) {
+            String suffix = formatter.findIndent(getCursor().getParentOrThrow()
+                            .firstEnclosing(J.Block.class).getIndent(),
+                    getCursor().getParentOrThrow().getTree()).getPrefix();
 
-                    J.Block<Tree> transformed = b.withEndOfBlockSuffix(suffix);
+            b = b.withEndOfBlockSuffix(suffix);
 
-                    if(transformed.getStatements().size() == 1) {
-                        transformed.getStatements().set(0, transformed.getStatements().get(0)
-                                .withFormatting(formatter().format(transformed)));
-                    }
+            if (b.getStatements().size() == 1) {
+                b.getStatements().set(0, b.getStatements().get(0).withFormatting(formatter.format(b)));
+            }
+        }
 
-                    return transformed;
-                }
-        );
+        return b;
     }
 
     @Override
-    public List<AstTransform> visitElse(J.If.Else elze) {
-        return maybeTransform(elze,
-                tokens.contains(LITERAL_ELSE) && !multiBlockSatisfiesPolicy(elze),
-                super::visitElse,
-                this::formatMultiBlock);
+    public J visitElse(J.If.Else elze) {
+        J.If.Else e = refactor(elze, super::visitElse);
+        if (tokens.contains(LITERAL_ELSE) && !multiBlockSatisfiesPolicy(elze)) {
+            e = formatMultiBlock(e);
+        }
+        return e;
     }
 
     @Override
-    public List<AstTransform> visitFinally(J.Try.Finally finallie) {
-        return maybeTransform(finallie,
-                tokens.contains(LITERAL_FINALLY) && !multiBlockSatisfiesPolicy(finallie),
-                super::visitFinally,
-                this::formatMultiBlock);
+    public J visitFinally(J.Try.Finally finallie) {
+        J.Try.Finally f = refactor(finallie, super::visitFinally);
+        if (tokens.contains(LITERAL_FINALLY) && !multiBlockSatisfiesPolicy(finallie)) {
+            f = formatMultiBlock(f);
+        }
+        return f;
     }
 
     @Override
-    public List<AstTransform> visitCatch(J.Try.Catch catzh) {
-        return maybeTransform(catzh,
-                tokens.contains(LITERAL_CATCH) && !multiBlockSatisfiesPolicy(catzh),
-                super::visitCatch,
-                this::formatMultiBlock);
+    public J visitCatch(J.Try.Catch catzh) {
+        J.Try.Catch c = refactor(catzh, super::visitCatch);
+        if (tokens.contains(LITERAL_CATCH) && !multiBlockSatisfiesPolicy(catzh)) {
+            c = formatMultiBlock(c);
+        }
+        return c;
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -89,9 +94,9 @@ public class RightCurly extends RefactorVisitor {
         return (option == SAME) != isAlone;
     }
 
-    private <T extends Tree> T formatMultiBlock(T tree, Cursor cursor) {
+    private <T extends J> T formatMultiBlock(T tree) {
         return option == SAME ?
                 tree.withPrefix(" ") :
-                tree.withFormatting(formatter().format(cursor.enclosingBlock()));
+                tree.withFormatting(formatter.format(enclosingBlock()));
     }
 }

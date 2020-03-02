@@ -1,19 +1,15 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import org.openrewrite.tree.Cursor;
-import org.openrewrite.tree.Expression;
-import org.openrewrite.tree.J;
-import org.openrewrite.tree.Type;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
-import org.openrewrite.visitor.refactor.op.UnwrapParentheses;
+import org.openrewrite.Tree;
+import org.openrewrite.java.tree.Expression;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.tree.JavaType;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
+import org.openrewrite.java.visitor.refactor.UnwrapParentheses;
 
-import java.util.List;
+import static org.openrewrite.Tree.randomId;
 
-import static org.openrewrite.tree.J.randomId;
-
-@SuppressWarnings("RedundantCast")
-public class SimplifyBooleanExpression extends RefactorVisitor {
+public class SimplifyBooleanExpression extends JavaRefactorVisitor {
     private int pass = 0;
 
     public SimplifyBooleanExpression() {
@@ -24,109 +20,99 @@ public class SimplifyBooleanExpression extends RefactorVisitor {
     }
 
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.SimplifyBooleanExpression";
     }
 
     @Override
-    public List<AstTransform> visitCompilationUnit(J.CompilationUnit cu) {
-        List<AstTransform> changes = super.visitCompilationUnit(cu);
-        if(!changes.isEmpty()) {
-            changes.addAll(transform(cu, c -> {
-                // add this in a transform step so that it happens after all parentheses unwrapping
-                andThen(new SimplifyBooleanExpression(pass+1));
-                return c;
-            }));
-        }
-        return changes;
+    public boolean isCursored() {
+        return true;
     }
 
     @Override
-    public List<AstTransform> visitBinary(J.Binary binary) {
-        List<AstTransform> changes = super.visitBinary(binary);
-
-        if (binary.getOperator() instanceof J.Binary.Operator.And) {
-            if (isLiteralFalse(binary.getLeft())) {
-                changes.addAll(binaryLeftAndUnwrap(binary));
-            } else if (isLiteralFalse(binary.getRight())) {
-                changes.addAll(binaryRightAndUnwrap(binary));
-            } else if(binary.getLeft().printTrimmed().replaceAll("\\s", "").equals(
-                    binary.getRight().printTrimmed().replaceAll("\\s", ""))) {
-                changes.addAll(binaryLeftAndUnwrap(binary));
-            }
-        } else if (binary.getOperator() instanceof J.Binary.Operator.Or) {
-            if (isLiteralTrue(binary.getLeft())) {
-                changes.addAll(binaryLeftAndUnwrap(binary));
-            } else if (isLiteralTrue(binary.getRight())) {
-                changes.addAll(binaryRightAndUnwrap(binary));
-            } else if (binary.getLeft().printTrimmed().replaceAll("\\s", "").equals(
-                    binary.getRight().printTrimmed().replaceAll("\\s", ""))) {
-                changes.addAll(binaryLeftAndUnwrap(binary));
-            }
-        } else if (binary.getOperator() instanceof J.Binary.Operator.Equal) {
-            if (isLiteralTrue(binary.getLeft())) {
-                changes.addAll(binaryRightAndUnwrap(binary));
-            } else if (isLiteralTrue(binary.getRight())) {
-                changes.addAll(binaryLeftAndUnwrap(binary));
-            }
-        } else if (binary.getOperator() instanceof J.Binary.Operator.NotEqual) {
-            if (isLiteralFalse(binary.getLeft())) {
-                changes.addAll(binaryRightAndUnwrap(binary));
-            } else if (isLiteralFalse(binary.getRight())) {
-                changes.addAll(binaryLeftAndUnwrap(binary));
-            }
+    public J visitCompilationUnit(J.CompilationUnit cu) {
+        J.CompilationUnit c = refactor(cu, super::visitCompilationUnit);
+        if (c != cu) {
+            andThen(new SimplifyBooleanExpression(pass + 1));
         }
-
-        return changes;
+        return c;
     }
 
     @Override
-    public List<AstTransform> visitUnary(J.Unary unary) {
-        List<AstTransform> changes = super.visitUnary(unary);
+    public J visitBinary(J.Binary binary) {
+        J.Binary b = refactor(binary, super::visitBinary);
 
-        if(unary.getOperator() instanceof J.Unary.Operator.Not) {
-            if (isLiteralTrue(unary.getExpr())) {
-                changes.addAll(transform((Expression) unary, (u, cursor) -> {
-                    maybeUnwrapParentheses(cursor);
-                    return new J.Literal(randomId(), false, "false",
-                            Type.Primitive.Boolean, unary.getFormatting());
-                }));
-            } else if (isLiteralFalse(unary.getExpr())) {
-                changes.addAll(transform((Expression) unary, (u, cursor) -> {
-                    maybeUnwrapParentheses(cursor);
-                    return new J.Literal(randomId(), true, "true",
-                            Type.Primitive.Boolean, unary.getFormatting());
-                }));
-            } else if(unary.getExpr() instanceof J.Unary && ((J.Unary) unary.getExpr()).getOperator() instanceof J.Unary.Operator.Not) {
-                changes.addAll(transform((Expression) unary, (u, cursor) -> {
-                    maybeUnwrapParentheses(cursor);
-                    return ((J.Unary) unary.getExpr()).getExpr().withFormatting(unary.getFormatting());
-                }));
+        if (b.getOperator() instanceof J.Binary.Operator.And) {
+            if (isLiteralFalse(b.getLeft())) {
+                return binaryLeftAndUnwrap(b);
+            } else if (isLiteralFalse(b.getRight())) {
+                return binaryRightAndUnwrap(b);
+            } else if (b.getLeft().printTrimmed().replaceAll("\\s", "").equals(
+                    b.getRight().printTrimmed().replaceAll("\\s", ""))) {
+                return binaryLeftAndUnwrap(b);
+            }
+        } else if (b.getOperator() instanceof J.Binary.Operator.Or) {
+            if (isLiteralTrue(b.getLeft())) {
+                return binaryLeftAndUnwrap(b);
+            } else if (isLiteralTrue(b.getRight())) {
+                return binaryRightAndUnwrap(b);
+            } else if (b.getLeft().printTrimmed().replaceAll("\\s", "").equals(
+                    b.getRight().printTrimmed().replaceAll("\\s", ""))) {
+                return binaryLeftAndUnwrap(b);
+            }
+        } else if (b.getOperator() instanceof J.Binary.Operator.Equal) {
+            if (isLiteralTrue(b.getLeft())) {
+                return binaryRightAndUnwrap(b);
+            } else if (isLiteralTrue(b.getRight())) {
+                return binaryLeftAndUnwrap(b);
+            }
+        } else if (b.getOperator() instanceof J.Binary.Operator.NotEqual) {
+            if (isLiteralFalse(b.getLeft())) {
+                return binaryRightAndUnwrap(b);
+            } else if (isLiteralFalse(b.getRight())) {
+                return binaryLeftAndUnwrap(b);
             }
         }
 
-        return changes;
+        return b;
     }
 
-    private List<AstTransform> binaryLeftAndUnwrap(J.Binary binary) {
-        return transform((Expression) binary, (b, cursor) -> {
-            J.Binary b2 = (J.Binary) b;
-            maybeUnwrapParentheses(cursor);
-            return b2.getLeft().withFormatting(b2.getFormatting());
-        });
+    @Override
+    public J visitUnary(J.Unary unary) {
+        J.Unary u = refactor(unary, super::visitUnary);
+
+        if (u.getOperator() instanceof J.Unary.Operator.Not) {
+            if (isLiteralTrue(u.getExpr())) {
+                maybeUnwrapParentheses();
+                return new J.Literal(randomId(), false, "false",
+                        JavaType.Primitive.Boolean, u.getFormatting());
+            } else if (isLiteralFalse(u.getExpr())) {
+                maybeUnwrapParentheses();
+                return new J.Literal(randomId(), true, "true",
+                            JavaType.Primitive.Boolean, u.getFormatting());
+            } else if (u.getExpr() instanceof J.Unary && ((J.Unary) u.getExpr()).getOperator() instanceof J.Unary.Operator.Not) {
+                maybeUnwrapParentheses();
+                return ((J.Unary) u.getExpr()).getExpr().withFormatting(u.getFormatting());
+            }
+        }
+
+        return u;
     }
 
-    private List<AstTransform> binaryRightAndUnwrap(J.Binary binary) {
-        return transform((Expression) binary, (b, cursor) -> {
-            J.Binary b2 = (J.Binary) b;
-            maybeUnwrapParentheses(cursor);
-            return b2.getRight().withFormatting(b2.getFormatting());
-        });
+    private Expression binaryLeftAndUnwrap(J.Binary binary) {
+        maybeUnwrapParentheses();
+        return binary.getLeft().withFormatting(binary.getFormatting());
     }
 
-    private void maybeUnwrapParentheses(Cursor cursor) {
-        if (cursor.getParentOrThrow().getTree() instanceof J.Parentheses) {
-            andThen(new UnwrapParentheses(cursor.getParentOrThrow().getTree().getId()));
+    private Expression binaryRightAndUnwrap(J.Binary binary) {
+        maybeUnwrapParentheses();
+        return binary.getRight().withFormatting(binary.getFormatting());
+    }
+
+    private void maybeUnwrapParentheses() {
+        Tree tree = getCursor().getParentOrThrow().getTree();
+        if (tree instanceof J.Parentheses) {
+            andThen(new UnwrapParentheses(tree.getId()));
         }
     }
 

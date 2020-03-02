@@ -1,20 +1,21 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.gradle.rewrite.checkstyle.policy.Token.LITERAL_CASE
 import org.gradle.rewrite.checkstyle.policy.Token.LITERAL_DEFAULT
 import org.junit.jupiter.api.Test
 
-open class NeedBracesTest : Parser() {
+open class NeedBracesTest : JavaParser() {
     @Test
     fun addBraces() {
         val a = parse("""
             public class A {
-                {
+                int n;
+                void foo() {
                     while (true);
-                    if (n == 1) return true;
-                    else return true;
-                    while (true) return true;
+                    if (n == 1) return;
+                    else return;
+                    while (true) return;
                     do this.notify(); while (true);
                     for (int i = 0; ; ) this.notify();
                 }
@@ -25,17 +26,18 @@ open class NeedBracesTest : Parser() {
 
         assertRefactored(fixed, """
             public class A {
-                {
+                int n;
+                void foo() {
                     while (true) {
                     }
                     if (n == 1) {
-                        return true;
+                        return;
                     }
                     else {
-                        return true;
+                        return;
                     }
                     while (true) {
-                        return true;
+                        return;
                     }
                     do {
                         this.notify();
@@ -77,9 +79,10 @@ open class NeedBracesTest : Parser() {
     fun allowSingleLineStatement() {
         val a = parse("""
             public class A {
-                {
-                    if (n == 1) return true;
-                    while (true) return true;
+                int n;
+                void foo() {
+                    if (n == 1) return;
+                    while (true) return;
                     do this.notify(); while (true);
                     for (int i = 0; ; ) this.notify();
                 }
@@ -92,9 +95,10 @@ open class NeedBracesTest : Parser() {
 
         assertRefactored(fixed, """
             public class A {
-                {
-                    if (n == 1) return true;
-                    while (true) return true;
+                int n;
+                void foo() {
+                    if (n == 1) return;
+                    while (true) return;
                     do this.notify(); while (true);
                     for (int i = 0; ; ) this.notify();
                 }

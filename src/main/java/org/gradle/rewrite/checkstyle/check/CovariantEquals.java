@@ -1,61 +1,63 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import org.openrewrite.tree.*;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.Cursor;
+import org.openrewrite.java.tree.*;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.openrewrite.tree.Formatting.format;
-import static org.openrewrite.tree.J.randomId;
+import static org.openrewrite.Formatting.*;
+import static org.openrewrite.Tree.randomId;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
-public class CovariantEquals extends RefactorVisitor {
+public class CovariantEquals extends JavaRefactorVisitor {
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.CovariantEquals";
     }
 
     @Override
-    public List<AstTransform> visitMethod(J.MethodDecl method) {
-        Type.Class classType = TypeUtils.asClass(getCursor().enclosingClass().getType());
-        return maybeTransform(method,
-                method.getSimpleName().equals("equals") &&
-                        method.hasModifier("public") &&
-                        method.getReturnTypeExpr() != null &&
-                        Type.Primitive.Boolean.equals(method.getReturnTypeExpr().getType()) &&
-                        method.getParams().getParams().size() == 1 &&
-                        method.getParams().getParams().stream().allMatch(p -> p.hasClassType(classType)),
-                super::visitMethod,
-                (m, cursor) -> {
-                    String methodPrefix = methodFormattingPrefix(m);
-                    String methodIndent = formatter().findIndent(cursor.enclosingBlock().getIndent(), method).getPrefix();
-
-                    J.MethodDecl fixedMethod = m;
-
-                    fixedMethod = maybeAddOverrideAnnotation(fixedMethod, methodPrefix, methodIndent);
-
-                    if (!fixedMethod.getModifiers().isEmpty()) {
-                        fixedMethod = fixedMethod.withModifiers(Formatting.formatFirstPrefix(fixedMethod.getModifiers(), methodIndent));
-                    }
-
-                    J.VariableDecls.NamedVar oldParamName = ((J.VariableDecls) m.getParams().getParams().iterator().next())
-                            .getVars().iterator().next();
-                    J.VariableDecls.NamedVar paramName = oldParamName
-                            .withName(oldParamName.getName().withName("o".equals(oldParamName.getSimpleName()) ? "other" : "o"));
-
-                    fixedMethod = changeParameterNameAndType(fixedMethod, paramName);
-                    fixedMethod = addEqualsBody(fixedMethod, cursor, oldParamName, paramName);
-
-                    return fixedMethod;
-                }
-        );
+    public boolean isCursored() {
+        return true;
     }
 
-    private J.MethodDecl addEqualsBody(J.MethodDecl method, Cursor cursor, J.VariableDecls.NamedVar oldParamName, J.VariableDecls.NamedVar paramName) {
-        List<Statement> equalsBody = TreeBuilder.buildSnippet(cursor.enclosingCompilationUnit(), new Cursor(cursor, method.getBody()),
+    @Override
+    public J visitMethod(J.MethodDecl method) {
+        J.MethodDecl m = refactor(method, super::visitMethod);
+        JavaType.Class classType = TypeUtils.asClass(enclosingClass().getType());
+
+        if (method.getSimpleName().equals("equals") &&
+                method.hasModifier("public") &&
+                method.getReturnTypeExpr() != null &&
+                JavaType.Primitive.Boolean.equals(method.getReturnTypeExpr().getType()) &&
+                method.getParams().getParams().size() == 1 &&
+                method.getParams().getParams().stream().allMatch(p -> p.hasClassType(classType))) {
+
+            String methodPrefix = methodFormattingPrefix(method);
+            String methodIndent = formatter.findIndent(enclosingBlock().getIndent(), method).getPrefix();
+
+            m = maybeAddOverrideAnnotation(m, methodPrefix, methodIndent);
+
+            if (!m.getModifiers().isEmpty()) {
+                m = m.withModifiers(formatFirstPrefix(m.getModifiers(), methodIndent));
+            }
+
+            J.VariableDecls.NamedVar oldParamName = ((J.VariableDecls) method.getParams().getParams().iterator().next())
+                    .getVars().iterator().next();
+            J.VariableDecls.NamedVar paramName = oldParamName
+                    .withName(oldParamName.getName().withName("o".equals(oldParamName.getSimpleName()) ? "other" : "o"));
+
+            m = changeParameterNameAndType(m, paramName);
+            m = addEqualsBody(m, oldParamName, paramName);
+        }
+
+        return m;
+    }
+
+    private J.MethodDecl addEqualsBody(J.MethodDecl method, J.VariableDecls.NamedVar oldParamName, J.VariableDecls.NamedVar paramName) {
+        List<Statement> equalsBody = TreeBuilder.buildSnippet(enclosingCompilationUnit(), new Cursor(getCursor(), method.getBody()),
                 "if (this == {}) return true;\n" +
                         "if ({} == null || getClass() != {}.getClass()) return false;\n" +
                         "Test {} = (Test) {};\n", paramName, paramName, paramName, oldParamName, paramName);
@@ -80,8 +82,14 @@ public class CovariantEquals extends RefactorVisitor {
     private J.MethodDecl maybeAddOverrideAnnotation(J.MethodDecl method, String methodPrefix, String methodIndent) {
         if (method.getAnnotations().stream().noneMatch(ann -> TypeUtils.isOfClassType(ann.getType(), "java.lang.Override"))) {
             List<J.Annotation> annotations = new ArrayList<>(method.getAnnotations());
-            annotations.add(new J.Annotation(randomId(), J.Ident.build(randomId(), "Override", Type.Class.build("java.lang.Override"), Formatting.EMPTY),
-                    null, method.getAnnotations().isEmpty() ? format(methodPrefix) : format(methodIndent)));
+            annotations.add(
+                    new J.Annotation(
+                            randomId(),
+                            J.Ident.build(randomId(), "Override", JavaType.Class.build("java.lang.Override"), EMPTY),
+                            null,
+                            method.getAnnotations().isEmpty() ? format(methodPrefix) : format(methodIndent)
+                    )
+            );
 
             return method.withAnnotations(annotations);
         }

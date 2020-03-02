@@ -1,10 +1,10 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.gradle.rewrite.checkstyle.policy.PunctuationToken.*
 import org.junit.jupiter.api.Test
 
-open class NoWhitespaceBeforeTest : Parser() {
+open class NoWhitespaceBeforeTest : JavaParser() {
     @Test
     fun noWhitespaceBefore() {
         val a = parse("""

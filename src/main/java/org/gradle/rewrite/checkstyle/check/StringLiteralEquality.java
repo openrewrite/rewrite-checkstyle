@@ -1,51 +1,45 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import org.openrewrite.tree.Expression;
-import org.openrewrite.tree.Flag;
-import org.openrewrite.tree.J;
-import org.openrewrite.tree.Type;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.java.tree.Expression;
+import org.openrewrite.java.tree.Flag;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.tree.JavaType;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
-import java.util.List;
 import java.util.Set;
 
 import static java.util.Collections.singletonList;
-import static org.openrewrite.tree.Formatting.EMPTY;
-import static org.openrewrite.tree.J.randomId;
+import static org.openrewrite.Formatting.EMPTY;
+import static org.openrewrite.Tree.randomId;
 
-public class StringLiteralEquality extends RefactorVisitor {
+public class StringLiteralEquality extends JavaRefactorVisitor {
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.StringLiteralEquality";
     }
 
     @Override
-    public List<AstTransform> visitBinary(J.Binary binary) {
-        return maybeTransform(binary,
-                binary.getOperator() instanceof J.Binary.Operator.Equal && (
-                        isStringLiteral(binary.getLeft()) || isStringLiteral(binary.getRight())),
-                super::visitBinary,
-                b -> (Expression) b,
-                b -> {
-                    J.Binary binary2 = (J.Binary) b;
-                    Expression left = isStringLiteral(binary.getRight()) ? binary.getRight() : binary.getLeft();
-                    Expression right = isStringLiteral(binary.getRight()) ? binary.getLeft() : binary.getRight();
+    public J visitBinary(J.Binary binary) {
+        if(binary.getOperator() instanceof J.Binary.Operator.Equal && (
+                isStringLiteral(binary.getLeft()) || isStringLiteral(binary.getRight()))) {
+            Expression left = isStringLiteral(binary.getRight()) ? binary.getRight() : binary.getLeft();
+            Expression right = isStringLiteral(binary.getRight()) ? binary.getLeft() : binary.getRight();
 
-                    return new J.MethodInvocation(randomId(),
-                            left.withFormatting(EMPTY),
-                            null,
-                            J.Ident.build(randomId(), "equals", Type.Primitive.Boolean, EMPTY),
-                            new J.MethodInvocation.Arguments(randomId(), singletonList(right.withFormatting(EMPTY)), EMPTY),
-                            Type.Method.build(Type.Class.build("java.lang.Object"), "equals",
-                                    null, null, singletonList("o"),
-                                    Set.of(Flag.Public)),
-                            binary2.getFormatting());
-                }
-        );
+            return new J.MethodInvocation(randomId(),
+                    left.withFormatting(EMPTY),
+                    null,
+                    J.Ident.build(randomId(), "equals", JavaType.Primitive.Boolean, EMPTY),
+                    new J.MethodInvocation.Arguments(randomId(), singletonList(right.withFormatting(EMPTY)), EMPTY),
+                    JavaType.Method.build(JavaType.Class.build("java.lang.Object"), "equals",
+                            null, null, singletonList("o"),
+                            Set.of(Flag.Public)),
+                    binary.getFormatting());
+        }
+
+        return super.visitBinary(binary);
     }
 
     public boolean isStringLiteral(Expression expression) {
-        return expression instanceof J.Literal && ((J.Literal) expression).getType() == Type.Primitive.String;
+        return expression instanceof J.Literal && ((J.Literal) expression).getType() == JavaType.Primitive.String;
     }
 }

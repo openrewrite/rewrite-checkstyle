@@ -2,13 +2,12 @@ package org.gradle.rewrite.checkstyle.check;
 
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.PunctuationToken;
+import org.openrewrite.Formatting;
+import org.openrewrite.Tree;
 import org.openrewrite.internal.lang.Nullable;
-import org.openrewrite.tree.Formatting;
-import org.openrewrite.tree.J;
-import org.openrewrite.tree.Statement;
-import org.openrewrite.tree.Tree;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.tree.Statement;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,11 +17,11 @@ import java.util.function.Function;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static org.gradle.rewrite.checkstyle.policy.PunctuationToken.*;
-import static org.openrewrite.tree.Formatting.stripPrefix;
-import static org.openrewrite.tree.Formatting.stripSuffix;
+import static org.openrewrite.Formatting.stripPrefix;
+import static org.openrewrite.Formatting.stripSuffix;
 
 @Builder
-public class NoWhitespaceBefore extends RefactorVisitor {
+public class NoWhitespaceBefore extends JavaRefactorVisitor {
     /**
      * Only applies to DOT.
      */
@@ -35,30 +34,36 @@ public class NoWhitespaceBefore extends RefactorVisitor {
     );
 
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.NoWhitespaceBefore";
     }
 
     @Override
-    public List<AstTransform> visitPackage(J.Package pkg) {
+    public boolean isCursored() {
+        return true;
+    }
+
+    @Override
+    public J visitPackage(J.Package pkg) {
         return maybeStripSuffixBefore(pkg, super::visitPackage, SEMI);
     }
 
     @Override
-    public List<AstTransform> visitImport(J.Import impoort) {
+    public J visitImport(J.Import impoort) {
         return maybeStripSuffixBefore(impoort, super::visitImport, SEMI);
     }
 
     @Override
-    public List<AstTransform> visitFieldAccess(J.FieldAccess fieldAccess) {
-        return maybeTransform(fieldAccess,
-                tokens.contains(DOT) && whitespaceInSuffix(fieldAccess.getTarget()),
-                super::visitFieldAccess,
-                fa -> fa.withTarget(stripSuffix(fa.getTarget())));
+    public J visitFieldAccess(J.FieldAccess fieldAccess) {
+        J.FieldAccess f = refactor(fieldAccess, super::visitFieldAccess);
+        if (tokens.contains(DOT) && whitespaceInSuffix(fieldAccess.getTarget())) {
+            f = f.withTarget(stripSuffix(f.getTarget()));
+        }
+        return f;
     }
 
     @Override
-    public List<AstTransform> visitMethod(J.MethodDecl method) {
+    public J visitMethod(J.MethodDecl method) {
         if (method.isAbstract()) {
             return maybeStripSuffixBefore(method, super::visitMethod, SEMI);
         }
@@ -66,19 +71,20 @@ public class NoWhitespaceBefore extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitMethodInvocation(J.MethodInvocation method) {
-        return maybeTransform(method,
-                (method.getSelect() != null && tokens.contains(DOT) && whitespaceInSuffix(method.getSelect())) ||
-                        (tokens.contains(COMMA) && method.getArgs().getArgs().stream().anyMatch(this::whitespaceInSuffix)),
-                super::visitMethodInvocation,
-                m -> m.withSelect(stripSuffix(m.getSelect()))
-                        .withArgs(m.getArgs().withArgs(m.getArgs().getArgs().stream()
-                                .map(Formatting::stripSuffix)
-                                .collect(toList()))));
+    public J visitMethodInvocation(J.MethodInvocation method) {
+        J.MethodInvocation m = refactor(method, super::visitMethodInvocation);
+        if ((method.getSelect() != null && tokens.contains(DOT) && whitespaceInSuffix(method.getSelect())) ||
+                (tokens.contains(COMMA) && method.getArgs().getArgs().stream().anyMatch(this::whitespaceInSuffix))) {
+            m = m.withSelect(stripSuffix(m.getSelect()))
+                    .withArgs(m.getArgs().withArgs(m.getArgs().getArgs().stream()
+                            .map(Formatting::stripSuffix)
+                            .collect(toList())));
+        }
+        return m;
     }
 
     @Override
-    public List<AstTransform> visitStatement(Statement statement) {
+    public J visitStatement(Statement statement) {
         Tree parent = getCursor().getParentOrThrow().getTree();
         if (!(parent instanceof J.MethodInvocation) &&
                 !(parent instanceof J.FieldAccess) &&
@@ -90,71 +96,72 @@ public class NoWhitespaceBefore extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitForLoop(J.ForLoop forLoop) {
+    public J visitForLoop(J.ForLoop forLoop) {
+        J.ForLoop f = refactor(forLoop, super::visitForLoop);
+
         J.ForLoop.Control ctrl = forLoop.getControl();
-        return maybeTransform(forLoop,
-                (tokens.contains(SEMI) && forLoop.getBody() instanceof J.Empty && whitespaceInPrefix(forLoop.getBody())) ||
-                        (tokens.contains(SEMI) && (whitespaceInSuffix(ctrl.getInit()) ||
-                                whitespaceInSuffix(ctrl.getCondition()) ||
-                                whitespaceInSuffix(ctrl.getUpdate().get(ctrl.getUpdate().size() - 1)))
-                        ) ||
-                        (tokens.contains(COMMA) && ctrl.getUpdate().stream().anyMatch(this::whitespaceInSuffix)),
-                super::visitForLoop,
-                f -> {
-                    J.ForLoop.Control fixCtrl = f.getControl();
-                    List<Statement> fixUpdate = new ArrayList<>(fixCtrl.getUpdate());
+        if ((tokens.contains(SEMI) && forLoop.getBody() instanceof J.Empty && whitespaceInPrefix(forLoop.getBody())) ||
+                (tokens.contains(SEMI) && (whitespaceInSuffix(ctrl.getInit()) ||
+                        whitespaceInSuffix(ctrl.getCondition()) ||
+                        whitespaceInSuffix(ctrl.getUpdate().get(ctrl.getUpdate().size() - 1)))
+                ) || (tokens.contains(COMMA) && ctrl.getUpdate().stream().anyMatch(this::whitespaceInSuffix))) {
+            J.ForLoop.Control fixCtrl = f.getControl();
+            List<Statement> fixUpdate = new ArrayList<>(fixCtrl.getUpdate());
 
-                    for (int i = 0; i < fixUpdate.size(); i++) {
-                        Statement update = fixUpdate.get(i);
-                        if (tokens.contains(COMMA) && i != fixUpdate.size() - 1) {
-                            fixUpdate.set(i, stripSuffix(update));
-                        } else if (tokens.contains(SEMI) && i == fixUpdate.size() - 1) {
-                            fixUpdate.set(i, stripSuffix(update));
-                        }
-                    }
-
-                    // commas between init variables will be stripped by the VariableDecls visitor separately
-                    fixCtrl = fixCtrl.withInit(stripSuffix(fixCtrl.getInit()))
-                            .withCondition(stripSuffix(fixCtrl.getCondition()))
-                            .withUpdate(fixUpdate);
-
-                    return f.withControl(fixCtrl)
-                            .withBody(f.getBody() instanceof J.Empty ? stripPrefix(f.getBody()) : f.getBody());
+            for (int i = 0; i < fixUpdate.size(); i++) {
+                Statement update = fixUpdate.get(i);
+                if (tokens.contains(COMMA) && i != fixUpdate.size() - 1) {
+                    fixUpdate.set(i, stripSuffix(update));
+                } else if (tokens.contains(SEMI) && i == fixUpdate.size() - 1) {
+                    fixUpdate.set(i, stripSuffix(update));
                 }
-        );
+            }
+
+            // commas between init variables will be stripped by the VariableDecls visitor separately
+            fixCtrl = fixCtrl.withInit(stripSuffix(fixCtrl.getInit()))
+                    .withCondition(stripSuffix(fixCtrl.getCondition()))
+                    .withUpdate(fixUpdate);
+
+            f = f.withControl(fixCtrl)
+                    .withBody(f.getBody() instanceof J.Empty ? stripPrefix(f.getBody()) : f.getBody());
+        }
+
+        return f;
     }
 
     @Override
-    public List<AstTransform> visitMultiVariable(J.VariableDecls multiVariable) {
-        return maybeTransform(multiVariable,
-                tokens.contains(ELLIPSIS) && whitespaceInPrefix(multiVariable.getVarargs()),
-                super::visitMultiVariable,
-                mv -> mv.withVarargs(stripPrefix(mv.getVarargs())));
+    public J visitMultiVariable(J.VariableDecls multiVariable) {
+        J.VariableDecls m = refactor(multiVariable, super::visitMultiVariable);
+        if (tokens.contains(ELLIPSIS) && whitespaceInPrefix(multiVariable.getVarargs())) {
+            m = m.withVarargs(stripPrefix(m.getVarargs()));
+        }
+        return m;
     }
 
     @Override
-    public List<AstTransform> visitVariable(J.VariableDecls.NamedVar variable) {
+    public J visitVariable(J.VariableDecls.NamedVar variable) {
         return maybeStripSuffixBefore(variable, super::visitVariable, COMMA);
     }
 
     @Override
-    public List<AstTransform> visitUnary(J.Unary unary) {
-        return maybeTransform(unary,
-                whitespaceInPrefix(unary.getOperator()) &&
-                        (unary.getOperator() instanceof J.Unary.Operator.PostDecrement ||
-                                unary.getOperator() instanceof J.Unary.Operator.PostIncrement) &&
-                        (tokens.contains(POST_DEC) || tokens.contains(POST_INC)),
-                super::visitUnary,
-                u -> u.withOperator(stripPrefix(u.getOperator())));
+    public J visitUnary(J.Unary unary) {
+        J.Unary u = refactor(unary, super::visitUnary);
+        if(whitespaceInPrefix(unary.getOperator()) &&
+                (unary.getOperator() instanceof J.Unary.Operator.PostDecrement ||
+                        unary.getOperator() instanceof J.Unary.Operator.PostIncrement) &&
+                (tokens.contains(POST_DEC) || tokens.contains(POST_INC))) {
+            u = u.withOperator(stripPrefix(u.getOperator()));
+        }
+        return u;
     }
 
     @Override
-    public List<AstTransform> visitTypeParameters(J.TypeParameters typeParams) {
+    public J visitTypeParameters(J.TypeParameters typeParams) {
         return maybeStripPrefixBefore(typeParams, super::visitTypeParameters, GENERIC_START);
     }
 
     @Override
-    public List<AstTransform> visitTypeParameter(J.TypeParameter typeParam) {
+    public J visitTypeParameter(J.TypeParameter typeParam) {
         J.TypeParameters typeParams = getCursor().getParentOrThrow().getTree();
         if (typeParams.getParams().get(typeParams.getParams().size() - 1) == typeParam) {
             return maybeStripSuffixBefore(typeParam, super::visitTypeParameter, GENERIC_END);
@@ -163,43 +170,50 @@ public class NoWhitespaceBefore extends RefactorVisitor {
     }
 
     @Override
-    public List<AstTransform> visitMemberReference(J.MemberReference memberRef) {
-        return maybeTransform(memberRef,
-                tokens.contains(METHOD_REF) && whitespaceInSuffix(memberRef.getContaining()),
-                super::visitMemberReference,
-                mr -> mr.withContaining(stripSuffix(mr.getContaining())));
+    public J visitMemberReference(J.MemberReference memberRef) {
+        J.MemberReference m = refactor(memberRef, super::visitMemberReference);
+        if(tokens.contains(METHOD_REF) && whitespaceInSuffix(memberRef.getContaining())) {
+            m = m.withContaining(stripSuffix(m.getContaining()));
+        }
+        return m;
     }
 
     @Override
-    public List<AstTransform> visitForEachLoop(J.ForEachLoop forEachLoop) {
-        return maybeTransform(forEachLoop,
-                tokens.contains(SEMI) && forEachLoop.getBody() instanceof J.Empty && whitespaceInPrefix(forEachLoop.getBody()),
-                super::visitForEachLoop,
-                w -> w.withBody(stripPrefix(w.getBody())));
+    public J visitForEachLoop(J.ForEachLoop forEachLoop) {
+        J.ForEachLoop f = refactor(forEachLoop, super::visitForEachLoop);
+        if(tokens.contains(SEMI) && forEachLoop.getBody() instanceof J.Empty && whitespaceInPrefix(forEachLoop.getBody())) {
+            f = f.withBody(stripPrefix(f.getBody()));
+        }
+        return f;
     }
 
     @Override
-    public List<AstTransform> visitWhileLoop(J.WhileLoop whileLoop) {
-        return maybeTransform(whileLoop,
-                tokens.contains(SEMI) && whileLoop.getBody() instanceof J.Empty && whitespaceInPrefix(whileLoop.getBody()),
-                super::visitWhileLoop,
-                w -> w.withBody(stripPrefix(w.getBody())));
+    public J visitWhileLoop(J.WhileLoop whileLoop) {
+        J.WhileLoop w = refactor(whileLoop, super::visitWhileLoop);
+        if(tokens.contains(SEMI) && whileLoop.getBody() instanceof J.Empty && whitespaceInPrefix(whileLoop.getBody())) {
+            w = w.withBody(stripPrefix(w.getBody()));
+        }
+        return w;
     }
 
-    private <T extends Tree> List<AstTransform> maybeStripSuffixBefore(T tree, Function<T, List<AstTransform>> callSuper,
-                                                                       PunctuationToken... tokensToMatch) {
-        return maybeTransform(tree,
-                stream(tokensToMatch).anyMatch(tokens::contains) && whitespaceInSuffix(tree),
-                callSuper,
-                Formatting::stripSuffix);
+    private <T extends J> T maybeStripSuffixBefore(T tree,
+                                                   Function<T, Tree> callSuper,
+                                                   PunctuationToken... tokensToMatch) {
+        T t = refactor(tree, callSuper);
+        if (stream(tokensToMatch).anyMatch(tokens::contains) && whitespaceInSuffix(tree)) {
+            t = stripSuffix(t);
+        }
+        return t;
     }
 
-    private <T extends Tree> List<AstTransform> maybeStripPrefixBefore(T tree, Function<T, List<AstTransform>> callSuper,
-                                                                       PunctuationToken... tokensToMatch) {
-        return maybeTransform(tree,
-                stream(tokensToMatch).anyMatch(tokens::contains) && whitespaceInPrefix(tree),
-                callSuper,
-                Formatting::stripPrefix);
+    private <T extends J> T maybeStripPrefixBefore(T tree,
+                                                   Function<T, Tree> callSuper,
+                                                   PunctuationToken... tokensToMatch) {
+        T t = refactor(tree, callSuper);
+        if (stream(tokensToMatch).anyMatch(tokens::contains) && whitespaceInPrefix(tree)) {
+            t = stripPrefix(t);
+        }
+        return t;
     }
 
     private boolean whitespaceInSuffix(@Nullable Tree t) {

@@ -1,10 +1,10 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-open class StaticVariableNameTest : Parser() {
+open class StaticVariableNameTest : JavaParser() {
     @Test
     fun snakeName() {
         assertThat(StaticVariableName.snakeCaseToCamel("CAMEL_CASE_NAME_1")).isEqualTo("camelCaseName1")

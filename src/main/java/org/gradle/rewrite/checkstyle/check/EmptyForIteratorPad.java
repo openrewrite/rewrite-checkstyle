@@ -2,17 +2,14 @@ package org.gradle.rewrite.checkstyle.check;
 
 import lombok.RequiredArgsConstructor;
 import org.gradle.rewrite.checkstyle.policy.PadPolicy;
-import org.openrewrite.tree.J;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
-import java.util.List;
-
-import static org.openrewrite.tree.Formatting.formatLastSuffix;
-import static org.openrewrite.tree.Formatting.lastSuffix;
+import static org.openrewrite.Formatting.formatLastSuffix;
+import static org.openrewrite.Formatting.lastSuffix;
 
 @RequiredArgsConstructor
-public class EmptyForIteratorPad extends RefactorVisitor {
+public class EmptyForIteratorPad extends JavaRefactorVisitor {
     private final PadPolicy option;
 
     public EmptyForIteratorPad() {
@@ -20,19 +17,21 @@ public class EmptyForIteratorPad extends RefactorVisitor {
     }
 
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.EmptyForInitializerPad";
     }
 
     @Override
-    public List<AstTransform> visitForLoop(J.ForLoop forLoop) {
+    public J visitForLoop(J.ForLoop forLoop) {
+        J.ForLoop f = refactor(forLoop, super::visitForLoop);
         String suffix = lastSuffix(forLoop.getControl().getUpdate());
-        return maybeTransform(forLoop,
-                !suffix.contains("\n") &&
-                        (option == PadPolicy.NOSPACE ? suffix.endsWith(" ") || suffix.endsWith("\t") : suffix.isEmpty()) &&
-                        forLoop.getControl().getUpdate().stream().reduce((u1, u2) -> u2).map(u -> u instanceof J.Empty).orElse(false),
-                super::visitForLoop,
-                c -> c.withControl(c.getControl().withUpdate(formatLastSuffix(c.getControl().getUpdate(), option == PadPolicy.NOSPACE ? "" : " ")))
-        );
+
+        if (!suffix.contains("\n") &&
+                (option == PadPolicy.NOSPACE ? suffix.endsWith(" ") || suffix.endsWith("\t") : suffix.isEmpty()) &&
+                forLoop.getControl().getUpdate().stream().reduce((u1, u2) -> u2).map(u -> u instanceof J.Empty).orElse(false)) {
+            f = f.withControl(f.getControl().withUpdate(formatLastSuffix(f.getControl().getUpdate(), option == PadPolicy.NOSPACE ? "" : " ")));
+        }
+
+        return f;
     }
 }

@@ -1,9 +1,9 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
 
-open class FinalClassTest : Parser() {
+open class FinalClassTest : JavaParser() {
     @Test
     fun shouldBeFinalClass() {
         val a = parse("""

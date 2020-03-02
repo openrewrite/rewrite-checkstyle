@@ -1,9 +1,9 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
 
-open class CovariantEqualsTest : Parser() {
+open class CovariantEqualsTest : JavaParser() {
     @Test
     fun replaceWithNonCovariantEquals() {
         val a = parse("""

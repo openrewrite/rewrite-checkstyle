@@ -1,9 +1,9 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
 
-open class HideUtilityClassConstructorTest : Parser() {
+open class HideUtilityClassConstructorTest : JavaParser() {
     @Test
     fun hideUtilityConstructor() {
         val a = parse("""

@@ -1,56 +1,55 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import org.openrewrite.tree.Formatting;
-import org.openrewrite.tree.J;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.Formatting;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
 import java.util.List;
 
-import static org.openrewrite.tree.Formatting.format;
-import static org.openrewrite.tree.Formatting.formatFirstPrefix;
-import static org.openrewrite.tree.J.randomId;
+import static org.openrewrite.Formatting.format;
+import static org.openrewrite.Formatting.formatFirstPrefix;
+import static org.openrewrite.Tree.randomId;
 
-public class FinalClass extends RefactorVisitor {
+public class FinalClass extends JavaRefactorVisitor {
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.FinalClass";
     }
 
     @Override
-    public boolean isSingleRun() {
-        return true;
+    public boolean isIdempotent() {
+        return false;
     }
 
     @Override
-    public List<AstTransform> visitClassDecl(J.ClassDecl classDecl) {
-        return maybeTransform(classDecl,
-                classDecl.getBody().getStatements().stream()
-                        .noneMatch(s -> s instanceof J.MethodDecl &&
-                                ((J.MethodDecl) s).isConstructor() &&
-                                !((J.MethodDecl) s).hasModifier("private")),
-                super::visitClassDecl,
-                cd -> {
-                    List<J.Modifier> modifiers = cd.getModifiers();
+    public J visitClassDecl(J.ClassDecl classDecl) {
+        J.ClassDecl c = refactor(classDecl, super::visitClassDecl);
 
-                    int insertPosition = 0;
-                    for (int i = 0; i < modifiers.size(); i++) {
-                        J.Modifier modifier = modifiers.get(i);
-                        if (modifier instanceof J.Modifier.Public || modifier instanceof J.Modifier.Static) {
-                            insertPosition = i + 1;
-                        }
-                    }
+        if(classDecl.getBody().getStatements().stream()
+                .noneMatch(s -> s instanceof J.MethodDecl &&
+                        ((J.MethodDecl) s).isConstructor() &&
+                        !((J.MethodDecl) s).hasModifier("private"))) {
+            List<J.Modifier> modifiers = c.getModifiers();
 
-                    Formatting format = format(" ");
-                    if (insertPosition == 0 && !modifiers.isEmpty()) {
-                        format = modifiers.get(0).getFormatting();
-                        formatFirstPrefix(modifiers, " ");
-                    }
-
-                    modifiers.add(insertPosition, new J.Modifier.Final(randomId(), format));
-
-                    return cd.withModifiers(modifiers);
+            int insertPosition = 0;
+            for (int i = 0; i < modifiers.size(); i++) {
+                J.Modifier modifier = modifiers.get(i);
+                if (modifier instanceof J.Modifier.Public || modifier instanceof J.Modifier.Static) {
+                    insertPosition = i + 1;
                 }
-        );
+            }
+
+            Formatting format = format(" ");
+            if (insertPosition == 0 && !modifiers.isEmpty()) {
+                format = modifiers.get(0).getFormatting();
+                formatFirstPrefix(modifiers, " ");
+            }
+
+            modifiers.add(insertPosition, new J.Modifier.Final(randomId(), format));
+
+            c = c.withModifiers(modifiers);
+        }
+
+        return c;
     }
 }

@@ -2,25 +2,22 @@ package org.gradle.rewrite.checkstyle.check;
 
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.Token;
-import org.openrewrite.tree.Cursor;
-import org.openrewrite.tree.J;
-import org.openrewrite.tree.Statement;
-import org.openrewrite.tree.Tree;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.Formatter;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.Tree;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.tree.Statement;
+import org.openrewrite.java.visitor.refactor.Formatter;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
-import java.util.List;
 import java.util.Set;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
-import static org.openrewrite.tree.Formatting.format;
-import static org.openrewrite.tree.J.randomId;
+import static org.openrewrite.Formatting.format;
+import static org.openrewrite.Tree.randomId;
 
 @Builder
-public class NeedBraces extends RefactorVisitor {
+public class NeedBraces extends JavaRefactorVisitor {
     @Builder.Default
     private final boolean allowSingleLineStatement = false;
 
@@ -33,82 +30,103 @@ public class NeedBraces extends RefactorVisitor {
     );
 
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.NeedBraces";
     }
 
     @Override
-    public List<AstTransform> visitIf(J.If iff) {
-        return maybeTransform(iff,
-                tokens.contains(LITERAL_IF) &&
-                        !(iff.getThenPart() instanceof J.Block) &&
-                        isNotAllowableSingleLine(),
-                super::visitIf,
-                J.If::getThenPart,
-                this::addBraces);
+    public boolean isCursored() {
+        return true;
     }
 
     @Override
-    public List<AstTransform> visitElse(J.If.Else elze) {
-        return maybeTransform(elze,
-                tokens.contains(LITERAL_IF) &&
-                        !(elze.getStatement() instanceof J.Block) &&
-                        isNotAllowableSingleLine(),
-                super::visitElse,
-                J.If.Else::getStatement,
-                this::addBraces);
+    public J visitIf(J.If iff) {
+        J.If i = refactor(iff, super::visitIf);
+
+        if(tokens.contains(LITERAL_IF) &&
+                !(iff.getThenPart() instanceof J.Block) &&
+                isNotAllowableSingleLine()) {
+            i = i.withThenPart(addBraces(i.getThenPart()));
+        }
+
+        return i;
     }
 
     @Override
-    public List<AstTransform> visitWhileLoop(J.WhileLoop whileLoop) {
-        Statement body = whileLoop.getBody();
+    public J visitElse(J.If.Else elze) {
+        J.If.Else e = refactor(elze, super::visitElse);
+
+        if (tokens.contains(LITERAL_IF) &&
+                !(elze.getStatement() instanceof J.Block) &&
+                isNotAllowableSingleLine()) {
+            e = e.withStatement(addBraces(e.getStatement()));
+        }
+
+        return e;
+    }
+
+    @Override
+    public J visitWhileLoop(J.WhileLoop whileLoop) {
+        J.WhileLoop w = refactor(whileLoop, super::visitWhileLoop);
+
+        Statement body = w.getBody();
         boolean hasAllowableBodyType = allowEmptyLoopBody ?
                 body instanceof J.Empty || body instanceof J.Block :
                 body instanceof J.Block;
 
-        return maybeTransform(whileLoop,
-                tokens.contains(LITERAL_WHILE) &&
-                        !hasAllowableBodyType &&
-                        isNotAllowableSingleLine(),
-                super::visitWhileLoop,
-                J.WhileLoop::getBody,
-                this::addBraces);
+        if(tokens.contains(LITERAL_WHILE) &&
+                !hasAllowableBodyType &&
+                isNotAllowableSingleLine()) {
+            w = w.withBody(addBraces(w.getBody()));
+        }
+
+        return w;
     }
 
     @Override
-    public List<AstTransform> visitDoWhileLoop(J.DoWhileLoop doWhileLoop) {
-        return maybeTransform(doWhileLoop,
-                tokens.contains(LITERAL_DO) &&
-                        !(doWhileLoop.getBody() instanceof J.Block) &&
-                        isNotAllowableSingleLine(),
-                super::visitDoWhileLoop,
-                J.DoWhileLoop::getBody,
-                this::addBraces);
+    public J visitDoWhileLoop(J.DoWhileLoop doWhileLoop) {
+        J.DoWhileLoop w = refactor(doWhileLoop, super::visitDoWhileLoop);
+
+        if(tokens.contains(LITERAL_DO) &&
+                !(w.getBody() instanceof J.Block) &&
+                isNotAllowableSingleLine()) {
+            w = w.withBody(addBraces(w.getBody()));
+        }
+
+        return w;
     }
 
     @Override
-    public List<AstTransform> visitForLoop(J.ForLoop forLoop) {
-        Statement body = forLoop.getBody();
+    public J visitForLoop(J.ForLoop forLoop) {
+        J.ForLoop f = refactor(forLoop, super::visitForLoop);
+
+        Statement body = f.getBody();
         boolean hasAllowableBodyType = allowEmptyLoopBody ?
                 body instanceof J.Empty || body instanceof J.Block :
                 body instanceof J.Block;
 
-        return maybeTransform(forLoop,
-                tokens.contains(LITERAL_FOR) &&
-                        !hasAllowableBodyType &&
-                        isNotAllowableSingleLine(),
-                super::visitForLoop,
-                J.ForLoop::getBody,
-                this::addBraces);
+        if(tokens.contains(LITERAL_FOR) &&
+                !hasAllowableBodyType &&
+                isNotAllowableSingleLine()) {
+            f = f.withBody(addBraces(f.getBody()));
+        }
+
+        return f;
     }
 
     private boolean isNotAllowableSingleLine() {
-        return !allowSingleLineStatement || new SpansMultipleLines(null).visit((Tree) getCursor().getTree());
+        return !allowSingleLineStatement || new SpansMultipleLines(getCursor().getTree(), null)
+                .visit((Tree) getCursor().getTree());
     }
 
-    private Statement addBraces(Statement body, Cursor cursor) {
-        int enclosingIndent = cursor.getParentOrThrow().enclosingBlock().getIndent();
-        Formatter.Result format = formatter().findIndent(enclosingIndent, cursor.getParentOrThrow().getTree());
+    @SuppressWarnings("ConstantConditions")
+    private Statement addBraces(Statement body) {
+        if(body instanceof J.Block) {
+            return body;
+        }
+
+        int enclosingIndent = getCursor().getParentOrThrow().firstEnclosing(J.Block.class).getIndent();
+        Formatter.Result format = formatter.findIndent(enclosingIndent, getCursor().getParentOrThrow().getTree());
 
         String originalBodySuffix = body.getFormatting().getSuffix();
 

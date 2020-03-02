@@ -1,31 +1,32 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import org.openrewrite.tree.*;
-import org.openrewrite.visitor.RetrieveTreeVisitor;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.BlockPolicy;
 import org.gradle.rewrite.checkstyle.policy.Token;
+import org.openrewrite.Cursor;
+import org.openrewrite.java.tree.*;
+import org.openrewrite.java.visitor.refactor.DeleteStatement;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
+import org.openrewrite.java.visitor.refactor.ScopedJavaRefactorVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.openrewrite.tree.Formatting.EMPTY;
-import static org.openrewrite.tree.Formatting.format;
-import static org.openrewrite.tree.J.randomId;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
+import static org.openrewrite.Formatting.EMPTY;
+import static org.openrewrite.Formatting.format;
+import static org.openrewrite.Tree.randomId;
 
 /**
  * TODO offer option to log if a logger field is available instead of rethrowing as an unchecked exception.
  */
 @Builder
-public class EmptyBlock extends RefactorVisitor {
+public class EmptyBlock extends JavaRefactorVisitor {
     @Builder.Default
     BlockPolicy block = BlockPolicy.Statement;
 
@@ -45,219 +46,194 @@ public class EmptyBlock extends RefactorVisitor {
     );
 
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.EmptyBlock";
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public List<AstTransform> visitWhileLoop(J.WhileLoop whileLoop) {
-        return maybeTransform(whileLoop,
-                tokens.contains(LITERAL_WHILE) && isEmptyBlock(whileLoop.getBody()),
-                super::visitWhileLoop,
-                J.WhileLoop::getBody,
-                b -> {
-                    J.Block<Tree> block = (J.Block<Tree>) b;
-                    return block.withStatements(
-                            singletonList(new J.Continue(randomId(), null, formatter().format(block))));
-                }
-        );
+    public boolean isCursored() {
+        return true;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<AstTransform> visitDoWhileLoop(J.DoWhileLoop doWhileLoop) {
-        return maybeTransform(doWhileLoop,
-                tokens.contains(LITERAL_DO) && isEmptyBlock(doWhileLoop.getBody()),
-                super::visitDoWhileLoop,
-                J.DoWhileLoop::getBody,
-                b -> {
-                    J.Block<Tree> block = (J.Block<Tree>) b;
-                    return block.withStatements(
-                            singletonList(new J.Continue(randomId(), null, formatter().format(block))));
-                }
-        );
+    public J visitWhileLoop(J.WhileLoop whileLoop) {
+        J.WhileLoop w = refactor(whileLoop, super::visitWhileLoop);
+
+        if (tokens.contains(LITERAL_WHILE) && isEmptyBlock(w.getBody())) {
+            J.Block<J> body = (J.Block<J>) w.getBody();
+            w = w.withBody(body.withStatements(singletonList(new J.Continue(randomId(), null,
+                    formatter.format(body)))));
+        }
+
+        return w;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public J visitDoWhileLoop(J.DoWhileLoop doWhileLoop) {
+        J.DoWhileLoop w = refactor(doWhileLoop, super::visitDoWhileLoop);
+
+        if (tokens.contains(LITERAL_WHILE) && isEmptyBlock(w.getBody())) {
+            J.Block<J> body = (J.Block<J>) w.getBody();
+            w = w.withBody(body.withStatements(singletonList(new J.Continue(randomId(), null,
+                    formatter.format(body)))));
+        }
+
+        return w;
     }
 
     @Override
-    public List<AstTransform> visitBlock(J.Block<Tree> block) {
+    public J visitBlock(J.Block<J> block) {
+        J.Block<J> b = refactor(block, super::visitBlock);
         Cursor containing = getCursor().getParentOrThrow();
-        return maybeTransform(block,
-                containing.getParent() != null &&
-                        containing.getParent().getTree() instanceof J.ClassDecl &&
-                        isEmptyBlock(block) &&
-                        ((tokens.contains(STATIC_INIT) && block.getStatic() != null) ||
-                                (tokens.contains(INSTANCE_INIT) && block.getStatic() == null)),
-                super::visitBlock,
-                b -> (J.Block<?>) containing.getTree(),
-                body -> body.withStatements(body.getStatements().stream()
-                        .filter(s -> s != block)
-                        .collect(toList()))
-        );
-    }
-
-    @Override
-    public List<AstTransform> visitCatch(J.Try.Catch catzh) {
-        return maybeTransform(catzh,
-                tokens.contains(LITERAL_CATCH) && isEmptyBlock(catzh.getBody()),
-                super::visitCatch,
-                c -> {
-                    var exceptionType = c.getParam().getTree().getTypeExpr();
-                    var exceptionClassType = exceptionType == null ? null : TypeUtils.asClass(exceptionType.getType());
-
-                    final String throwName;
-                    final Type.Class throwClass;
-
-                    if (exceptionClassType != null && exceptionClassType.getFullyQualifiedName().equals("java.io.IOException")) {
-                        throwName = "UncheckedIOException";
-                        throwClass = Type.Class.build("java.io.UncheckedIOException");
-                        maybeAddImport(throwClass);
-                    } else {
-                        throwName = "RuntimeException";
-                        throwClass = Type.Class.build("java.lang.RuntimeException");
-                    }
-
-                    return c.withBody(
-                            c.getBody().withStatements(
-                                    singletonList(new J.Throw(randomId(),
-                                            new J.NewClass(randomId(),
-                                                    J.Ident.build(randomId(), throwName, throwClass, format(" ")),
-                                                    new J.NewClass.Arguments(randomId(),
-                                                            singletonList(J.Ident.build(randomId(), c.getParam().getTree().getVars().iterator().next().getSimpleName(),
-                                                                    exceptionType == null ? null : exceptionType.getType(), EMPTY)),
-                                                            EMPTY),
-                                                    null,
-                                                    throwClass,
-                                                    format(" ")
-                                            ),
-                                            formatter().format(c.getBody())))
-                            )
-                    );
-                }
-        );
-    }
-
-    @Override
-    public List<AstTransform> visitTry(J.Try tryable) {
-        List<AstTransform> changes = super.visitTry(tryable);
-
-        if (tokens.contains(LITERAL_TRY) && isEmptyBlock(tryable.getBody())) {
-            deleteStatement(tryable);
-        } else if (tokens.contains(LITERAL_FINALLY) && tryable.getFinally() != null && isEmptyBlock(tryable.getFinally().getBody())) {
-            changes.addAll(transform(tryable, t -> t.withFinallie(null)));
+        if (containing.getParent() != null &&
+                containing.getParent().getTree() instanceof J.ClassDecl &&
+                isEmptyBlock(b) &&
+                ((tokens.contains(STATIC_INIT) && b.getStatic() != null) ||
+                        (tokens.contains(INSTANCE_INIT) && b.getStatic() == null))) {
+            b = b.withStatements(b.getStatements().stream()
+                    .filter(s -> s != block)
+                    .collect(toList()));
         }
 
-        return changes;
+        return b;
+    }
+
+    @Override
+    public J visitCatch(J.Try.Catch catzh) {
+        J.Try.Catch c = refactor(catzh, super::visitCatch);
+
+        if (tokens.contains(LITERAL_CATCH) && isEmptyBlock(c.getBody())) {
+            var exceptionType = c.getParam().getTree().getTypeExpr();
+            var exceptionClassType = exceptionType == null ? null : TypeUtils.asClass(exceptionType.getType());
+
+            final String throwName;
+            final JavaType.Class throwClass;
+
+            if (exceptionClassType != null && exceptionClassType.getFullyQualifiedName().equals("java.io.IOException")) {
+                throwName = "UncheckedIOException";
+                throwClass = JavaType.Class.build("java.io.UncheckedIOException");
+                maybeAddImport(throwClass);
+            } else {
+                throwName = "RuntimeException";
+                throwClass = JavaType.Class.build("java.lang.RuntimeException");
+            }
+
+            c = c.withBody(
+                    c.getBody().withStatements(
+                            singletonList(new J.Throw(randomId(),
+                                    new J.NewClass(randomId(),
+                                            J.Ident.build(randomId(), throwName, throwClass, format(" ")),
+                                            new J.NewClass.Arguments(randomId(),
+                                                    singletonList(J.Ident.build(randomId(), c.getParam().getTree().getVars().iterator().next().getSimpleName(),
+                                                            exceptionType == null ? null : exceptionType.getType(), EMPTY)),
+                                                    EMPTY),
+                                            null,
+                                            throwClass,
+                                            format(" ")
+                                    ),
+                                    formatter.format(c.getBody())))
+                    )
+            );
+        }
+
+        return c;
+    }
+
+    @Override
+    public J visitTry(J.Try tryable) {
+        J.Try t = refactor(tryable, super::visitTry);
+
+        if (tokens.contains(LITERAL_TRY) && isEmptyBlock(t.getBody())) {
+            andThen(new DeleteStatement(tryable));
+        } else if (tokens.contains(LITERAL_FINALLY) && t.getFinally() != null && isEmptyBlock(t.getFinally().getBody())) {
+            t = t.withFinally(null);
+        }
+
+        return t;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<AstTransform> visitIf(J.If iff) {
-        List<AstTransform> changes = super.visitIf(iff);
+    public J visitIf(J.If iff) {
+        J.If i = refactor(iff, super::visitIf);
 
-        if (!tokens.contains(LITERAL_IF) || !isEmptyBlock(iff.getThenPart())) {
-            return changes;
+        if (!tokens.contains(LITERAL_IF) || !isEmptyBlock(i.getThenPart())) {
+            return i;
         }
 
-        if (iff.getElsePart() == null) {
+        if (i.getElsePart() == null) {
             // extract side effects from condition (if there are any).
-            changes.addAll(transform(getCursor().getParentOrThrow().getTree(), enclosing -> {
-                        if (enclosing instanceof J.Block) {
-                            J.Block<Tree> enclosingBlock = (J.Block<Tree>) enclosing;
-                            J.If iff2 = (J.If) new RetrieveTreeVisitor(iff.getId()).visit(enclosing);
-
-                            List<Tree> statements = new ArrayList<>(enclosingBlock.getStatements().size());
-                            for (Tree statement : enclosingBlock.getStatements()) {
-                                if (statement == iff2) {
-                                    iff2.getIfCondition().getTree().getSideEffects()
-                                            .stream()
-                                            .map(s -> (Tree) s.withFormatting(formatter().format(enclosingBlock)))
-                                            .forEach(statements::add);
-                                } else {
-                                    statements.add(statement);
-                                }
-                            }
-                            return enclosingBlock.withStatements(statements);
-                        } else {
-                            return enclosing;
-                        }
-                    })
-            );
-
-            return changes;
+            andThen(new ExtractSideEffectsOfIfCondition(enclosingBlock(), i));
+            return i;
         }
 
         // invert top-level if
-        changes.addAll(transform(iff.getIfCondition(), cond -> {
-            if (cond.getTree() instanceof J.Binary) {
-                J.Binary binary = (J.Binary) cond.getTree();
+        J.Parentheses<Expression> cond = i.getIfCondition();
+        if (cond.getTree() instanceof J.Binary) {
+            J.Binary binary = (J.Binary) cond.getTree();
 
-                // only boolean operators are valid for if conditions
-                J.Binary.Operator op = binary.getOperator();
-                if (op instanceof J.Binary.Operator.Equal) {
-                    return cond.withTree(binary.withOperator(new J.Binary.Operator.NotEqual(op.getId(), op.getFormatting())));
-                } else if (op instanceof J.Binary.Operator.NotEqual) {
-                    return cond.withTree(binary.withOperator(new J.Binary.Operator.Equal(op.getId(), op.getFormatting())));
-                } else if (op instanceof J.Binary.Operator.LessThan) {
-                    return cond.withTree(binary.withOperator(new J.Binary.Operator.GreaterThanOrEqual(op.getId(), op.getFormatting())));
-                } else if (op instanceof J.Binary.Operator.LessThanOrEqual) {
-                    return cond.withTree(binary.withOperator(new J.Binary.Operator.GreaterThan(op.getId(), op.getFormatting())));
-                } else if (op instanceof J.Binary.Operator.GreaterThan) {
-                    return cond.withTree(binary.withOperator(new J.Binary.Operator.LessThanOrEqual(op.getId(), op.getFormatting())));
-                } else if (op instanceof J.Binary.Operator.GreaterThanOrEqual) {
-                    return cond.withTree(binary.withOperator(new J.Binary.Operator.LessThan(op.getId(), op.getFormatting())));
-                }
-            }
-            return cond;
-        }));
-
-        changes.addAll(transform(iff, (i, cursor) -> {
-            if (i.getElsePart() == null) {
-                return i.withThenPart(new J.Empty(randomId(), EMPTY)).withElsePart(null);
+            // only boolean operators are valid for if conditions
+            J.Binary.Operator op = binary.getOperator();
+            if (op instanceof J.Binary.Operator.Equal) {
+                cond = cond.withTree(binary.withOperator(new J.Binary.Operator.NotEqual(op.getId(), op.getFormatting())));
+            } else if (op instanceof J.Binary.Operator.NotEqual) {
+                cond = cond.withTree(binary.withOperator(new J.Binary.Operator.Equal(op.getId(), op.getFormatting())));
+            } else if (op instanceof J.Binary.Operator.LessThan) {
+                cond = cond.withTree(binary.withOperator(new J.Binary.Operator.GreaterThanOrEqual(op.getId(), op.getFormatting())));
+            } else if (op instanceof J.Binary.Operator.LessThanOrEqual) {
+                cond = cond.withTree(binary.withOperator(new J.Binary.Operator.GreaterThan(op.getId(), op.getFormatting())));
+            } else if (op instanceof J.Binary.Operator.GreaterThan) {
+                cond = cond.withTree(binary.withOperator(new J.Binary.Operator.LessThanOrEqual(op.getId(), op.getFormatting())));
+            } else if (op instanceof J.Binary.Operator.GreaterThanOrEqual) {
+                cond = cond.withTree(binary.withOperator(new J.Binary.Operator.LessThan(op.getId(), op.getFormatting())));
             }
 
-            J.Block<Tree> thenPart = (J.Block<Tree>) i.getThenPart();
+            i = i.withIfCondition(cond);
+        }
 
-            var containing = cursor.getParentOrThrow().getTree();
-            Statement elseStatement = i.getElsePart().getStatement();
-            List<Tree> elseStatementBody;
-            if (elseStatement instanceof J.Block) {
-                // any else statements should already be at the correct indentation level
-                elseStatementBody = ((J.Block<Tree>) elseStatement).getStatements();
-            } else if (elseStatement instanceof J.If) {
-                // J.If will typically just have a format of one space (the space between "else" and "if" in "else if")
-                // we want this to be on its own line now inside its containing if block
-                String prefix = "\n" + range(0, thenPart.getIndent()).mapToObj(n -> " ").collect(joining(""));
-                elseStatementBody = singletonList(elseStatement.withPrefix(prefix));
-                andThen(formatter().shiftRight(elseStatement, i.getThenPart(), containing));
-            } else {
-                elseStatementBody = singletonList(elseStatement);
-                andThen(formatter().shiftRight(elseStatement, i.getThenPart(), containing));
-            }
+        if (i.getElsePart() == null) {
+            return i.withThenPart(new J.Empty(randomId(), EMPTY)).withElsePart(null);
+        }
 
-            return i
-                    .withThenPart(
-                            // NOTE: then part MUST be a J.Block, because otherwise impossible to have an empty if condition followed by else-if/else chain
-                            thenPart.withStatements(elseStatementBody))
-                    .withElsePart(null);
-        }));
+        // NOTE: then part MUST be a J.Block, because otherwise impossible to have an empty if condition followed by else-if/else chain
+        J.Block<J> thenPart = (J.Block<J>) i.getThenPart();
 
-        return changes;
+        var containing = getCursor().getParentOrThrow().getTree();
+        Statement elseStatement = i.getElsePart().getStatement();
+        List<J> elseStatementBody;
+        if (elseStatement instanceof J.Block) {
+            // any else statements should already be at the correct indentation level
+            elseStatementBody = ((J.Block<J>) elseStatement).getStatements();
+        } else if (elseStatement instanceof J.If) {
+            // J.If will typically just have a format of one space (the space between "else" and "if" in "else if")
+            // we want this to be on its own line now inside its containing if block
+            String prefix = "\n" + range(0, thenPart.getIndent()).mapToObj(n -> " ").collect(joining(""));
+            elseStatementBody = singletonList(elseStatement.withPrefix(prefix));
+            andThen(formatter.shiftRight(elseStatement, i.getThenPart(), containing));
+        } else {
+            elseStatementBody = singletonList(elseStatement);
+            andThen(formatter.shiftRight(elseStatement, i.getThenPart(), containing));
+        }
+
+        return i.withThenPart(thenPart.withStatements(elseStatementBody))
+                .withElsePart(null);
     }
 
     @Override
-    public List<AstTransform> visitSynchronized(J.Synchronized synch) {
+    public J visitSynchronized(J.Synchronized synch) {
         if (tokens.contains(LITERAL_SYNCHRONIZED) && isEmptyBlock(synch.getBody())) {
-            deleteStatement(synch);
+            andThen(new DeleteStatement(synch));
         }
 
         return super.visitSynchronized(synch);
     }
 
     @Override
-    public List<AstTransform> visitSwitch(J.Switch switzh) {
+    public J visitSwitch(J.Switch switzh) {
         if (tokens.contains(LITERAL_SWITCH) && isEmptyBlock(switzh.getCases())) {
-            deleteStatement(switzh);
+            andThen(new DeleteStatement(switzh));
         }
 
         return super.visitSwitch(switzh);
@@ -267,5 +243,34 @@ public class EmptyBlock extends RefactorVisitor {
         return block.equals(BlockPolicy.Statement) &&
                 blockNode instanceof J.Block &&
                 ((J.Block<?>) blockNode).getStatements().isEmpty();
+    }
+
+    private static class ExtractSideEffectsOfIfCondition extends ScopedJavaRefactorVisitor {
+        private final J.If toExtract;
+
+        public ExtractSideEffectsOfIfCondition(J.Block<?> enclosingBlock, J.If toExtract) {
+            super(enclosingBlock.getId());
+            this.toExtract = toExtract;
+        }
+
+        @Override
+        public J visitBlock(J.Block<J> block) {
+            J.Block<J> b = refactor(block, super::visitBlock);
+            if (isScope()) {
+                List<J> statements = new ArrayList<>(b.getStatements().size());
+                for (J statement : b.getStatements()) {
+                    if (statement == toExtract) {
+                        toExtract.getIfCondition().getTree().getSideEffects()
+                                .stream()
+                                .map(s -> (J) s.withFormatting(formatter.format(block)))
+                                .forEach(statements::add);
+                    } else {
+                        statements.add(statement);
+                    }
+                }
+                b = b.withStatements(statements);
+            }
+            return b;
+        }
     }
 }

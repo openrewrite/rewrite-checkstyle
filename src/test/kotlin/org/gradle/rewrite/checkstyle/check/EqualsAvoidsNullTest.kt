@@ -1,9 +1,9 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
 
-open class EqualsAvoidsNullTest: Parser() {
+open class EqualsAvoidsNullTest: JavaParser() {
     @Test
     fun invertConditional() {
         val a = parse("""

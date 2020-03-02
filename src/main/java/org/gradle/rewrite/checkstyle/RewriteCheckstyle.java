@@ -6,7 +6,7 @@ import com.puppycrawl.tools.checkstyle.api.Configuration;
 import org.gradle.rewrite.checkstyle.check.*;
 import org.gradle.rewrite.checkstyle.policy.*;
 import org.openrewrite.internal.lang.Nullable;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 import org.xml.sax.InputSource;
 
 import java.io.InputStream;
@@ -24,7 +24,7 @@ import static org.gradle.rewrite.checkstyle.policy.PunctuationToken.*;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
 
 public class RewriteCheckstyle {
-    public static List<RefactorVisitor> fromConfiguration(InputStream reader) {
+    public static List<JavaRefactorVisitor> fromConfiguration(InputStream reader) {
         try {
             Configuration config = ConfigurationLoader.loadConfiguration(new InputSource(reader),
                     System::getProperty,

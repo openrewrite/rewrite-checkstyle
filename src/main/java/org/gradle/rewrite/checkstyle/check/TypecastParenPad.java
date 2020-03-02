@@ -2,19 +2,16 @@ package org.gradle.rewrite.checkstyle.check;
 
 import lombok.RequiredArgsConstructor;
 import org.gradle.rewrite.checkstyle.policy.PadPolicy;
-import org.openrewrite.tree.Formatting;
-import org.openrewrite.tree.J;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
-
-import java.util.List;
+import org.openrewrite.Formatting;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
 import static org.gradle.rewrite.checkstyle.policy.PadPolicy.NOSPACE;
-import static org.openrewrite.tree.Formatting.EMPTY;
-import static org.openrewrite.tree.Formatting.format;
+import static org.openrewrite.Formatting.EMPTY;
+import static org.openrewrite.Formatting.format;
 
 @RequiredArgsConstructor
-public class TypecastParenPad extends RefactorVisitor {
+public class TypecastParenPad extends JavaRefactorVisitor {
     private final PadPolicy option;
 
     public TypecastParenPad() {
@@ -22,17 +19,18 @@ public class TypecastParenPad extends RefactorVisitor {
     }
 
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.TypecastParenPad";
     }
 
     @Override
-    public List<AstTransform> visitTypeCast(J.TypeCast typeCast) {
+    public J visitTypeCast(J.TypeCast typeCast) {
+        J.TypeCast tc = refactor(typeCast, super::visitTypeCast);
         Formatting formatting = typeCast.getClazz().getTree().getFormatting();
-        return maybeTransform(typeCast,
-                (option == NOSPACE) != formatting.equals(EMPTY),
-                super::visitTypeCast,
-                tc -> tc.withClazz(tc.getClazz().withTree(tc.getClazz().getTree()
-                        .withFormatting(option == NOSPACE ? EMPTY : format(" ", " ")))));
+        if((option == NOSPACE) != formatting.equals(EMPTY)) {
+            tc = tc.withClazz(tc.getClazz().withTree(tc.getClazz().getTree()
+                    .withFormatting(option == NOSPACE ? EMPTY : format(" ", " "))));
+        }
+        return tc;
     }
 }

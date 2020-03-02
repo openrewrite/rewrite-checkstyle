@@ -1,9 +1,9 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.Parser
+import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
 
-class GenericWhitespaceTest : Parser() {
+class GenericWhitespaceTest : JavaParser() {
     @Test
     fun genericWhitespace() {
         val a = parse("""

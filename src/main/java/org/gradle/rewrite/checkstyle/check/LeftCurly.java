@@ -3,22 +3,20 @@ package org.gradle.rewrite.checkstyle.check;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.LeftCurlyPolicy;
 import org.gradle.rewrite.checkstyle.policy.Token;
-import org.openrewrite.tree.Cursor;
-import org.openrewrite.tree.J;
-import org.openrewrite.tree.Tree;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.Cursor;
+import org.openrewrite.Tree;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
-import java.util.List;
 import java.util.Set;
 
 import static org.gradle.rewrite.checkstyle.policy.LeftCurlyPolicy.EOL;
 import static org.gradle.rewrite.checkstyle.policy.LeftCurlyPolicy.NL;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
-import static org.openrewrite.tree.Formatting.EMPTY;
+import static org.openrewrite.Formatting.EMPTY;
 
 @Builder
-public class LeftCurly extends RefactorVisitor {
+public class LeftCurly extends JavaRefactorVisitor {
     @Builder.Default
     private final LeftCurlyPolicy option = EOL;
 
@@ -52,25 +50,32 @@ public class LeftCurly extends RefactorVisitor {
     );
 
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.LeftCurly";
     }
 
     @Override
-    public List<AstTransform> visitBlock(J.Block<Tree> block) {
+    public boolean isCursored() {
+        return true;
+    }
+
+    @Override
+    public J visitBlock(J.Block<J> block) {
+        J.Block<J> b = refactor(block, super::visitBlock);
+
         Cursor containing = getCursor().getParentOrThrow();
 
         boolean spansMultipleLines = LeftCurlyPolicy.NLOW.equals(option) ?
-                new SpansMultipleLines(block).visit((Tree) containing.getTree().withFormatting(EMPTY)) : false;
+                new SpansMultipleLines(containing.getTree(), block).visit((Tree) containing.getTree()) : false;
 
-        return maybeTransform(block,
-                !satisfiesPolicy(option, block, containing.getTree(), spansMultipleLines),
-                super::visitBlock,
-                b -> formatCurly(option, b, spansMultipleLines, containing)
-        );
+        if(!satisfiesPolicy(option, block, containing.getTree(), spansMultipleLines)) {
+            b = formatCurly(option, b, spansMultipleLines, containing);
+        }
+
+        return b;
     }
 
-    private boolean satisfiesPolicy(LeftCurlyPolicy option, J.Block<Tree> block, Tree containing, boolean spansMultipleLines) {
+    private boolean satisfiesPolicy(LeftCurlyPolicy option, J.Block<J> block, Tree containing, boolean spansMultipleLines) {
         switch (option) {
             case EOL:
                 return (ignoreEnums && containing instanceof J.Case) || !block.getFormatting().getPrefix().contains("\n");
@@ -83,7 +88,7 @@ public class LeftCurly extends RefactorVisitor {
         }
     }
 
-    private static J.Block<Tree> formatCurly(LeftCurlyPolicy option, J.Block<Tree> block, boolean spansMultipleLines, Cursor containing) {
+    private static J.Block<J> formatCurly(LeftCurlyPolicy option, J.Block<J> block, boolean spansMultipleLines, Cursor containing) {
         switch (option) {
             case EOL:
                 return containing.getParentOrThrow().getTree() instanceof J.ClassDecl && block.getStatic() == null ?

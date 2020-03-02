@@ -1,8 +1,8 @@
 package org.gradle.rewrite.checkstyle.policy;
 
-import org.openrewrite.tree.Cursor;
-import org.openrewrite.tree.J;
-import org.openrewrite.tree.Tree;
+import org.openrewrite.Cursor;
+import org.openrewrite.Tree;
+import org.openrewrite.java.tree.J;
 
 import java.util.Set;
 

@@ -1,54 +1,57 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import org.openrewrite.tree.Formatting;
-import org.openrewrite.tree.J;
-import org.openrewrite.tree.Tree;
-import org.openrewrite.visitor.refactor.AstTransform;
-import org.openrewrite.visitor.refactor.RefactorVisitor;
+import org.openrewrite.Tree;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
 import java.util.List;
 
-import static org.openrewrite.tree.Formatting.EMPTY;
+import static org.openrewrite.Formatting.*;
 
-public class GenericWhitespace extends RefactorVisitor {
+public class GenericWhitespace extends JavaRefactorVisitor {
     @Override
-    public String getRuleName() {
+    public String getName() {
         return "checkstyle.GenericWhitespace";
     }
 
     @Override
-    public List<AstTransform> visitTypeParameters(J.TypeParameters typeParams) {
-        Tree tree = getCursor().getParentOrThrow().getTree();
-        return maybeTransform(typeParams,
-                !(tree instanceof J.MethodDecl) && !typeParams.getFormatting().getPrefix().isEmpty(),
-                super::visitTypeParameters,
-                tp -> tp.withFormatting(EMPTY)
-        );
+    public boolean isCursored() {
+        return true;
     }
 
     @Override
-    public List<AstTransform> visitTypeParameter(J.TypeParameter typeParam) {
+    public J visitTypeParameters(J.TypeParameters typeParams) {
+        J.TypeParameters t = refactor(typeParams, super::visitTypeParameters);
+
+        Tree tree = getCursor().getParentOrThrow().getTree();
+        if (!(tree instanceof J.MethodDecl) && !typeParams.getFormatting().getPrefix().isEmpty()) {
+            t = t.withFormatting(EMPTY);
+        }
+
+        return t;
+    }
+
+    @Override
+    public J visitTypeParameter(J.TypeParameter typeParam) {
+        J.TypeParameter t = refactor(typeParam, super::visitTypeParameter);
         List<J.TypeParameter> params = ((J.TypeParameters) getCursor().getParentOrThrow().getTree()).getParams();
 
         if (params.isEmpty()) {
             return super.visitTypeParameter(typeParam);
         } else if (params.size() == 1) {
-            return maybeTransform(typeParam,
-                    !typeParam.getFormatting().equals(EMPTY),
-                    super::visitTypeParameter,
-                    tp -> tp.withFormatting(EMPTY));
+            if (!typeParam.getFormatting().equals(EMPTY)) {
+                t = t.withFormatting(EMPTY);
+            }
         } else if (params.get(0) == typeParam) {
-            return maybeTransform(typeParam,
-                    !typeParam.getFormatting().getPrefix().isEmpty(),
-                    super::visitTypeParameter,
-                    Formatting::stripPrefix);
+            if (!typeParam.getFormatting().getPrefix().isEmpty()) {
+                t = stripPrefix(t);
+            }
         } else if (params.get(params.size() - 1) == typeParam) {
-            return maybeTransform(typeParam,
-                    !typeParam.getFormatting().getSuffix().isEmpty(),
-                    super::visitTypeParameter,
-                    Formatting::stripSuffix);
+            if (!typeParam.getFormatting().getSuffix().isEmpty()) {
+                t = stripSuffix(t);
+            }
         }
 
-        return super.visitTypeParameter(typeParam);
+        return t;
     }
 }
