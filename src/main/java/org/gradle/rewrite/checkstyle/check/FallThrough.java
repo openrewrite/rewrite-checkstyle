@@ -4,10 +4,10 @@ import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.openrewrite.Tree;
 import org.openrewrite.java.JavaSourceVisitor;
+import org.openrewrite.java.refactor.JavaRefactorVisitor;
+import org.openrewrite.java.refactor.ScopedJavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Statement;
-import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
-import org.openrewrite.java.visitor.refactor.ScopedJavaRefactorVisitor;
 
 import java.util.*;
 import java.util.regex.Pattern;

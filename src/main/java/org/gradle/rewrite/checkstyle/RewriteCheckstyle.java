@@ -6,7 +6,7 @@ import com.puppycrawl.tools.checkstyle.api.Configuration;
 import org.gradle.rewrite.checkstyle.check.*;
 import org.gradle.rewrite.checkstyle.policy.*;
 import org.openrewrite.internal.lang.Nullable;
-import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
+import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.xml.sax.InputSource;
 
 import java.io.InputStream;

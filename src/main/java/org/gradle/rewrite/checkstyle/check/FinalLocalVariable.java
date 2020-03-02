@@ -1,9 +1,9 @@
 package org.gradle.rewrite.checkstyle.check;
 
 import org.openrewrite.Tree;
+import org.openrewrite.java.refactor.JavaRefactorVisitor;
+import org.openrewrite.java.search.FindReferencesToVariable;
 import org.openrewrite.java.tree.J;
-import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
-import org.openrewrite.java.visitor.search.FindReferencesToVariable;
 
 import java.util.ArrayList;
 import java.util.List;

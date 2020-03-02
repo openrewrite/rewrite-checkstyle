@@ -1,11 +1,11 @@
 package org.gradle.rewrite.checkstyle.check;
 
 import lombok.Builder;
+import org.openrewrite.java.refactor.ChangeFieldName;
+import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 import org.openrewrite.java.tree.TypeUtils;
-import org.openrewrite.java.visitor.refactor.ChangeFieldName;
-import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
 import java.util.function.Function;
 

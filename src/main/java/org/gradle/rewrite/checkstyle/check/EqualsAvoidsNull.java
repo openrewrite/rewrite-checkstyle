@@ -1,14 +1,12 @@
 package org.gradle.rewrite.checkstyle.check;
 
-import org.openrewrite.Cursor;
 import org.openrewrite.Tree;
 import org.openrewrite.java.MethodMatcher;
+import org.openrewrite.java.refactor.JavaRefactorVisitor;
+import org.openrewrite.java.refactor.ScopedJavaRefactorVisitor;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
-import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
-import org.openrewrite.java.visitor.refactor.ScopedJavaRefactorVisitor;
-import org.openrewrite.java.visitor.refactor.UnwrapParentheses;
 
 import java.util.UUID;
 

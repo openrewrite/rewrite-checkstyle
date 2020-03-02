@@ -5,12 +5,12 @@ import org.gradle.rewrite.checkstyle.policy.PadPolicy;
 import org.gradle.rewrite.checkstyle.policy.Token;
 import org.openrewrite.Tree;
 import org.openrewrite.internal.lang.Nullable;
+import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.J.EnumValue;
 import org.openrewrite.java.tree.J.MethodDecl;
 import org.openrewrite.java.tree.J.MethodInvocation;
 import org.openrewrite.java.tree.J.NewClass;
-import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
 import java.util.Set;
 import java.util.function.BiFunction;

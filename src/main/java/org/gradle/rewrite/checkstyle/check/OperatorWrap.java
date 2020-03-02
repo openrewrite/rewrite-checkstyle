@@ -4,9 +4,9 @@ import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.OperatorToken;
 import org.gradle.rewrite.checkstyle.policy.WrapPolicy;
 import org.openrewrite.Tree;
+import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.TypeTree;
-import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
 import java.util.ArrayList;
 import java.util.List;

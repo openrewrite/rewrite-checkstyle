@@ -4,10 +4,10 @@ import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.ParenthesesToken;
 import org.openrewrite.Cursor;
 import org.openrewrite.Tree;
+import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
-import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
 import java.util.Set;
 

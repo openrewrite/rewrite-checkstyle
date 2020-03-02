@@ -1,15 +1,16 @@
 package org.gradle.rewrite.checkstyle.check;
 
+import lombok.Builder;
+import lombok.RequiredArgsConstructor;
+import org.gradle.rewrite.checkstyle.policy.Token;
 import org.openrewrite.Cursor;
 import org.openrewrite.Tree;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.JavaSourceVisitor;
-import org.openrewrite.java.tree.*;
-import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
-import lombok.Builder;
-import lombok.RequiredArgsConstructor;
-import org.gradle.rewrite.checkstyle.policy.Token;
-import org.openrewrite.java.visitor.refactor.ScopedJavaRefactorVisitor;
+import org.openrewrite.java.refactor.JavaRefactorVisitor;
+import org.openrewrite.java.refactor.ScopedJavaRefactorVisitor;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.tree.JavaType;
 
 import java.util.List;
 import java.util.Set;
@@ -17,10 +18,10 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.openrewrite.java.tree.TypeUtils.getVisibleSupertypeMembers;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
+import static org.openrewrite.java.tree.TypeUtils.getVisibleSupertypeMembers;
 
 @Builder
 public class HiddenField extends JavaRefactorVisitor {

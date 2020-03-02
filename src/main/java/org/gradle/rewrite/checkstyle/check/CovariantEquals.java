@@ -1,16 +1,16 @@
 package org.gradle.rewrite.checkstyle.check;
 
 import org.openrewrite.Cursor;
+import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.*;
-import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.openrewrite.Formatting.*;
-import static org.openrewrite.Tree.randomId;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
+import static org.openrewrite.Formatting.*;
+import static org.openrewrite.Tree.randomId;
 
 public class CovariantEquals extends JavaRefactorVisitor {
     @Override

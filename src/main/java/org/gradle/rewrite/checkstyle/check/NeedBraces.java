@@ -3,10 +3,10 @@ package org.gradle.rewrite.checkstyle.check;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.Token;
 import org.openrewrite.Tree;
+import org.openrewrite.java.refactor.Formatter;
+import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Statement;
-import org.openrewrite.java.visitor.refactor.Formatter;
-import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
 import java.util.Set;
 

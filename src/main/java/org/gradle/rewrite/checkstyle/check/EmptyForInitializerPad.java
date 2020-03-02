@@ -2,9 +2,9 @@ package org.gradle.rewrite.checkstyle.check;
 
 import lombok.RequiredArgsConstructor;
 import org.gradle.rewrite.checkstyle.policy.PadPolicy;
+import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Statement;
-import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
 @RequiredArgsConstructor
 public class EmptyForInitializerPad extends JavaRefactorVisitor {

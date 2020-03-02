@@ -5,15 +5,14 @@ import org.gradle.rewrite.checkstyle.policy.LeftCurlyPolicy;
 import org.gradle.rewrite.checkstyle.policy.Token;
 import org.openrewrite.Cursor;
 import org.openrewrite.Tree;
+import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
-import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
 
 import java.util.Set;
 
 import static org.gradle.rewrite.checkstyle.policy.LeftCurlyPolicy.EOL;
 import static org.gradle.rewrite.checkstyle.policy.LeftCurlyPolicy.NL;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
-import static org.openrewrite.Formatting.EMPTY;
 
 @Builder
 public class LeftCurly extends JavaRefactorVisitor {

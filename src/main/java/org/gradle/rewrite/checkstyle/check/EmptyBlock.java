@@ -3,11 +3,10 @@ package org.gradle.rewrite.checkstyle.check;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.BlockPolicy;
 import org.gradle.rewrite.checkstyle.policy.Token;
-import org.openrewrite.Cursor;
+import org.openrewrite.java.refactor.DeleteStatement;
+import org.openrewrite.java.refactor.JavaRefactorVisitor;
+import org.openrewrite.java.refactor.ScopedJavaRefactorVisitor;
 import org.openrewrite.java.tree.*;
-import org.openrewrite.java.visitor.refactor.DeleteStatement;
-import org.openrewrite.java.visitor.refactor.JavaRefactorVisitor;
-import org.openrewrite.java.visitor.refactor.ScopedJavaRefactorVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +17,6 @@ import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
 import static org.openrewrite.Formatting.EMPTY;
