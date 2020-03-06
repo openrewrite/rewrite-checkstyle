@@ -1,5 +1,6 @@
 package org.gradle.rewrite.checkstyle;
 
+import com.google.common.base.Charsets;
 import org.apache.commons.cli.*;
 import org.openrewrite.Change;
 import org.openrewrite.Refactor;
@@ -7,10 +8,7 @@ import org.openrewrite.SourceVisitor;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.tree.J;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.io.*;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,32 +19,44 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
 public class Main {
-    public static void main(String[] args) throws ParseException {
+    public static void main(String[] args) throws ParseException, IOException {
         CommandLineParser parser = new DefaultParser();
         Options options = new Options();
-        options.addRequiredOption("f", "file", true, "Checkstyle configuration XML");
+        options.addOption("f", "file", true, "Checkstyle configuration XML file");
+        options.addOption("c", "config", true, "Checkstyle configuration XML");
         options.addOption("l", "limit", true, "Limit number of files processed");
         options.addOption("r", "regex", true, "Glob filter");
 
         CommandLine line = parser.parse(options, args);
 
-        try (FileInputStream fis = new FileInputStream(new File(line.getOptionValue("f")))) {
-            List<SourceVisitor<J>> rules = new RewriteCheckstyle(fis).getVisitors();
+        List<SourceVisitor<J>> rules;
 
-            PathMatcher pathMatcher = line.hasOption("r") ?
-                    FileSystems.getDefault().getPathMatcher("glob:" + line.getOptionValue("r")) :
-                    null;
+        if(line.hasOption("f")) {
+            try (InputStream is = new FileInputStream(new File(line.getOptionValue("f")))) {
+                rules = new RewriteCheckstyle(is).getVisitors();
+            }
+        } else if(line.hasOption("c")) {
+            try (InputStream is = new ByteArrayInputStream(line.getOptionValue("c").getBytes(Charsets.UTF_8))) {
+                rules = new RewriteCheckstyle(is).getVisitors();
+            }
+        } else {
+            throw new IllegalArgumentException("Supply either a config XML file via -f or an inline config via -c");
+        }
 
-            List<Path> sourcePaths = Files.walk(Path.of(""))
-                    .filter(p -> p.toFile().getName().endsWith(".java"))
-                    .filter(p -> pathMatcher == null || pathMatcher.matches(p))
-                    .limit(Integer.parseInt(line.getOptionValue("l", "2147483647")))
-                    .collect(toList());
+        PathMatcher pathMatcher = line.hasOption("r") ?
+                FileSystems.getDefault().getPathMatcher("glob:" + line.getOptionValue("r")) :
+                null;
 
-            sourcePaths.stream()
+        List<Path> sourcePaths = Files.walk(Path.of(""))
+                .filter(p -> p.toFile().getName().endsWith(".java"))
+                .filter(p -> pathMatcher == null || pathMatcher.matches(p))
+                .limit(Integer.parseInt(line.getOptionValue("l", "2147483647")))
+                .collect(toList());
+
+        sourcePaths.stream()
                 .flatMap(javaSource ->
                         new JavaParser().setLogCompilationWarningsAndErrors(false).parse(singletonList(javaSource), Path.of("").toAbsolutePath())
-                            .stream())
+                                .stream())
                 .forEach(cu -> {
                     Refactor<J.CompilationUnit, J> refactor = cu.refactor();
                     for (SourceVisitor<J> visitor : rules) {
@@ -64,8 +74,6 @@ public class Main {
                         }
                     }
                 });
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+
     }
 }

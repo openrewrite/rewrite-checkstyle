@@ -53,6 +53,12 @@ tasks.named<Test>("test") {
     jvmArgs = listOf("-XX:+UnlockDiagnosticVMOptions", "-XX:+ShowHiddenFrames")
 }
 
+tasks.named<Jar>("jar") {
+    manifest {
+        attributes(listOf("Main-Class" to "org.gradle.rewrite.checkstyle.Main").toMap())
+    }
+}
+
 val shadowJar = tasks.named<ShadowJar>("shadowJar")
 
 publishing {
@@ -60,7 +66,7 @@ publishing {
         create<MavenPublication>("runnableJar") {
             artifactId = "rewrite-checkstyle"
             artifact(shadowJar.get()) {
-                classifier = "cli"
+                classifier = "all"
             }
         }
     }
