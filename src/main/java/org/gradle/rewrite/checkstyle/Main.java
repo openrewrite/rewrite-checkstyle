@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -31,11 +32,11 @@ public class Main {
 
         List<SourceVisitor<J>> rules;
 
-        if(line.hasOption("f")) {
+        if (line.hasOption("f")) {
             try (InputStream is = new FileInputStream(new File(line.getOptionValue("f")))) {
                 rules = new RewriteCheckstyle(is).getVisitors();
             }
-        } else if(line.hasOption("c")) {
+        } else if (line.hasOption("c")) {
             try (InputStream is = new ByteArrayInputStream(line.getOptionValue("c").getBytes(Charsets.UTF_8))) {
                 rules = new RewriteCheckstyle(is).getVisitors();
             }
@@ -54,9 +55,14 @@ public class Main {
                 .collect(toList());
 
         sourcePaths.stream()
-                .flatMap(javaSource ->
-                        new JavaParser().setLogCompilationWarningsAndErrors(false).parse(singletonList(javaSource), Path.of("").toAbsolutePath())
-                                .stream())
+                .flatMap(javaSource -> {
+                    try {
+                        return new JavaParser().setLogCompilationWarningsAndErrors(false).parse(singletonList(javaSource), Path.of("").toAbsolutePath())
+                                .stream();
+                    } catch (Throwable t) {
+                        return Stream.empty();
+                    }
+                })
                 .forEach(cu -> {
                     Refactor<J.CompilationUnit, J> refactor = cu.refactor();
                     for (SourceVisitor<J> visitor : rules) {
