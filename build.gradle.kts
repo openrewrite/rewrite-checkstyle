@@ -60,7 +60,7 @@ publishing {
         create<MavenPublication>("runnableJar") {
             artifactId = "rewrite-checkstyle"
             artifact(shadowJar.get()) {
-                classifier = null
+                classifier = "cli"
             }
         }
     }
