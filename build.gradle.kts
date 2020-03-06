@@ -34,7 +34,10 @@ dependencies {
 
     implementation("commons-cli:commons-cli:1.4")
 
-    runtimeOnly("ch.qos.logback:logback-classic:1.0.13")
+    implementation("io.micrometer.prometheus:prometheus-rsocket-client:latest.release")
+    implementation("io.rsocket:rsocket-transport-netty:latest.release")
+
+    implementation("ch.qos.logback:logback-classic:1.0.13")
 
     compileOnly("org.projectlombok:lombok:1.18.10")
     annotationProcessor("org.projectlombok:lombok:1.18.10")
