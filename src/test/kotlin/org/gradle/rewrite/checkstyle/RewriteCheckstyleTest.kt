@@ -35,7 +35,7 @@ class RewriteCheckstyleTest {
             </module>
         """.trimIndent()
 
-        val visitors = RewriteCheckstyle.fromConfiguration(checkstyleConfig.byteInputStream())
+        val visitors = RewriteCheckstyle(checkstyleConfig.byteInputStream()).visitors
 
         assertThat(visitors)
                 .hasAtLeastOneElementOfType(CovariantEquals::class.java)
