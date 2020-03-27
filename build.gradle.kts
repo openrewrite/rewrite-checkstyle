@@ -25,7 +25,6 @@ configurations.all {
 }
 
 java {
-    withJavadocJar()
     withSourcesJar()
 }
 
