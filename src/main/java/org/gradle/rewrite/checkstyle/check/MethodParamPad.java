@@ -7,7 +7,6 @@ import org.openrewrite.Tree;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
-import org.openrewrite.java.tree.J.EnumValue;
 import org.openrewrite.java.tree.J.MethodDecl;
 import org.openrewrite.java.tree.J.MethodInvocation;
 import org.openrewrite.java.tree.J.NewClass;
@@ -50,11 +49,6 @@ public class MethodParamPad extends JavaRefactorVisitor {
     @Override
     public J visitNewClass(NewClass newClass) {
         return maybeFixFormatting(newClass, super::visitNewClass, NewClass::getArgs, NewClass::withArgs, LITERAL_NEW);
-    }
-
-    @Override
-    public J visitEnumValue(EnumValue enoom) {
-        return maybeFixFormatting(enoom, super::visitEnumValue, EnumValue::getInitializer, EnumValue::withInitializer, ENUM_CONSTANT_DEF);
     }
 
     @Override

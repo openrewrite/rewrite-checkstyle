@@ -3,7 +3,7 @@ package org.gradle.rewrite.checkstyle.check;
 import lombok.Builder;
 import org.gradle.rewrite.checkstyle.policy.Token;
 import org.openrewrite.Tree;
-import org.openrewrite.java.refactor.Formatter;
+import org.openrewrite.java.refactor.JavaFormatter;
 import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Statement;
@@ -126,7 +126,7 @@ public class NeedBraces extends JavaRefactorVisitor {
         }
 
         int enclosingIndent = getCursor().getParentOrThrow().firstEnclosing(J.Block.class).getIndent();
-        Formatter.Result format = formatter.findIndent(enclosingIndent, getCursor().getParentOrThrow().getTree());
+        JavaFormatter.Result format = formatter.findIndent(enclosingIndent, getCursor().getParentOrThrow().getTree());
 
         String originalBodySuffix = body.getFormatting().getSuffix();
 

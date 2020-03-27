@@ -9,11 +9,11 @@ plugins {
     id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
-group = "org.gradle"
+group = "org.gradle.rewrite.plan"
 description = "Refactor checkstyle automatically"
 
 repositories {
-    maven { url = uri("https://oss.jfrog.org/artifactory/oss-snapshot-local") }
+    maven { url = uri("https://repo.gradle.org/gradle/libs-snapshots/") }
     mavenCentral()
 }
 
@@ -25,7 +25,7 @@ configurations.all {
 }
 
 dependencies {
-    implementation("com.netflix.devinsight.rewrite:rewrite-java:latest.integration")
+    implementation("org.gradle.rewrite:rewrite-java:latest.integration")
 
     implementation("com.puppycrawl.tools:checkstyle:latest.release")
 
@@ -66,34 +66,17 @@ val shadowJar = tasks.named<ShadowJar>("shadowJar")
 
 publishing {
     publications {
+        create<MavenPublication>("jar") {
+            from(components["java"])
+        }
         create<MavenPublication>("runnableJar") {
-            artifactId = "rewrite-checkstyle"
-            artifact(shadowJar.get()) {
-                classifier = "all"
-            }
+            artifactId = "rewrite-checkstyle-all"
+            artifact(shadowJar.get())
         }
     }
     repositories {
         maven {
             name = "GradleSnapshots"
-            url = URI.create("https://repo.gradle.org/gradle/libs-snapshots-local")
-            credentials {
-                username = project.findProperty("artifactoryUsername") as String?
-                password = project.findProperty("artifactoryPassword") as String?
-            }
-        }
-    }
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("jar") {
-            artifactId = "rewrite-checkstyle"
-        }
-    }
-    repositories {
-        maven {
-            name = "GradleBuildInternalSnapshots"
             url = URI.create("https://repo.gradle.org/gradle/libs-snapshots-local")
             credentials {
                 username = project.findProperty("artifactoryUsername") as String?
