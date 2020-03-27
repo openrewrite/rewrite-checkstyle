@@ -24,6 +24,11 @@ configurations.all {
     }
 }
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
 dependencies {
     implementation("org.gradle.rewrite:rewrite-java:latest.integration")
 
