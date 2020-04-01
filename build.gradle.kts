@@ -1,4 +1,4 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+//import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.URI
 
@@ -7,7 +7,7 @@ plugins {
     `maven-publish`
     id("org.jetbrains.kotlin.jvm") version "1.3.61"
     id("nebula.release") version "13.2.1"
-    id("com.github.johnrengelman.shadow") version "5.2.0"
+//    id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
 group = "org.gradle.rewrite.plan"
@@ -74,22 +74,38 @@ tasks.named<Jar>("jar") {
     }
 }
 
-val shadowJar = tasks.named<ShadowJar>("shadowJar")
+//val shadowJar = tasks.named<ShadowJar>("shadowJar")
+
+fun shouldUseReleaseRepo(): Boolean {
+    return project.gradle.startParameter.taskNames.contains("final") || project.gradle.startParameter.taskNames.contains(":final")
+}
+
+project.gradle.taskGraph.whenReady(object: Action<TaskExecutionGraph> {
+    override fun execute(graph: TaskExecutionGraph) {
+            if (graph.hasTask(":snapshot") || graph.hasTask(":immutableSnapshot")) {
+                throw GradleException("You cannot use the snapshot or immutableSnapshot task from the release plugin. Please use the devSnapshot task.")
+            }
+    }
+})
 
 publishing {
     publications {
         create<MavenPublication>("jar") {
             from(components["java"])
         }
-        create<MavenPublication>("runnableJar") {
-            artifactId = "rewrite-checkstyle-all"
-            artifact(shadowJar.get())
-        }
+//        create<MavenPublication>("runnableJar") {
+//            artifactId = "rewrite-checkstyle-all"
+//            artifact(shadowJar.get())
+//        }
     }
     repositories {
         maven {
-            name = "GradleReleases"
-            url = URI.create("https://repo.gradle.org/gradle/libs-releases-local")
+            name = "GradleEnterprise"
+            url = if(shouldUseReleaseRepo()) {
+                URI.create("https://repo.gradle.org/gradle/enterprise-libs-releases-local")
+            } else {
+                URI.create("https://repo.gradle.org/gradle/enterprise-libs-snapshots-local")
+            }
             credentials {
                 username = project.findProperty("artifactoryUsername") as String?
                 password = project.findProperty("artifactoryPassword") as String?
@@ -97,3 +113,5 @@ publishing {
         }
     }
 }
+
+project.rootProject.tasks.getByName("postRelease").dependsOn(project.tasks.getByName("publishAllPublicationsToGradleEnterpriseRepository"))
