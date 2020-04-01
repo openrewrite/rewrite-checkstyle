@@ -88,8 +88,8 @@ publishing {
     }
     repositories {
         maven {
-            name = "GradleSnapshots"
-            url = URI.create("https://repo.gradle.org/gradle/libs-snapshots-local")
+            name = "GradleReleases"
+            url = URI.create("https://repo.gradle.org/gradle/libs-releases-local")
             credentials {
                 username = project.findProperty("artifactoryUsername") as String?
                 password = project.findProperty("artifactoryPassword") as String?
