@@ -4,9 +4,10 @@ import java.net.URI
 
 plugins {
     `java-library`
-    `maven-publish`
-    id("org.jetbrains.kotlin.jvm") version "1.3.61"
+    id("org.jetbrains.kotlin.jvm") version "1.3.71"
     id("nebula.release") version "13.2.1"
+    id("nebula.maven-publish") version "17.2.1"
+    id("nebula.maven-resolved-dependencies") version "17.2.1"
 //    id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
@@ -14,8 +15,18 @@ group = "org.gradle.rewrite.plan"
 description = "Refactor checkstyle automatically"
 
 repositories {
-    maven { url = uri("https://repo.gradle.org/gradle/libs-snapshots/") }
-    mavenCentral()
+    maven { url = uri("https://repo.gradle.org/gradle/enterprise-libs-releases-local/") }
+    maven { url = uri("https://repo.gradle.org/gradle/enterprise-libs-snapshots-local/") }
+    mavenCentral {
+        content {
+            excludeVersionByRegex("com\\.fasterxml\\.jackson\\..*", ".*", ".*rc.*")
+        }
+    }
+    mavenCentral {
+        content {
+            includeVersionByRegex("com\\.fasterxml\\.jackson\\..*", ".*", "(\\d+\\.)*\\d+")
+        }
+    }
 }
 
 configurations.all {
@@ -35,7 +46,7 @@ dependencies {
     implementation("com.puppycrawl.tools:checkstyle:latest.release")
 
     // FIXME the IDE throws "unknown enum constant com.fasterxml.jackson.annotation.JsonTypeInfo.Id.MINIMAL_CLASS sometimes?
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.10.2")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:latest.release")
 
     implementation("commons-cli:commons-cli:1.4")
 
@@ -44,8 +55,8 @@ dependencies {
 
     implementation("ch.qos.logback:logback-classic:1.0.13")
 
-    compileOnly("org.projectlombok:lombok:1.18.10")
-    annotationProcessor("org.projectlombok:lombok:1.18.10")
+    compileOnly("org.projectlombok:lombok:latest.release")
+    annotationProcessor("org.projectlombok:lombok:latest.release")
 
     testImplementation("org.jetbrains.kotlin:kotlin-reflect")
     testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -90,9 +101,6 @@ project.gradle.taskGraph.whenReady(object: Action<TaskExecutionGraph> {
 
 publishing {
     publications {
-        create<MavenPublication>("jar") {
-            from(components["java"])
-        }
 //        create<MavenPublication>("runnableJar") {
 //            artifactId = "rewrite-checkstyle-all"
 //            artifact(shadowJar.get())
