@@ -1,10 +1,13 @@
 package org.gradle.rewrite.checkstyle;
 
 import com.puppycrawl.tools.checkstyle.ConfigurationLoader;
-import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
-import com.puppycrawl.tools.checkstyle.api.Configuration;
+import com.puppycrawl.tools.checkstyle.Definitions;
+import com.puppycrawl.tools.checkstyle.Main;
+import com.puppycrawl.tools.checkstyle.api.*;
+import com.puppycrawl.tools.checkstyle.filters.SuppressionsLoader;
 import org.gradle.rewrite.checkstyle.check.*;
 import org.gradle.rewrite.checkstyle.policy.*;
+import org.openrewrite.Refactor;
 import org.openrewrite.RefactorModule;
 import org.openrewrite.SourceVisitor;
 import org.openrewrite.internal.lang.Nullable;
@@ -26,23 +29,55 @@ import static org.gradle.rewrite.checkstyle.policy.PunctuationToken.*;
 import static org.gradle.rewrite.checkstyle.policy.Token.*;
 
 public class RewriteCheckstyle implements RefactorModule<J.CompilationUnit, J> {
-    private final Configuration config;
+    // we just want to re-use the suppression filtering logic in Checkstyle without emitting messages
+    private static final LocalizedMessage localizedMessageThatDoesntMatter = new LocalizedMessage(1,
+            "bundle", "key", new String[0], null, RewriteCheckstyle.class, null);
+
+    private List<SourceVisitor<J>> checkstyleVisitors = emptyList();
+    private FilterSet suppressions = new FilterSet();
 
     public RewriteCheckstyle(InputStream reader) {
+        this(reader, null);
+    }
+
+    public RewriteCheckstyle(InputStream reader, @Nullable Map<String, Object> configProperties) {
         try {
-            this.config = ConfigurationLoader.loadConfiguration(new InputSource(reader),
-                    System::getProperty,
+            Configuration config = ConfigurationLoader.loadConfiguration(new InputSource(reader),
+                    configProperties == null ?
+                            System::getProperty :
+                            name -> configProperties.get(name).toString(),
                     ConfigurationLoader.IgnoredModulesOptions.OMIT);
+
+            for (Configuration firstLevelChild : config.getChildren()) {
+                if ("SuppressionFilter".equals(firstLevelChild.getName())) {
+                    for (String attributeName : firstLevelChild.getAttributeNames()) {
+                        if("file".equals(attributeName)) {
+                           this.suppressions = SuppressionsLoader.loadSuppressions(firstLevelChild.getAttribute("file"));
+                        }
+                    }
+
+                }
+            }
+
+            initCheckstyleVisitors(config);
         } catch (CheckstyleException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public List<SourceVisitor<J>> getVisitors() {
+    public Refactor<J.CompilationUnit, J> apply(Refactor<J.CompilationUnit, J> refactor) {
+        if(suppressions.accept(new AuditEvent("does not matter", refactor.getOriginal().getSourcePath(),
+                localizedMessageThatDoesntMatter))) {
+            return refactor.visit(checkstyleVisitors);
+        }
+        return refactor;
+    }
+
+    private void initCheckstyleVisitors(Configuration config) {
         for (Configuration firstLevelChild : config.getChildren()) {
             if ("TreeWalker".equals(firstLevelChild.getName())) {
-                return stream(firstLevelChild.getChildren())
+                this.checkstyleVisitors = stream(firstLevelChild.getChildren())
                         .map(child -> {
                             try {
                                 Map<String, String> properties = new HashMap<>();
@@ -205,8 +240,6 @@ public class RewriteCheckstyle implements RefactorModule<J.CompilationUnit, J> {
                         .collect(toList());
             }
         }
-
-        return emptyList();
     }
 
     public static class Module {

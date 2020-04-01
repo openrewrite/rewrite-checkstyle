@@ -14,7 +14,6 @@ import io.rsocket.transport.netty.client.TcpClientTransport;
 import org.apache.commons.cli.*;
 import org.openrewrite.Change;
 import org.openrewrite.Refactor;
-import org.openrewrite.SourceVisitor;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.tree.J;
 import org.slf4j.LoggerFactory;
@@ -61,15 +60,15 @@ public class Main {
                 new ProcessorMetrics().bindTo(meterRegistry);
             }
 
-            List<SourceVisitor<J>> rules;
+            RewriteCheckstyle rewriteCheckstyle;
 
             if (line.hasOption("f")) {
                 try (InputStream is = new FileInputStream(new File(line.getOptionValue("f")))) {
-                    rules = new RewriteCheckstyle(is).getVisitors();
+                    rewriteCheckstyle = new RewriteCheckstyle(is);
                 }
             } else if (line.hasOption("c")) {
                 try (InputStream is = new ByteArrayInputStream(line.getOptionValue("c").getBytes(Charsets.UTF_8))) {
-                    rules = new RewriteCheckstyle(is).getVisitors();
+                    rewriteCheckstyle = new RewriteCheckstyle(is);
                 }
             } else {
                 throw new IllegalArgumentException("Supply either a config XML file via -f or an inline config via -c");
@@ -105,13 +104,12 @@ public class Main {
                     .forEach(cu -> {
                         Timer.Sample sample = Timer.start();
 
-                        Refactor<J.CompilationUnit, J> refactor = cu.refactor();
-                        rules.forEach(refactor::visit);
+                        Refactor<J.CompilationUnit, J> refactor = rewriteCheckstyle.apply(cu.refactor());
 
                         Change<J.CompilationUnit> fixed = refactor.fix();
-                        if (!fixed.getGetRulesThatMadeChanges().isEmpty()) {
+                        if (!fixed.getRulesThatMadeChanges().isEmpty()) {
                             System.out.println(cu.getSourcePath() + " changed by: ");
-                            fixed.getGetRulesThatMadeChanges().forEach(rule -> System.out.println("  " + rule));
+                            fixed.getRulesThatMadeChanges().forEach(rule -> System.out.println("  " + rule));
                             try {
                                 Files.writeString(new File(cu.getSourcePath()).toPath(), fixed.getFixed().print());
                             } catch (IOException e) {
