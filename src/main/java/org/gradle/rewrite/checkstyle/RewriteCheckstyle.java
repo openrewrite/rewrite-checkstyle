@@ -45,7 +45,10 @@ public class RewriteCheckstyle implements RefactorModule<J.CompilationUnit, J> {
             Configuration config = ConfigurationLoader.loadConfiguration(new InputSource(reader),
                     configProperties == null ?
                             System::getProperty :
-                            name -> configProperties.get(name).toString(),
+                            name -> {
+                                Object prop = configProperties.get(name);
+                                return prop == null ? null : prop.toString();
+                            },
                     ConfigurationLoader.IgnoredModulesOptions.OMIT);
 
             for (Configuration firstLevelChild : config.getChildren()) {
