@@ -59,10 +59,10 @@ class RewriteCheckstyleTest {
         val generated = J.CompilationUnit.buildEmptyClass(Path.of("src", "generated"), "", "Generated")
 
         val rewriteCheckstyle = RewriteCheckstyle(checkstyleConfig.byteInputStream(),
-            mapOf("config_loc" to tempDir.toFile().toString()))
+                setOf("CovariantEquals"),
+                mapOf("config_loc" to tempDir.toFile().toString()))
 
         assertThat(rewriteCheckstyle.apply(main.refactor()).visitors)
-                .hasAtLeastOneElementOfType(CovariantEquals::class.java)
                 .hasAtLeastOneElementOfType(DefaultComesLast::class.java)
                 .hasAtLeastOneElementOfType(SimplifyBooleanExpression::class.java)
                 .hasAtLeastOneElementOfType(SimplifyBooleanReturn::class.java)
