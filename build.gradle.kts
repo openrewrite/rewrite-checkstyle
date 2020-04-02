@@ -15,8 +15,26 @@ group = "org.gradle.rewrite.plan"
 description = "Refactor checkstyle automatically"
 
 repositories {
-    maven { url = uri("https://repo.gradle.org/gradle/enterprise-libs-releases-local/") }
-    maven { url = uri("https://repo.gradle.org/gradle/enterprise-libs-snapshots-local/") }
+    maven {
+        url = uri("https://repo.gradle.org/gradle/enterprise-libs-releases-local/")
+        credentials  {
+            username = project.findProperty("artifactoryUsername") as String
+            password = project.findProperty("artifactoryPassword") as String
+        }
+        authentication {
+            create<BasicAuthentication>("basic")
+        }
+    }
+    maven {
+        url = uri("https://repo.gradle.org/gradle/enterprise-libs-snapshots-local/")
+        credentials  {
+            username = project.findProperty("artifactoryUsername") as String
+            password = project.findProperty("artifactoryPassword") as String
+        }
+        authentication {
+            create<BasicAuthentication>("basic")
+        }
+    }
     mavenCentral {
         content {
             excludeVersionByRegex("com\\.fasterxml\\.jackson\\..*", ".*", ".*rc.*")
