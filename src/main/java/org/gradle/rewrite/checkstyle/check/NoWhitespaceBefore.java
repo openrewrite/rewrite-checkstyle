@@ -89,6 +89,7 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
         if (!(parent instanceof J.MethodInvocation) &&
                 !(parent instanceof J.FieldAccess) &&
                 !(parent instanceof J.ForEachLoop) && // don't strip spaces before ':' in for each loop
+                !(parent instanceof J.MethodDecl) && // don't strip spaces before end parentheses in method declaration arguments
                 statement.isSemicolonTerminated()) {
             return maybeStripSuffixBefore(statement, super::visitStatement, SEMI);
         }
