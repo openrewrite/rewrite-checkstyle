@@ -1,8 +1,6 @@
 package org.gradle.rewrite.checkstyle;
 
 import com.puppycrawl.tools.checkstyle.ConfigurationLoader;
-import com.puppycrawl.tools.checkstyle.Definitions;
-import com.puppycrawl.tools.checkstyle.Main;
 import com.puppycrawl.tools.checkstyle.api.*;
 import com.puppycrawl.tools.checkstyle.filters.SuppressionsLoader;
 import org.gradle.rewrite.checkstyle.check.*;
@@ -21,6 +19,7 @@ import java.util.regex.Pattern;
 
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.gradle.rewrite.checkstyle.policy.OperatorToken.*;
@@ -37,10 +36,11 @@ public class RewriteCheckstyle implements RefactorModule<J.CompilationUnit, J> {
     private FilterSet suppressions = new FilterSet();
 
     public RewriteCheckstyle(InputStream reader) {
-        this(reader, null);
+        this(reader, emptySet(), null);
     }
 
-    public RewriteCheckstyle(InputStream reader, @Nullable Map<String, Object> configProperties) {
+    public RewriteCheckstyle(InputStream reader, Set<String> excludes,
+                             @Nullable Map<String, Object> configProperties) {
         try {
             Configuration config = ConfigurationLoader.loadConfiguration(new InputSource(reader),
                     configProperties == null ?
@@ -64,7 +64,7 @@ public class RewriteCheckstyle implements RefactorModule<J.CompilationUnit, J> {
                 }
             }
 
-            initCheckstyleVisitors(config);
+            initCheckstyleVisitors(config, excludes);
         } catch (CheckstyleException e) {
             throw new RuntimeException(e);
         }
@@ -79,7 +79,7 @@ public class RewriteCheckstyle implements RefactorModule<J.CompilationUnit, J> {
         return refactor;
     }
 
-    private void initCheckstyleVisitors(Configuration config) {
+    private void initCheckstyleVisitors(Configuration config, Set<String> excludes) {
         for (Configuration firstLevelChild : config.getChildren()) {
             if ("TreeWalker".equals(firstLevelChild.getName())) {
                 this.checkstyleVisitors = stream(firstLevelChild.getChildren())
@@ -95,6 +95,7 @@ public class RewriteCheckstyle implements RefactorModule<J.CompilationUnit, J> {
                             }
                         })
                         .filter(Objects::nonNull)
+                        .filter(m -> !excludes.contains(m.getName()))
                         .map(m -> {
                             switch (m.getName()) {
                                 case "CovariantEquals":
