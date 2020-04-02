@@ -47,7 +47,9 @@ public class RewriteCheckstyle implements RefactorModule<J.CompilationUnit, J> {
                             System::getProperty :
                             name -> {
                                 Object prop = configProperties.get(name);
-                                return prop == null ? null : prop.toString();
+                                return prop == null ?
+                                        name.equals("config_loc") ? "config/checkstyle" : null :
+                                        prop.toString();
                             },
                     ConfigurationLoader.IgnoredModulesOptions.OMIT);
 
