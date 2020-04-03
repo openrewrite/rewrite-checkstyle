@@ -174,7 +174,7 @@ public class RewriteCheckstyle implements RefactorModule<J.CompilationUnit, J> {
                                     return new NoFinalizer();
                                 case "NoWhitespaceAfter":
                                     return NoWhitespaceAfter.builder()
-                                            .allowLineBreaks(m.prop("allowLineBreaks", false))
+                                            .allowLineBreaks(m.prop("allowLineBreaks", true))
                                             .tokens(m.propAsTokens(PunctuationToken.class,
                                                     Set.of(PunctuationToken.ARRAY_INIT, AT, INC, DEC, UNARY_MINUS, UNARY_PLUS, BNOT, LNOT, DOT, ARRAY_DECLARATOR, INDEX_OP)))
                                             .build();
