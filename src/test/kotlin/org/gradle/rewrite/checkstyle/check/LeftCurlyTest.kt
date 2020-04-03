@@ -15,6 +15,11 @@ open class LeftCurlyTest : JavaParser() {
                     {
                     }
                 }
+            
+                private static final int N = 1;
+                static
+                {
+                }
             }
         """.trimIndent())
 
@@ -25,6 +30,10 @@ open class LeftCurlyTest : JavaParser() {
                 {
                     if(1 == 2) {
                     }
+                }
+            
+                private static final int N = 1;
+                static {
                 }
             }
         """)
@@ -37,6 +46,10 @@ open class LeftCurlyTest : JavaParser() {
                 {
                     if(1 == 2) {
                     }
+                }
+            
+                private static final int N = 1;
+                static {
                 }
             }
         """.trimIndent())
@@ -52,6 +65,11 @@ open class LeftCurlyTest : JavaParser() {
                     if(1 == 2)
                     {
                     }
+                }
+            
+                private static final int N = 1;
+                static
+                {
                 }
             }
         """)
@@ -69,6 +87,10 @@ open class LeftCurlyTest : JavaParser() {
                         3 == 4) {
                     }
                 }
+            
+                private static final int N = 1;
+                static {
+                }
             }
         """.trimIndent())
 
@@ -85,6 +107,11 @@ open class LeftCurlyTest : JavaParser() {
                         3 == 4)
                     {
                     }
+                }
+            
+                private static final int N = 1;
+                static
+                {
                 }
             }
         """)

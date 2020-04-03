@@ -67,7 +67,7 @@ public class LeftCurly extends JavaRefactorVisitor {
         boolean spansMultipleLines = LeftCurlyPolicy.NLOW.equals(option) ?
                 new SpansMultipleLines(containing.getTree(), block).visit((Tree) containing.getTree()) : false;
 
-        if(!satisfiesPolicy(option, block, containing.getTree(), spansMultipleLines)) {
+        if (!satisfiesPolicy(option, block, containing.getTree(), spansMultipleLines)) {
             b = formatCurly(option, b, spansMultipleLines, containing);
         }
 
@@ -77,9 +77,14 @@ public class LeftCurly extends JavaRefactorVisitor {
     private boolean satisfiesPolicy(LeftCurlyPolicy option, J.Block<J> block, Tree containing, boolean spansMultipleLines) {
         switch (option) {
             case EOL:
-                return (ignoreEnums && containing instanceof J.Case) || !block.getFormatting().getPrefix().contains("\n");
+                return (ignoreEnums && containing instanceof J.Case) ||
+                        (
+                                !block.getFormatting().getPrefix().contains("\n") &&
+                                        (block.getStatic() == null || !block.getStatic().getFormatting().getSuffix().contains("\n"))
+                        );
             case NL:
-                return block.getFormatting().getPrefix().contains("\n");
+                return block.getFormatting().getPrefix().contains("\n") &&
+                        (block.getStatic() == null || block.getStatic().getFormatting().getSuffix().contains("\n"));
             case NLOW:
             default:
                 return (spansMultipleLines && satisfiesPolicy(NL, block, containing, spansMultipleLines)) ||
@@ -90,10 +95,15 @@ public class LeftCurly extends JavaRefactorVisitor {
     private static J.Block<J> formatCurly(LeftCurlyPolicy option, J.Block<J> block, boolean spansMultipleLines, Cursor containing) {
         switch (option) {
             case EOL:
-                return containing.getParentOrThrow().getTree() instanceof J.ClassDecl && block.getStatic() == null ?
-                        block : block.withPrefix(" ");
+                // a non-static class initializer can remain as it is
+                if(containing.getParentOrThrow().getTree() instanceof J.ClassDecl && block.getStatic() == null) {
+                    return block;
+                }
+
+                return block.getStatic() == null ? block.withPrefix(" ") : block.withStatic(block.getStatic().withSuffix(" "));
             case NL:
-                return block.withPrefix(block.getEndOfBlockSuffix());
+                return block.getStatic() == null ? block.withPrefix(block.getEndOfBlockSuffix()) :
+                        block.withStatic(block.getStatic().withSuffix(block.getEndOfBlockSuffix()));
             case NLOW:
             default:
                 return formatCurly(spansMultipleLines ? NL : EOL, block, spansMultipleLines, containing);
