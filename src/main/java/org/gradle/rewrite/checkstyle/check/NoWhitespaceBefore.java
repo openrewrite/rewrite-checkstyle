@@ -74,13 +74,17 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
     @Override
     public J visitMethodInvocation(J.MethodInvocation method) {
         J.MethodInvocation m = refactor(method, super::visitMethodInvocation);
-        if ((method.getSelect() != null && tokens.contains(DOT) && whitespaceInSuffix(method.getSelect())) ||
-                (tokens.contains(COMMA) && method.getArgs().getArgs().stream().anyMatch(this::whitespaceInSuffix))) {
-            m = m.withSelect(stripSuffix(m.getSelect()))
-                    .withArgs(m.getArgs().withArgs(m.getArgs().getArgs().stream()
-                            .map(arg -> isLastArgumentInMethodInvocation(arg, method) ? arg : Formatting.stripSuffix(arg))
-                            .collect(toList())));
+
+        if (method.getSelect() != null && tokens.contains(DOT) && whitespaceInSuffix(method.getSelect())) {
+            m = m.withSelect(stripSuffix(m.getSelect()));
         }
+
+        if (tokens.contains(COMMA) && method.getArgs().getArgs().stream().anyMatch(this::whitespaceInSuffix)) {
+            m = m.withArgs(m.getArgs().withArgs(m.getArgs().getArgs().stream()
+                    .map(arg -> isLastArgumentInMethodInvocation(arg, method) ? arg : Formatting.stripSuffix(arg))
+                    .collect(toList())));
+        }
+
         return m;
     }
 
@@ -98,6 +102,7 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
                 !(parent instanceof J.FieldAccess) &&
                 !(parent instanceof J.ForEachLoop) && // don't strip spaces before ':' in for each loop
                 !isLastArgumentInMethodDeclaration(statement, parent) &&
+                !isStatementPrecedingTernaryConditionOrFalse(statement, parent) &&
                 statement.isSemicolonTerminated()) {
             return maybeStripSuffixBefore(statement, super::visitStatement, SEMI);
         }
@@ -113,6 +118,11 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
         return ((J.MethodDecl) parent).getParams().getParams().stream().reduce((r1, r2) -> r2)
                 .map(lastArg -> lastArg == statement)
                 .orElse(false);
+    }
+
+    private boolean isStatementPrecedingTernaryConditionOrFalse(Statement statement, Tree parent) {
+        return parent instanceof J.Ternary && (((J.Ternary) parent).getCondition() == statement ||
+                ((J.Ternary) parent).getTruePart() == statement);
     }
 
     @Override

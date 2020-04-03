@@ -103,38 +103,78 @@ open class NoWhitespaceBeforeTest : JavaParser() {
     }
 
     @Test
-    fun beforeEndOfMethodParams() {
-        val a = parse("""
-            package a;
-            public abstract class A {
-                abstract A foo(int n,
-                    int m
-                );
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(NoWhitespaceBefore.builder().build()).fix().fixed
-
-        assertRefactored(fixed, """
-            package a;
-            public abstract class A {
-                abstract A foo(int n,
-                    int m
-                );
-            }
-        """)
-    }
-
-    @Test
-    fun beforeEndOfMethodInvocation() {
+    fun dontStripLastParameterSuffixInMethodDeclaration() {
         val aSource = """
             package a;
             public abstract class A {
+                abstract A foo(
+                    int n,
+                    int m
+                );
+            }
+        """.trimIndent()
+
+        val a = parse(aSource)
+
+        val fixed = a.refactor().visit(NoWhitespaceBefore.builder().build()).fix().fixed
+
+        assertRefactored(fixed, aSource)
+    }
+
+    @Test
+    fun dontStripLastArgumentSuffixInMethodInvocation() {
+        val aSource = """
+            package a;
+            public class A {
                 {
                     int n = Math.min(
                         1,
                         2
                     );
+                }
+            }
+        """.trimIndent()
+
+        val a = parse(aSource)
+
+        val fixed = a.refactor().visit(NoWhitespaceBefore.builder().build()).fix().fixed
+
+        assertRefactored(fixed, aSource)
+    }
+
+    @Test
+    fun dontStripChainedMethodInvocationsByDefault() {
+        val aSource = """
+            package a;
+            public class A {
+                public static A a(int... n) { return new A(); }
+            
+                {
+                    A
+                        .a()
+                        .a(
+                            1,
+                            2
+                        );
+                }
+            }
+        """.trimIndent()
+
+        val a = parse(aSource)
+
+        val fixed = a.refactor().visit(NoWhitespaceBefore.builder().build()).fix().fixed
+
+        assertRefactored(fixed, aSource)
+    }
+
+    @Test
+    fun dontStripMethodInvocationSuffix() {
+        val aSource = """
+            package a;
+            public class A {
+                List l;
+                {
+                    int n = l.isEmpty() ? l.size() : 2;
                 }
             }
         """.trimIndent()
