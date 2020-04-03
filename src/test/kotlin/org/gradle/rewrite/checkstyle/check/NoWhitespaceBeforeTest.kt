@@ -124,4 +124,25 @@ open class NoWhitespaceBeforeTest : JavaParser() {
             }
         """)
     }
+
+    @Test
+    fun beforeEndOfMethodInvocation() {
+        val aSource = """
+            package a;
+            public abstract class A {
+                {
+                    int n = Math.min(
+                        1,
+                        2
+                    );
+                }
+            }
+        """.trimIndent()
+
+        val a = parse(aSource)
+
+        val fixed = a.refactor().visit(NoWhitespaceBefore.builder().build()).fix().fixed
+
+        assertRefactored(fixed, aSource)
+    }
 }

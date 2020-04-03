@@ -6,6 +6,7 @@ import org.openrewrite.Formatting;
 import org.openrewrite.Tree;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.refactor.JavaRefactorVisitor;
+import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Statement;
 
@@ -77,10 +78,17 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
                 (tokens.contains(COMMA) && method.getArgs().getArgs().stream().anyMatch(this::whitespaceInSuffix))) {
             m = m.withSelect(stripSuffix(m.getSelect()))
                     .withArgs(m.getArgs().withArgs(m.getArgs().getArgs().stream()
-                            .map(Formatting::stripSuffix)
+                            .map(arg -> isLastArgumentInMethodInvocation(arg, method) ? arg : Formatting.stripSuffix(arg))
                             .collect(toList())));
         }
         return m;
+    }
+
+    // don't strip spaces before end parentheses in method invocation arguments
+    private boolean isLastArgumentInMethodInvocation(Expression arg, J.MethodInvocation parent) {
+        return parent.getArgs().getArgs().stream().reduce((r1, r2) -> r2)
+                .map(lastArg -> lastArg == arg)
+                .orElse(false);
     }
 
     @Override
