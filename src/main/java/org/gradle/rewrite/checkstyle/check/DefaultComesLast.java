@@ -111,7 +111,21 @@ public class DefaultComesLast extends JavaRefactorVisitor {
                 }
             }
 
-            s = s.withCases(s.getCases().withStatements(fixedCases));
+            boolean changed = true;
+            if (cases.size() == fixedCases.size()) {
+                changed = false;
+
+                for (int i = 0; i < cases.size(); i++) {
+                    if (cases.get(i) != fixedCases.get(i)) {
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+
+            if (changed) {
+                s = s.withCases(s.getCases().withStatements(fixedCases));
+            }
         }
 
         return s;

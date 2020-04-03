@@ -1,5 +1,6 @@
 package org.gradle.rewrite.checkstyle.check
 
+import org.assertj.core.api.Assertions.assertThat
 import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
 
@@ -147,9 +148,9 @@ open class DefaultComesLastTest : JavaParser() {
 
         val a = parse(aSource)
 
-        val fixed = a.refactor().visit(DefaultComesLast()).fix().fixed
-
-        assertRefactored(fixed, aSource)
+        val changes = a.refactor().visit(DefaultComesLast()).fix()
+        assertThat(changes.rulesThatMadeChanges).isEmpty()
+        assertRefactored(changes.fixed, aSource)
     }
 
     @Test
@@ -169,8 +170,8 @@ open class DefaultComesLastTest : JavaParser() {
 
         val a = parse(aSource)
 
-        val fixed = a.refactor().visit(DefaultComesLast()).fix().fixed
-
-        assertRefactored(fixed, aSource)
+        val changes = a.refactor().visit(DefaultComesLast()).fix()
+        assertThat(changes.rulesThatMadeChanges).isEmpty()
+        assertRefactored(changes.fixed, aSource)
     }
 }
