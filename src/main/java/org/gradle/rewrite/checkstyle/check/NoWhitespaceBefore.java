@@ -79,7 +79,8 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
             m = m.withSelect(stripSuffix(m.getSelect()));
         }
 
-        if (tokens.contains(COMMA) && method.getArgs().getArgs().stream().anyMatch(this::whitespaceInSuffix)) {
+        if (tokens.contains(COMMA) && method.getArgs().getArgs().stream()
+                .anyMatch(arg -> whitespaceInSuffix(arg) && !isLastArgumentInMethodInvocation(arg, method))) {
             m = m.withArgs(m.getArgs().withArgs(m.getArgs().getArgs().stream()
                     .map(arg -> isLastArgumentInMethodInvocation(arg, method) ? arg : Formatting.stripSuffix(arg))
                     .collect(toList())));
