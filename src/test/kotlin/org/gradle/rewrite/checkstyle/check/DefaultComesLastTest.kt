@@ -151,4 +151,26 @@ open class DefaultComesLastTest : JavaParser() {
 
         assertRefactored(fixed, aSource)
     }
+
+    @Test
+    fun defaultIsLastAndReturnsNonVoid() {
+        val aSource = """
+            class Test {
+                public int foo(int n) {
+                    switch (n) {
+                        case 1:
+                            return 1;
+                        default:
+                            return 2;
+                    }
+                }
+            }
+        """.trimIndent()
+
+        val a = parse(aSource)
+
+        val fixed = a.refactor().visit(DefaultComesLast()).fix().fixed
+
+        assertRefactored(fixed, aSource)
+    }
 }
