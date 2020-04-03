@@ -128,4 +128,27 @@ open class DefaultComesLastTest : JavaParser() {
             }
         """)
     }
+
+    @Test
+    fun defaultIsLastAndThrows() {
+        val aSource = """
+            class Test {
+                int n;
+                {
+                    switch (n) {
+                        case 1:
+                            break;
+                        default:
+                            throw new RuntimeException("unexpected value");
+                    }
+                }
+            }
+        """.trimIndent()
+
+        val a = parse(aSource)
+
+        val fixed = a.refactor().visit(DefaultComesLast()).fix().fixed
+
+        assertRefactored(fixed, aSource)
+    }
 }

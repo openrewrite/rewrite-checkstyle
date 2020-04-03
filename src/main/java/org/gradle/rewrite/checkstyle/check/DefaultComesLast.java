@@ -102,7 +102,7 @@ public class DefaultComesLast extends JavaRefactorVisitor {
             if (defaultCase != null) {
                 if (defaultCase.getStatements().stream().reduce((s1, s2) -> s2)
                         .map(stat -> stat instanceof J.Break || stat instanceof J.Continue ||
-                                stat instanceof J.Return || stat instanceof J.Throw)
+                                stat instanceof J.Return)
                         .orElse(false)) {
                     List<Statement> fixedDefaultStatements = new ArrayList<>(defaultCase.getStatements());
                     fixedDefaultStatements.remove(fixedDefaultStatements.size() - 1);
