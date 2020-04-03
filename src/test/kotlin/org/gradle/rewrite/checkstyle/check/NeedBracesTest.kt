@@ -139,4 +139,27 @@ open class NeedBracesTest : JavaParser() {
             }
         """)
     }
+
+    @Test
+    fun dontSplitElseIf() {
+        val aSource = """
+            public class A {
+                int n;
+                {
+                    if (n == 1) {
+                    }
+                    else if (n == 2) {
+                    }
+                    else {
+                    }
+                }
+            }
+        """.trimIndent()
+
+        val a = parse(aSource)
+
+        val fixed = a.refactor().visit(NeedBraces.builder().build()).fix().fixed
+
+        assertRefactored(fixed, aSource)
+    }
 }

@@ -56,7 +56,8 @@ public class NeedBraces extends JavaRefactorVisitor {
     public J visitElse(J.If.Else elze) {
         J.If.Else e = refactor(elze, super::visitElse);
 
-        if (tokens.contains(LITERAL_IF) &&
+        if (tokens.contains(LITERAL_ELSE) &&
+                !(elze.getStatement() instanceof J.If) &&
                 !(elze.getStatement() instanceof J.Block) &&
                 isNotAllowableSingleLine()) {
             e = e.withStatement(addBraces(e.getStatement()));
