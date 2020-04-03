@@ -89,11 +89,22 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
         if (!(parent instanceof J.MethodInvocation) &&
                 !(parent instanceof J.FieldAccess) &&
                 !(parent instanceof J.ForEachLoop) && // don't strip spaces before ':' in for each loop
-                !(parent instanceof J.MethodDecl) && // don't strip spaces before end parentheses in method declaration arguments
+                !isLastArgumentInMethodDeclaration(statement, parent) &&
                 statement.isSemicolonTerminated()) {
             return maybeStripSuffixBefore(statement, super::visitStatement, SEMI);
         }
         return super.visitStatement(statement);
+    }
+
+    // don't strip spaces before end parentheses in method declaration arguments
+    private boolean isLastArgumentInMethodDeclaration(Statement statement, Tree parent) {
+        if (!(parent instanceof J.MethodDecl)) {
+            return false;
+        }
+
+        return ((J.MethodDecl) parent).getParams().getParams().stream().reduce((r1, r2) -> r2)
+                .map(lastArg -> lastArg == statement)
+                .orElse(false);
     }
 
     @Override
@@ -147,7 +158,7 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
     @Override
     public J visitUnary(J.Unary unary) {
         J.Unary u = refactor(unary, super::visitUnary);
-        if(whitespaceInPrefix(unary.getOperator()) &&
+        if (whitespaceInPrefix(unary.getOperator()) &&
                 (unary.getOperator() instanceof J.Unary.Operator.PostDecrement ||
                         unary.getOperator() instanceof J.Unary.Operator.PostIncrement) &&
                 (tokens.contains(POST_DEC) || tokens.contains(POST_INC))) {
@@ -173,7 +184,7 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
     @Override
     public J visitMemberReference(J.MemberReference memberRef) {
         J.MemberReference m = refactor(memberRef, super::visitMemberReference);
-        if(tokens.contains(METHOD_REF) && whitespaceInSuffix(memberRef.getContaining())) {
+        if (tokens.contains(METHOD_REF) && whitespaceInSuffix(memberRef.getContaining())) {
             m = m.withContaining(stripSuffix(m.getContaining()));
         }
         return m;
@@ -182,7 +193,7 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
     @Override
     public J visitForEachLoop(J.ForEachLoop forEachLoop) {
         J.ForEachLoop f = refactor(forEachLoop, super::visitForEachLoop);
-        if(tokens.contains(SEMI) && forEachLoop.getBody() instanceof J.Empty && whitespaceInPrefix(forEachLoop.getBody())) {
+        if (tokens.contains(SEMI) && forEachLoop.getBody() instanceof J.Empty && whitespaceInPrefix(forEachLoop.getBody())) {
             f = f.withBody(stripPrefix(f.getBody()));
         }
         return f;
@@ -191,7 +202,7 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
     @Override
     public J visitWhileLoop(J.WhileLoop whileLoop) {
         J.WhileLoop w = refactor(whileLoop, super::visitWhileLoop);
-        if(tokens.contains(SEMI) && whileLoop.getBody() instanceof J.Empty && whitespaceInPrefix(whileLoop.getBody())) {
+        if (tokens.contains(SEMI) && whileLoop.getBody() instanceof J.Empty && whitespaceInPrefix(whileLoop.getBody())) {
             w = w.withBody(stripPrefix(w.getBody()));
         }
         return w;
