@@ -55,7 +55,7 @@ open class SimplifyBooleanReturnTest : JavaParser() {
                         return true;
                     }
                     return false;
-                } 
+                }
             }
         """.trimIndent())
 
@@ -68,7 +68,7 @@ open class SimplifyBooleanReturnTest : JavaParser() {
                         return true;
                     }
                     return this == o;
-                } 
+                }
             }""")
     }
 
@@ -81,7 +81,32 @@ open class SimplifyBooleanReturnTest : JavaParser() {
                         if(this == 0) 
                             return true;
                     return false;
-                } 
+                }
+            }
+        """.trimIndent()
+
+        val a = parse(aSource)
+
+        val fixed = a.refactor().visit(SimplifyBooleanReturn()).fix().fixed
+
+        assertRefactored(fixed, aSource)
+    }
+
+    @Test
+    fun dontAlterWhenElseIfPresent() {
+        val aSource = """
+            public class A {
+                public boolean foo(int n) {
+                    if (n == 1) {
+                        return false;
+                    } 
+                    else if (n == 2) {
+                        return true;
+                    } 
+                    else {
+                        return false;
+                    }
+                }
             }
         """.trimIndent()
 
