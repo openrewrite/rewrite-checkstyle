@@ -1,7 +1,7 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
+import org.openrewrite.java.JavaParser
 
 open class SimplifyBooleanReturnTest : JavaParser() {
     @Test
@@ -41,5 +41,34 @@ open class SimplifyBooleanReturnTest : JavaParser() {
                 }
             }
         """)
+    }
+
+    @Test
+    fun dontSimplifyToReturnUnlessLastStatement() {
+        val a = parse("""
+            public class A {
+                public boolean absurdEquals(Object o) {
+                    if(this == o) {
+                        return true;
+                    }
+                    if(this == o) {
+                        return true;
+                    }
+                    return false;
+                } 
+            }
+        """.trimIndent())
+
+        val fixed = a.refactor().visit(SimplifyBooleanReturn()).fix().fixed
+
+        assertRefactored(fixed, """
+            public class A {
+                public boolean absurdEquals(Object o) {
+                    if(this == o) {
+                        return true;
+                    }
+                    return this == o;
+                } 
+            }""")
     }
 }
