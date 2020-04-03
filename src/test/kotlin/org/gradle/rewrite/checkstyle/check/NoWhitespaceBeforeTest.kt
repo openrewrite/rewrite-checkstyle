@@ -1,8 +1,8 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
 import org.gradle.rewrite.checkstyle.policy.PunctuationToken.*
 import org.junit.jupiter.api.Test
+import org.openrewrite.java.JavaParser
 
 open class NoWhitespaceBeforeTest : JavaParser() {
     @Test
@@ -104,7 +104,7 @@ open class NoWhitespaceBeforeTest : JavaParser() {
 
     @Test
     fun dontStripLastParameterSuffixInMethodDeclaration() {
-        val aSource = """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
             package a;
             public abstract class A {
                 abstract A foo(
@@ -112,18 +112,12 @@ open class NoWhitespaceBeforeTest : JavaParser() {
                     int m
                 );
             }
-        """.trimIndent()
-
-        val a = parse(aSource)
-
-        val fixed = a.refactor().visit(NoWhitespaceBefore.builder().build()).fix().fixed
-
-        assertRefactored(fixed, aSource)
+        """)
     }
 
     @Test
     fun dontStripLastArgumentSuffixInMethodInvocation() {
-        val aSource = """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
             package a;
             public class A {
                 {
@@ -133,18 +127,12 @@ open class NoWhitespaceBeforeTest : JavaParser() {
                     );
                 }
             }
-        """.trimIndent()
-
-        val a = parse(aSource)
-
-        val fixed = a.refactor().visit(NoWhitespaceBefore.builder().build()).fix().fixed
-
-        assertRefactored(fixed, aSource)
+        """)
     }
 
     @Test
     fun dontStripChainedMethodInvocationsByDefault() {
-        val aSource = """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
             package a;
             public class A {
                 public static A a(int... n) { return new A(); }
@@ -158,18 +146,12 @@ open class NoWhitespaceBeforeTest : JavaParser() {
                         );
                 }
             }
-        """.trimIndent()
-
-        val a = parse(aSource)
-
-        val fixed = a.refactor().visit(NoWhitespaceBefore.builder().build()).fix().fixed
-
-        assertRefactored(fixed, aSource)
+        """)
     }
 
     @Test
     fun dontStripStatementSuffixInTernaryConditionAndTrue() {
-        val aSource = """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
             package a;
             import java.util.*;
             public class A {
@@ -178,18 +160,12 @@ open class NoWhitespaceBeforeTest : JavaParser() {
                     int n = l.isEmpty() ? l.size() : 2;
                 }
             }
-        """.trimIndent()
-
-        val a = parse(aSource)
-
-        val fixed = a.refactor().visit(NoWhitespaceBefore.builder().build()).fix().fixed
-
-        assertRefactored(fixed, aSource)
+        """)
     }
 
     @Test
     fun dontStripStatementSuffixPrecedingInstanceof() {
-        val aSource = """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
             package a;
             import java.util.*;
             public class A {
@@ -198,12 +174,6 @@ open class NoWhitespaceBeforeTest : JavaParser() {
                     boolean b = l.subList(0, 1) instanceof ArrayList;
                 }
             }
-        """.trimIndent()
-
-        val a = parse(aSource)
-
-        val fixed = a.refactor().visit(NoWhitespaceBefore.builder().build()).fix().fixed
-
-        assertRefactored(fixed, aSource)
+        """)
     }
 }

@@ -120,4 +120,19 @@ open class NoWhitespaceAfterTest : JavaParser() {
             }
         """)
     }
+
+    /**
+     * Evidently checkstyle doesn't recognize these as new arrays.
+     */
+    @Test
+    fun dontChangeAnnotationValueNewArrays() {
+        assertUnchangedByRefactoring(NoWhitespaceAfter.builder().build(), """
+            @SuppressWarnings(value = {
+                "all",
+                "unchecked"
+            })
+            public class A {
+            }
+        """)
+    }
 }

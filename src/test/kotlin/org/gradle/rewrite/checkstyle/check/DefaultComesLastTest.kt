@@ -1,8 +1,7 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.assertj.core.api.Assertions.assertThat
-import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
+import org.openrewrite.java.JavaParser
 
 open class DefaultComesLastTest : JavaParser() {
     @Test
@@ -132,7 +131,7 @@ open class DefaultComesLastTest : JavaParser() {
 
     @Test
     fun defaultIsLastAndThrows() {
-        val aSource = """
+        assertUnchangedByRefactoring(DefaultComesLast(), """
             class Test {
                 int n;
                 {
@@ -144,18 +143,12 @@ open class DefaultComesLastTest : JavaParser() {
                     }
                 }
             }
-        """.trimIndent()
-
-        val a = parse(aSource)
-
-        val changes = a.refactor().visit(DefaultComesLast()).fix()
-        assertThat(changes.rulesThatMadeChanges).isEmpty()
-        assertRefactored(changes.fixed, aSource)
+        """)
     }
 
     @Test
     fun defaultIsLastAndReturnsNonVoid() {
-        val aSource = """
+        assertUnchangedByRefactoring(DefaultComesLast(), """
             class Test {
                 public int foo(int n) {
                     switch (n) {
@@ -166,12 +159,6 @@ open class DefaultComesLastTest : JavaParser() {
                     }
                 }
             }
-        """.trimIndent()
-
-        val a = parse(aSource)
-
-        val changes = a.refactor().visit(DefaultComesLast()).fix()
-        assertThat(changes.rulesThatMadeChanges).isEmpty()
-        assertRefactored(changes.fixed, aSource)
+        """)
     }
 }

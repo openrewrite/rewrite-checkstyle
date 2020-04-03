@@ -37,6 +37,11 @@ public class NoWhitespaceAfter extends JavaRefactorVisitor {
     }
 
     @Override
+    public boolean isCursored() {
+        return true;
+    }
+
+    @Override
     public J visitTypeCast(J.TypeCast typeCast) {
         J.TypeCast t = refactor(typeCast, super::visitTypeCast);
         if (tokens.contains(TYPECAST) && whitespaceInPrefix(typeCast.getExpr())) {
@@ -87,10 +92,11 @@ public class NoWhitespaceAfter extends JavaRefactorVisitor {
     public J visitNewArray(J.NewArray newArray) {
         J.NewArray n = refactor(newArray, super::visitNewArray);
         if (tokens.contains(ARRAY_INIT) &&
+                getCursor().firstEnclosing(J.Annotation.class) == null &&
                 Optional.ofNullable(newArray.getInitializer())
                         .map(J.NewArray.Initializer::getElements)
-                        .map(init -> !init.isEmpty() && (whitespaceInPrefix(init.get(0)) ||
-                                whitespaceInSuffix(init.get(init.size() - 1))))
+                        .map(init -> !init.isEmpty() &&
+                                (whitespaceInPrefix(init.get(0)) || whitespaceInSuffix(init.get(init.size() - 1))))
                         .orElse(false)) {
             @SuppressWarnings("ConstantConditions") List<Expression> fixedInit =
                     new ArrayList<>(n.getInitializer().getElements());
@@ -144,7 +150,7 @@ public class NoWhitespaceAfter extends JavaRefactorVisitor {
     @Override
     public J visitFieldAccess(J.FieldAccess fieldAccess) {
         J.FieldAccess f = refactor(fieldAccess, super::visitFieldAccess);
-        if (tokens.contains(DOT) && whitespaceInPrefix(fieldAccess.getName())) {
+        if (tokens.contains(DOT) && whitespaceInDotPrefix(fieldAccess.getName())) {
             f = f.withName(stripPrefix(f.getName()));
         }
         return f;
@@ -153,7 +159,7 @@ public class NoWhitespaceAfter extends JavaRefactorVisitor {
     @Override
     public J visitMethodInvocation(J.MethodInvocation method) {
         J.MethodInvocation m = refactor(method, super::visitMethodInvocation);
-        if (tokens.contains(DOT) && whitespaceInPrefix(method.getName())) {
+        if (tokens.contains(DOT) && whitespaceInDotPrefix(method.getName())) {
             m = m.withName(stripPrefix(m.getName()));
         }
         return m;
@@ -163,11 +169,15 @@ public class NoWhitespaceAfter extends JavaRefactorVisitor {
         return t != null && (t.getFormatting().getSuffix().contains(" ") || t.getFormatting().getSuffix().contains("\t"));
     }
 
+    private boolean whitespaceInDotPrefix(@Nullable Tree t) {
+        return whitespaceInPrefix(t) && (!allowLineBreaks || !t.getFormatting().getPrefix().startsWith("\n"));
+    }
+
     private boolean whitespaceInPrefix(@Nullable Tree t) {
         if (t == null) {
             return false;
         }
         String prefix = t.getFormatting().getPrefix();
-        return (prefix.contains(" ") || prefix.contains("\t")) && (!allowLineBreaks || !prefix.startsWith("\n"));
+        return (prefix.contains(" ") || prefix.contains("\t"));
     }
 }

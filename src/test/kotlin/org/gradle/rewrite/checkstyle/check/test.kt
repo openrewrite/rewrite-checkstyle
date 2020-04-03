@@ -16,8 +16,17 @@
 package org.gradle.rewrite.checkstyle.check
 
 import org.assertj.core.api.Assertions.assertThat
+import org.openrewrite.java.JavaParser
+import org.openrewrite.java.refactor.JavaRefactorVisitor
 import org.openrewrite.java.tree.J
 
 fun assertRefactored(cu: J.CompilationUnit, refactored: String) {
     assertThat(cu.printTrimmed()).isEqualTo(refactored.trimIndent())
+}
+
+fun JavaParser.assertUnchangedByRefactoring(visitor: JavaRefactorVisitor, original: String) {
+    val cu = parse(original.trimIndent())
+    val change = cu.refactor().visit(visitor).fix()
+    assertRefactored(change.fixed, original.trimIndent())
+    assertThat(change.rulesThatMadeChanges).isEmpty()
 }
