@@ -31,7 +31,7 @@ public class SimplifyBooleanReturn extends JavaRefactorVisitor {
     public J visitIf(J.If iff) {
         J.If i = refactor(iff, super::visitIf);
 
-        if (thenHasOnlyReturnStatement(iff)) {
+        if (thenHasOnlyReturnStatement(iff) && getCursor().getParentOrThrow().getTree() instanceof J.Block) {
             List<Statement> followingStatements = followingStatements();
             Optional<Statement> singleFollowingStatement = ofNullable(followingStatements.isEmpty() ? null : followingStatements.get(0));
 

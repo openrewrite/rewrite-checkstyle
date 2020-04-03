@@ -71,4 +71,24 @@ open class SimplifyBooleanReturnTest : JavaParser() {
                 } 
             }""")
     }
+
+    @Test
+    fun nestedIfsWithNoBlock() {
+        val aSource = """
+            public class A {
+                public boolean absurdEquals(Object o) {
+                    if(this == o)
+                        if(this == 0) 
+                            return true;
+                    return false;
+                } 
+            }
+        """.trimIndent()
+
+        val a = parse(aSource)
+
+        val fixed = a.refactor().visit(SimplifyBooleanReturn()).fix().fixed
+
+        assertRefactored(fixed, aSource)
+    }
 }
