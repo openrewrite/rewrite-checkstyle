@@ -104,6 +104,7 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
                 !(parent instanceof J.ForEachLoop) && // don't strip spaces before ':' in for each loop
                 !isLastArgumentInMethodDeclaration(statement, parent) &&
                 !isStatementPrecedingTernaryConditionOrFalse(statement, parent) &&
+                !isStatementPrecedingInstanceof(statement, parent) &&
                 statement.isSemicolonTerminated()) {
             return maybeStripSuffixBefore(statement, super::visitStatement, SEMI);
         }
@@ -124,6 +125,10 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
     private boolean isStatementPrecedingTernaryConditionOrFalse(Statement statement, Tree parent) {
         return parent instanceof J.Ternary && (((J.Ternary) parent).getCondition() == statement ||
                 ((J.Ternary) parent).getTruePart() == statement);
+    }
+
+    private boolean isStatementPrecedingInstanceof(Statement statement, Tree parent) {
+        return parent instanceof J.InstanceOf && ((J.InstanceOf) parent).getExpr() == statement;
     }
 
     @Override

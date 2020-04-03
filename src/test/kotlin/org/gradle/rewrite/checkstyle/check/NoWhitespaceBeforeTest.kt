@@ -168,13 +168,34 @@ open class NoWhitespaceBeforeTest : JavaParser() {
     }
 
     @Test
-    fun dontStripMethodInvocationSuffix() {
+    fun dontStripStatementSuffixInTernaryConditionAndTrue() {
         val aSource = """
             package a;
+            import java.util.*;
             public class A {
                 List l;
                 {
                     int n = l.isEmpty() ? l.size() : 2;
+                }
+            }
+        """.trimIndent()
+
+        val a = parse(aSource)
+
+        val fixed = a.refactor().visit(NoWhitespaceBefore.builder().build()).fix().fixed
+
+        assertRefactored(fixed, aSource)
+    }
+
+    @Test
+    fun dontStripStatementSuffixPrecedingInstanceof() {
+        val aSource = """
+            package a;
+            import java.util.*;
+            public class A {
+                List l;
+                {
+                    boolean b = l.subList(0, 1) instanceof ArrayList;
                 }
             }
         """.trimIndent()
