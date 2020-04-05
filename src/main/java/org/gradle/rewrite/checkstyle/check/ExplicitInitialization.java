@@ -56,6 +56,10 @@ public class ExplicitInitialization extends JavaRefactorVisitor {
                         }
                         break;
                     case Char:
+                        if (literalInit.getValue() != null && (Character) literalInit.getValue() == 0) {
+                            v = v.withInitializer(null).withName(stripSuffix(v.getName()));
+                        }
+                        break;
                     case Int:
                     case Long:
                     case Short:

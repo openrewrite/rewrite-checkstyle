@@ -14,6 +14,7 @@ open class ExplicitInitializationTest : JavaParser() {
                 private int d = 1;
                 private long e = 2L;
                 private int f;
+                private char g = '\0';
 
                 private boolean g = false;
                 private boolean h = true;
@@ -36,6 +37,7 @@ open class ExplicitInitializationTest : JavaParser() {
                 private int d = 1;
                 private long e = 2L;
                 private int f;
+                private char g;
             
                 private boolean g;
                 private boolean h = true;
