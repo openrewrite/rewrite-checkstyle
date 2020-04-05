@@ -88,7 +88,9 @@ public class Main {
                     .flatMap(javaSource -> {
                         Timer.Sample sample = Timer.start();
                         try {
-                            Stream<J.CompilationUnit> cus = new JavaParser().setLogCompilationWarningsAndErrors(false).parse(singletonList(javaSource), Path.of("").toAbsolutePath())
+                            Stream<J.CompilationUnit> cus = new JavaParser()
+                                    .setLogCompilationWarningsAndErrors(false)
+                                    .parse(singletonList(javaSource), Path.of("").toAbsolutePath())
                                     .stream();
                             sample.stop(meterRegistry.timer("rewrite.parse", "outcome", "success"));
                             return cus;
@@ -116,8 +118,7 @@ public class Main {
                                 throw new UncheckedIOException(e);
                             }
                             sample.stop(meterRegistry.timer("rewrite.refactor", "outcome", "refactored"));
-                        }
-                        else {
+                        } else {
                             sample.stop(meterRegistry.timer("rewrite.refactor", "outcome", "unchanged"));
                         }
                     });
