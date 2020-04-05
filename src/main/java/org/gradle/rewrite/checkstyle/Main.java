@@ -3,10 +3,9 @@ package org.gradle.rewrite.checkstyle;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.google.common.base.Charsets;
-import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
-import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.micrometer.prometheus.rsocket.PrometheusRSocketClient;
@@ -35,7 +34,6 @@ public class Main {
     }
 
     public static void main(String[] args) throws ParseException, IOException {
-        CompositeMeterRegistry meterRegistry = new CompositeMeterRegistry();
         PrometheusRSocketClient metricsClient = null;
 
         try {
@@ -54,10 +52,10 @@ public class Main {
                 metricsClient = new PrometheusRSocketClient(prometheusMeterRegistry,
                         TcpClientTransport.create(TcpClient.create().host("localhost").port(7001)),
                         c -> c.retryBackoff(Long.MAX_VALUE, Duration.ofSeconds(10), Duration.ofMinutes(10)));
-                meterRegistry.add(prometheusMeterRegistry);
+                Metrics.globalRegistry.add(prometheusMeterRegistry);
 
-                new JvmGcMetrics().bindTo(meterRegistry);
-                new ProcessorMetrics().bindTo(meterRegistry);
+                new JvmGcMetrics().bindTo(Metrics.globalRegistry);
+                new ProcessorMetrics().bindTo(Metrics.globalRegistry);
             }
 
             RewriteCheckstyle rewriteCheckstyle;
@@ -86,40 +84,30 @@ public class Main {
 
             sourcePaths.stream()
                     .flatMap(javaSource -> {
-                        Timer.Sample sample = Timer.start();
                         try {
-                            Stream<J.CompilationUnit> cus = new JavaParser()
+                            return new JavaParser()
                                     .setLogCompilationWarningsAndErrors(false)
                                     .parse(singletonList(javaSource), Path.of("").toAbsolutePath())
                                     .stream();
-                            sample.stop(meterRegistry.timer("rewrite.parse", "outcome", "success"));
-                            return cus;
                         } catch (Throwable t) {
                             try {
                                 Files.writeString(Path.of("errors-parsing.log"), javaSource.toString(), StandardOpenOption.APPEND);
                             } catch (IOException ignored) {
                             }
-                            sample.stop(meterRegistry.timer("rewrite.parse", "outcome", "failed"));
                             return Stream.empty();
                         }
                     })
                     .forEach(cu -> {
-                        Timer.Sample sample = Timer.start();
-
                         Refactor<J.CompilationUnit, J> refactor = rewriteCheckstyle.apply(cu.refactor());
 
                         Change<J.CompilationUnit> fixed = refactor.fix();
                         if (!fixed.getRulesThatMadeChanges().isEmpty()) {
-                            System.out.println(cu.getSourcePath() + " changed by: ");
                             fixed.getRulesThatMadeChanges().forEach(rule -> System.out.println("  " + rule));
                             try {
                                 Files.writeString(new File(cu.getSourcePath()).toPath(), fixed.getFixed().print());
                             } catch (IOException e) {
                                 throw new UncheckedIOException(e);
                             }
-                            sample.stop(meterRegistry.timer("rewrite.refactor", "outcome", "refactored"));
-                        } else {
-                            sample.stop(meterRegistry.timer("rewrite.refactor", "outcome", "unchanged"));
                         }
                     });
         } finally {

@@ -49,7 +49,7 @@ public class OperatorWrap extends JavaRefactorVisitor {
 
     @Override
     public String getName() {
-        return "OperatorWrap{policy=" + option + "}";
+        return "checkstyle.OperatorWrap{policy=" + option + "}";
     }
 
     @Override
