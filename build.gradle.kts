@@ -59,7 +59,9 @@ java {
 dependencies {
     implementation("org.gradle.rewrite:rewrite-java:latest.integration")
 
-    implementation("com.puppycrawl.tools:checkstyle:latest.release")
+    implementation("com.puppycrawl.tools:checkstyle:latest.release") {
+        exclude(group = "antlr")
+    }
 
     // FIXME the IDE throws "unknown enum constant com.fasterxml.jackson.annotation.JsonTypeInfo.Id.MINIMAL_CLASS sometimes?
     implementation("com.fasterxml.jackson.core:jackson-annotations:latest.release")
