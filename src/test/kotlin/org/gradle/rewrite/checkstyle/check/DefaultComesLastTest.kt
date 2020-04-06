@@ -161,4 +161,54 @@ open class DefaultComesLastTest : JavaParser() {
             }
         """)
     }
+
+    @Test
+    fun dontAddBreaksIfCasesArentMoving() {
+        assertUnchangedByRefactoring(DefaultComesLast(), """
+            class Test {
+                int n;
+                boolean foo() {
+                    switch (n) {
+                        case 1:
+                        case 2:
+                            System.out.println("side effect");
+                        default:
+                            return true;
+                    }
+                }
+            }
+        """)
+    }
+
+    @Test
+    fun dontRemoveExtraneousDefaultCaseBreaks() {
+        assertUnchangedByRefactoring(DefaultComesLast(), """
+            class Test {
+                int n;
+                void foo() {
+                    switch (n) {
+                        default:
+                            break;
+                    }
+                }
+            }
+        """)
+    }
+
+    @Test
+    fun allCasesGroupedWithDefault() {
+        assertUnchangedByRefactoring(DefaultComesLast(), """
+            class Test {
+                int n;
+                boolean foo() {
+                    switch (n) {
+                        case 1:
+                        case 2:
+                        default:
+                            return true;
+                    }
+                }
+            }
+        """)
+    }
 }

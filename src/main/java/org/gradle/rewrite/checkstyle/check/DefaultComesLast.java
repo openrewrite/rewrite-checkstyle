@@ -139,12 +139,17 @@ public class DefaultComesLast extends JavaRefactorVisitor {
         J.Case defaultCase = null;
         J.Case prior = null;
         for (J.Case aCase : switzh.getCases().getStatements()) {
+            if(defaultCase != null) {
+                // default case was not last
+                return false;
+            }
+
             if (isDefault(aCase)) {
                 defaultCase = aCase;
             }
 
-            if (defaultCase != null && prior != null) {
-                return skipIfLastAndSharedWithCase && prior.getStatements().isEmpty();
+            if (defaultCase != null && prior != null && skipIfLastAndSharedWithCase && prior.getStatements().isEmpty()) {
+                return true;
             }
 
             prior = aCase;
