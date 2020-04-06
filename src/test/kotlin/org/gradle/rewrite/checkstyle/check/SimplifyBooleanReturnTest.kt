@@ -106,6 +106,23 @@ open class SimplifyBooleanReturnTest : JavaParser() {
     }
 
     @Test
+    fun dontAlterWhenElseContainsSomethingOtherThanReturn() {
+        assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
+            public class A {
+                public boolean foo(int n) {
+                    if (n == 1) {
+                        return true;
+                    } 
+                    else {
+                        System.out.println("side effect");
+                        return false;
+                    } 
+                }
+            }
+        """)
+    }
+
+    @Test
     fun onlySimplifyToReturnWhenLastStatement() {
         assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
             import java.util.*;

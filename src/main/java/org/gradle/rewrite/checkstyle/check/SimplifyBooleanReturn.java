@@ -37,53 +37,66 @@ public class SimplifyBooleanReturn extends JavaRefactorVisitor {
         if (parent.getTree() instanceof J.Block &&
                 parent.getParentOrThrow().getTree() instanceof J.MethodDecl &&
                 thenHasOnlyReturnStatement(iff) &&
-                (i.getElsePart() == null || !(i.getElsePart().getStatement() instanceof J.If))) {
+                elseWithOnlyReturn(i)) {
             List<Statement> followingStatements = followingStatements();
-            Optional<Statement> singleFollowingStatement = ofNullable(followingStatements.isEmpty() ? null : followingStatements.get(0));
-
-            if (followingStatements.size() < 2 && singleFollowingStatement
+            Optional<Expression> singleFollowingStatement = ofNullable(followingStatements.isEmpty() ? null : followingStatements.get(0))
                     .flatMap(stat -> Optional.ofNullable(stat instanceof J.Return ? (J.Return) stat : null))
-                    .map(J.Return::getExpr)
-                    .map(r -> isLiteralFalse(r) || isLiteralTrue(r))
-                    .orElse(true)) {
+                    .map(J.Return::getExpr);
 
+            if (followingStatements.isEmpty() || singleFollowingStatement.map(r -> isLiteralFalse(r) || isLiteralTrue(r)).orElse(false)) {
                 J.Return retrn = getReturnIfOnlyStatementInThen(iff).orElseThrow();
                 Expression ifCondition = i.getIfCondition().getTree();
 
-                if (isLiteralTrue(retrn.getExpr()) && getReturnExprIfOnlyStatementInElseThen(i)
-                        .map(this::isLiteralFalse).orElse(true)) {
-                    if (i.getElsePart() != null) {
-                        andThen(new DeleteStatement(i.getElsePart().getStatement()));
+                if (isLiteralTrue(retrn.getExpr())) {
+                    if (singleFollowingStatement.map(this::isLiteralFalse).orElse(false) && i.getElsePart() == null) {
+                        andThen(new DeleteStatement(followingStatements.get(0)));
+                        return retrn
+                                .withExpr(ifCondition.withFormatting(format(" ")))
+                                .withFormatting(i.getFormatting());
+                    } else if (singleFollowingStatement.isEmpty() &&
+                            getReturnExprIfOnlyStatementInElseThen(i).map(this::isLiteralFalse).orElse(false)) {
+                        if (i.getElsePart() != null) {
+                            andThen(new DeleteStatement(i.getElsePart().getStatement()));
+                        }
+
+                        return retrn
+                                .withExpr(ifCondition.withFormatting(format(" ")))
+                                .withFormatting(i.getFormatting());
+                    }
+                } else if (isLiteralFalse(retrn.getExpr())) {
+                    boolean returnThenPart = false;
+
+                    if (singleFollowingStatement.map(this::isLiteralTrue).orElse(false) && i.getElsePart() == null) {
+                        andThen(new DeleteStatement(followingStatements.get(0)));
+                        returnThenPart = true;
+                    } else if (singleFollowingStatement.isEmpty() && getReturnExprIfOnlyStatementInElseThen(i)
+                            .map(this::isLiteralTrue).orElse(false)) {
+                        if (i.getElsePart() != null) {
+                            andThen(new DeleteStatement(i.getElsePart().getStatement()));
+                        }
+                        returnThenPart = true;
                     }
 
-                    singleFollowingStatement.ifPresent(s -> andThen(new DeleteStatement(s)));
+                    if(returnThenPart) {
+                        //  we need to NOT the expression inside the if condition
+                        var maybeParenthesizedCondition = ifCondition instanceof J.Binary ?
+                                new J.Parentheses<>(randomId(), ifCondition, EMPTY) :
+                                ifCondition;
 
-                    return retrn
-                            .withExpr(ifCondition.withFormatting(format(" ")))
-                            .withFormatting(i.getFormatting());
-                } else if (isLiteralFalse(retrn.getExpr()) && getReturnExprIfOnlyStatementInElseThen(i)
-                        .map(this::isLiteralTrue).orElse(true)) {
-                    if (i.getElsePart() != null) {
-                        andThen(new DeleteStatement(i.getElsePart().getStatement()));
+                        return retrn
+                                .withExpr(new J.Unary(randomId(), new J.Unary.Operator.Not(randomId(), EMPTY),
+                                        maybeParenthesizedCondition, JavaType.Primitive.Boolean, format(" ")))
+                                .withFormatting(i.getFormatting());
                     }
-
-                    singleFollowingStatement.ifPresent(s -> andThen(new DeleteStatement(s)));
-
-                    //  we need to NOT the expression inside the if condition
-
-                    var maybeParenthesizedCondition = ifCondition instanceof J.Binary ?
-                            new J.Parentheses<>(randomId(), ifCondition, EMPTY) :
-                            ifCondition;
-
-                    return retrn
-                            .withExpr(new J.Unary(randomId(), new J.Unary.Operator.Not(randomId(), EMPTY),
-                                    maybeParenthesizedCondition, JavaType.Primitive.Boolean, format(" ")))
-                            .withFormatting(i.getFormatting());
                 }
             }
         }
 
         return i;
+    }
+
+    private boolean elseWithOnlyReturn(J.If i) {
+        return i.getElsePart() == null || !(i.getElsePart().getStatement() instanceof J.If);
     }
 
     private boolean thenHasOnlyReturnStatement(J.If iff) {
@@ -98,12 +111,12 @@ public class SimplifyBooleanReturn extends JavaRefactorVisitor {
                 .skip(1).collect(toList());
     }
 
-    private boolean isLiteralTrue(Expression expression) {
-        return expression instanceof J.Literal && ((J.Literal) expression).getValue() == Boolean.valueOf(true);
+    private boolean isLiteralTrue(J tree) {
+        return tree instanceof J.Literal && ((J.Literal) tree).getValue() == Boolean.valueOf(true);
     }
 
-    private boolean isLiteralFalse(Expression expression) {
-        return expression instanceof J.Literal && ((J.Literal) expression).getValue() == Boolean.valueOf(false);
+    private boolean isLiteralFalse(J tree) {
+        return tree instanceof J.Literal && ((J.Literal) tree).getValue() == Boolean.valueOf(false);
     }
 
     private Optional<J.Return> getReturnIfOnlyStatementInThen(J.If iff) {
@@ -120,9 +133,25 @@ public class SimplifyBooleanReturn extends JavaRefactorVisitor {
     }
 
     private Optional<Expression> getReturnExprIfOnlyStatementInElseThen(J.If iff2) {
-        return ofNullable(iff2.getElsePart())
-                .flatMap(elze -> ofNullable(elze.getStatement() instanceof J.If ? (J.If) elze.getStatement() : null))
-                .flatMap(this::getReturnIfOnlyStatementInThen)
-                .map(J.Return::getExpr);
+        if (iff2.getElsePart() == null) {
+            return Optional.empty();
+        }
+
+        Statement elze = iff2.getElsePart().getStatement();
+        if (elze instanceof J.Return) {
+            return ofNullable(((J.Return) elze).getExpr());
+        }
+
+        if (elze instanceof J.Block) {
+            List<? extends J> statements = ((J.Block<? extends J>) elze).getStatements();
+            if (statements.size() == 1) {
+                J statement = statements.get(0);
+                if (statement instanceof J.Return) {
+                    return ofNullable(((J.Return) statement).getExpr());
+                }
+            }
+        }
+
+        return Optional.empty();
     }
 }
