@@ -53,37 +53,4 @@ open class UnnecessaryParenthesesTest : JavaParser() {
             }
         """)
     }
-
-    @Test
-    fun operatorPrecedence() {
-        // NOTE: Don't think it's possible to change right-associativity with parentheses, so
-        // we don't really need to consider associativity properties of operators
-
-        val a = parse("""
-            public class A {
-                int a, b, c;
-                {
-                    int x = 1;
-                    int y = (a + b) * x;
-                    int z = ((a + b) + c) * x;
-                    int w = y + (x == y ? 1 : 2);
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(UnnecessaryParentheses.builder()
-                .build()).fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                int a, b, c;
-                {
-                    int x = 1;
-                    int y = (a + b) * x;
-                    int z = (a + b + c) * x;
-                    int w = y + (x == y ? 1 : 2);
-                }
-            }
-        """)
-    }
 }
