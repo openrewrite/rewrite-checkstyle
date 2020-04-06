@@ -1,7 +1,6 @@
 package org.gradle.rewrite.checkstyle
 
 import org.assertj.core.api.Assertions.assertThat
-import org.gradle.rewrite.checkstyle.check.CovariantEquals
 import org.gradle.rewrite.checkstyle.check.DefaultComesLast
 import org.gradle.rewrite.checkstyle.check.SimplifyBooleanExpression
 import org.gradle.rewrite.checkstyle.check.SimplifyBooleanReturn

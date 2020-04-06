@@ -1,5 +1,6 @@
 package org.gradle.rewrite.checkstyle.check;
 
+import org.openrewrite.Cursor;
 import org.openrewrite.java.refactor.DeleteStatement;
 import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.Expression;
@@ -31,9 +32,12 @@ public class SimplifyBooleanReturn extends JavaRefactorVisitor {
     public J visitIf(J.If iff) {
         J.If i = refactor(iff, super::visitIf);
 
-        if (thenHasOnlyReturnStatement(iff) &&
-                (i.getElsePart() == null || !(i.getElsePart().getStatement() instanceof J.If)) &&
-                getCursor().getParentOrThrow().getTree() instanceof J.Block) {
+        Cursor parent = getCursor().getParentOrThrow();
+
+        if (parent.getTree() instanceof J.Block &&
+                parent.getParentOrThrow().getTree() instanceof J.MethodDecl &&
+                thenHasOnlyReturnStatement(iff) &&
+                (i.getElsePart() == null || !(i.getElsePart().getStatement() instanceof J.If))) {
             List<Statement> followingStatements = followingStatements();
             Optional<Statement> singleFollowingStatement = ofNullable(followingStatements.isEmpty() ? null : followingStatements.get(0));
 

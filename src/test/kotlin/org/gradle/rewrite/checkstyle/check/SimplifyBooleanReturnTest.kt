@@ -74,7 +74,7 @@ open class SimplifyBooleanReturnTest : JavaParser() {
 
     @Test
     fun nestedIfsWithNoBlock() {
-        val aSource = """
+        assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
             public class A {
                 public boolean absurdEquals(Object o) {
                     if(this == o)
@@ -83,18 +83,12 @@ open class SimplifyBooleanReturnTest : JavaParser() {
                     return false;
                 }
             }
-        """.trimIndent()
-
-        val a = parse(aSource)
-
-        val fixed = a.refactor().visit(SimplifyBooleanReturn()).fix().fixed
-
-        assertRefactored(fixed, aSource)
+        """)
     }
 
     @Test
     fun dontAlterWhenElseIfPresent() {
-        val aSource = """
+        assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
             public class A {
                 public boolean foo(int n) {
                     if (n == 1) {
@@ -108,12 +102,23 @@ open class SimplifyBooleanReturnTest : JavaParser() {
                     }
                 }
             }
-        """.trimIndent()
+        """)
+    }
 
-        val a = parse(aSource)
-
-        val fixed = a.refactor().visit(SimplifyBooleanReturn()).fix().fixed
-
-        assertRefactored(fixed, aSource)
+    @Test
+    fun onlySimplifyToReturnWhenLastStatement() {
+        assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
+            import java.util.*;
+            public class A {
+                public static boolean deepEquals(List<byte[]> l, List<byte[]> r) {
+                    for (int i = 0; i < l.size(); ++i) {
+                        if (!Arrays.equals(l.get(i), r.get(i))) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }
+        """)
     }
 }
