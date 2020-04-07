@@ -102,6 +102,7 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
         if (!(parent instanceof J.MethodInvocation) &&
                 !(parent instanceof J.FieldAccess) &&
                 !(parent instanceof J.ForEachLoop) && // don't strip spaces before ':' in for each loop
+                !(parent instanceof J.Try) && // don't strip suffix of variable declarations in try-with-resources statements
                 !isLastArgumentInMethodDeclaration(statement, parent) &&
                 !isStatementPrecedingTernaryConditionOrFalse(statement, parent) &&
                 !isStatementPrecedingInstanceof(statement, parent) &&

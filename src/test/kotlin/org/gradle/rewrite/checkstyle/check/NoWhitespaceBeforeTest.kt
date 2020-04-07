@@ -176,4 +176,23 @@ open class NoWhitespaceBeforeTest : JavaParser() {
             }
         """)
     }
+
+    @Test
+    fun dontStripTryWithResourcesEndParens() {
+        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
+            import java.util.zip.*;
+            import java.io.*;
+            public class A {
+                public static void main(String[] args) {
+                    try (
+                        InputStream source = new GZIPInputStream(new FileInputStream(args[0]));
+                        OutputStream out = new FileOutputStream(args[1])
+                    ) {
+                        System.out.println("side effect");
+                    } catch (Exception e) {
+                    }
+                }
+            }
+        """)
+    }
 }
