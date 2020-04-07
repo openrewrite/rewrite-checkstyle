@@ -135,4 +135,16 @@ open class NoWhitespaceAfterTest : JavaParser() {
             }
         """)
     }
+
+    @Test
+    fun dontChangeFirstAndLastValuesOfArrayInitializer() {
+        assertUnchangedByRefactoring(NoWhitespaceAfter.builder().build(), """
+            public class A {
+                int[] ns = {
+                    0,
+                    1
+                };
+            }
+        """)
+    }
 }
