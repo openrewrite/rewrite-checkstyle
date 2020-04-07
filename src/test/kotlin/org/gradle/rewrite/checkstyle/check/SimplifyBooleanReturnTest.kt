@@ -138,4 +138,30 @@ open class SimplifyBooleanReturnTest : JavaParser() {
             }
         """)
     }
+
+    @Test
+    fun wrapNotReturnsOfTernaryIfConditionsInParentheses() {
+        val a = parse("""
+            public class A {
+                Object failure;
+                public boolean equals(Object o) {
+                    if (failure != null ? !failure.equals(that.failure) : that.failure != null) {
+                        return false;
+                    }
+                    return true;
+                }
+            }
+        """.trimIndent())
+
+        val fixed = a.refactor().visit(SimplifyBooleanReturn()).fix().fixed
+
+        assertRefactored(fixed, """
+            public class A {
+                Object failure;
+                public boolean equals(Object o) {
+                    return !(failure != null ? !failure.equals(that.failure) : that.failure != null);
+                }
+            }
+        """)
+    }
 }

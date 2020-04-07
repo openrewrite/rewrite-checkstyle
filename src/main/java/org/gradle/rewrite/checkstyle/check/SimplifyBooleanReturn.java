@@ -79,7 +79,7 @@ public class SimplifyBooleanReturn extends JavaRefactorVisitor {
 
                     if(returnThenPart) {
                         //  we need to NOT the expression inside the if condition
-                        var maybeParenthesizedCondition = ifCondition instanceof J.Binary ?
+                        var maybeParenthesizedCondition = ifCondition instanceof J.Binary || ifCondition instanceof J.Ternary ?
                                 new J.Parentheses<>(randomId(), ifCondition, EMPTY) :
                                 ifCondition;
 
