@@ -195,4 +195,18 @@ open class NoWhitespaceBeforeTest : JavaParser() {
             }
         """)
     }
+
+    @Test
+    fun dontStripAnnotationArguments() {
+        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
+            public class A {
+                @SuppressFBWarnings(
+                    value = "SECPR",
+                    justification = "Usages of this method are not meant for cryptographic purposes"
+                )
+                void foo() {
+                }
+            }
+        """)
+    }
 }

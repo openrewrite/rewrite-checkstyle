@@ -1,6 +1,7 @@
 package org.gradle.rewrite.checkstyle.check;
 
 import lombok.Builder;
+import org.gradle.rewrite.checkstyle.check.internal.WhitespaceChecks;
 import org.gradle.rewrite.checkstyle.policy.PunctuationToken;
 import org.openrewrite.Formatting;
 import org.openrewrite.Tree;
@@ -17,8 +18,9 @@ import java.util.function.Function;
 
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
+import static org.gradle.rewrite.checkstyle.check.internal.WhitespaceChecks.stripPrefixUpToLinebreak;
+import static org.gradle.rewrite.checkstyle.check.internal.WhitespaceChecks.stripSuffixUpToLinebreak;
 import static org.gradle.rewrite.checkstyle.policy.PunctuationToken.*;
-import static org.openrewrite.Formatting.stripPrefix;
 import static org.openrewrite.Formatting.stripSuffix;
 
 @Builder
@@ -82,7 +84,7 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
         if (tokens.contains(COMMA) && method.getArgs().getArgs().stream()
                 .anyMatch(arg -> whitespaceInSuffix(arg) && !isLastArgumentInMethodInvocation(arg, method))) {
             m = m.withArgs(m.getArgs().withArgs(m.getArgs().getArgs().stream()
-                    .map(arg -> isLastArgumentInMethodInvocation(arg, method) ? arg : Formatting.stripSuffix(arg))
+                    .map(arg -> isLastArgumentInMethodInvocation(arg, method) ? arg : stripSuffix(arg))
                     .collect(toList())));
         }
 
@@ -148,19 +150,19 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
             for (int i = 0; i < fixUpdate.size(); i++) {
                 Statement update = fixUpdate.get(i);
                 if (tokens.contains(COMMA) && i != fixUpdate.size() - 1) {
-                    fixUpdate.set(i, stripSuffix(update));
+                    fixUpdate.set(i, stripSuffixUpToLinebreak(update));
                 } else if (tokens.contains(SEMI) && i == fixUpdate.size() - 1) {
-                    fixUpdate.set(i, stripSuffix(update));
+                    fixUpdate.set(i, stripSuffixUpToLinebreak(update));
                 }
             }
 
             // commas between init variables will be stripped by the VariableDecls visitor separately
-            fixCtrl = fixCtrl.withInit(stripSuffix(fixCtrl.getInit()))
-                    .withCondition(stripSuffix(fixCtrl.getCondition()))
+            fixCtrl = fixCtrl.withInit(stripSuffixUpToLinebreak(fixCtrl.getInit()))
+                    .withCondition(stripSuffixUpToLinebreak(fixCtrl.getCondition()))
                     .withUpdate(fixUpdate);
 
             f = f.withControl(fixCtrl)
-                    .withBody(f.getBody() instanceof J.Empty ? stripPrefix(f.getBody()) : f.getBody());
+                    .withBody(f.getBody() instanceof J.Empty ? stripPrefixUpToLinebreak(f.getBody()) : f.getBody());
         }
 
         return f;
@@ -170,7 +172,7 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
     public J visitMultiVariable(J.VariableDecls multiVariable) {
         J.VariableDecls m = refactor(multiVariable, super::visitMultiVariable);
         if (tokens.contains(ELLIPSIS) && whitespaceInPrefix(multiVariable.getVarargs())) {
-            m = m.withVarargs(stripPrefix(m.getVarargs()));
+            m = m.withVarargs(stripPrefixUpToLinebreak(m.getVarargs()));
         }
         return m;
     }
@@ -187,7 +189,7 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
                 (unary.getOperator() instanceof J.Unary.Operator.PostDecrement ||
                         unary.getOperator() instanceof J.Unary.Operator.PostIncrement) &&
                 (tokens.contains(POST_DEC) || tokens.contains(POST_INC))) {
-            u = u.withOperator(stripPrefix(u.getOperator()));
+            u = u.withOperator(stripPrefixUpToLinebreak(u.getOperator()));
         }
         return u;
     }
@@ -210,7 +212,7 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
     public J visitMemberReference(J.MemberReference memberRef) {
         J.MemberReference m = refactor(memberRef, super::visitMemberReference);
         if (tokens.contains(METHOD_REF) && whitespaceInSuffix(memberRef.getContaining())) {
-            m = m.withContaining(stripSuffix(m.getContaining()));
+            m = m.withContaining(stripSuffixUpToLinebreak(m.getContaining()));
         }
         return m;
     }
@@ -219,7 +221,7 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
     public J visitForEachLoop(J.ForEachLoop forEachLoop) {
         J.ForEachLoop f = refactor(forEachLoop, super::visitForEachLoop);
         if (tokens.contains(SEMI) && forEachLoop.getBody() instanceof J.Empty && whitespaceInPrefix(forEachLoop.getBody())) {
-            f = f.withBody(stripPrefix(f.getBody()));
+            f = f.withBody(stripPrefixUpToLinebreak(f.getBody()));
         }
         return f;
     }
@@ -228,7 +230,7 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
     public J visitWhileLoop(J.WhileLoop whileLoop) {
         J.WhileLoop w = refactor(whileLoop, super::visitWhileLoop);
         if (tokens.contains(SEMI) && whileLoop.getBody() instanceof J.Empty && whitespaceInPrefix(whileLoop.getBody())) {
-            w = w.withBody(stripPrefix(w.getBody()));
+            w = w.withBody(stripPrefixUpToLinebreak(w.getBody()));
         }
         return w;
     }
@@ -238,7 +240,7 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
                                                    PunctuationToken... tokensToMatch) {
         T t = refactor(tree, callSuper);
         if (stream(tokensToMatch).anyMatch(tokens::contains) && whitespaceInSuffix(tree)) {
-            t = stripSuffix(t);
+            t = stripSuffixUpToLinebreak(t);
         }
         return t;
     }
@@ -248,7 +250,7 @@ public class NoWhitespaceBefore extends JavaRefactorVisitor {
                                                    PunctuationToken... tokensToMatch) {
         T t = refactor(tree, callSuper);
         if (stream(tokensToMatch).anyMatch(tokens::contains) && whitespaceInPrefix(tree)) {
-            t = stripPrefix(t);
+            t = stripPrefixUpToLinebreak(t);
         }
         return t;
     }
