@@ -1,6 +1,7 @@
 package org.gradle.rewrite.checkstyle.check;
 
 import org.openrewrite.Tree;
+import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 
@@ -24,8 +25,13 @@ public class GenericWhitespace extends JavaRefactorVisitor {
         J.TypeParameters t = refactor(typeParams, super::visitTypeParameters);
 
         Tree tree = getCursor().getParentOrThrow().getTree();
-        if (!(tree instanceof J.MethodDecl) && !typeParams.getFormatting().getPrefix().isEmpty()) {
-            t = t.withFormatting(EMPTY);
+        if (!(tree instanceof J.MethodDecl)) {
+            if(startsWithNonLinebreakWhitespace(t.getFormatting().getPrefix())) {
+                t = stripPrefixUpToLinebreak(t);
+            }
+            if(startsWithNonLinebreakWhitespace(t.getFormatting().getSuffix())) {
+                t = stripPrefixUpToLinebreak(t);
+            }
         }
 
         return t;
@@ -39,19 +45,46 @@ public class GenericWhitespace extends JavaRefactorVisitor {
         if (params.isEmpty()) {
             return t;
         } else if (params.size() == 1) {
-            if (!typeParam.getFormatting().equals(EMPTY)) {
-                t = t.withFormatting(EMPTY);
+            if (startsWithNonLinebreakWhitespace(t.getFormatting().getPrefix())) {
+                t = stripPrefixUpToLinebreak(t);
             }
-        } else if (params.get(0) == typeParam) {
-            if (!typeParam.getFormatting().getPrefix().isEmpty()) {
-                t = stripPrefix(t);
+            if (startsWithNonLinebreakWhitespace(t.getFormatting().getSuffix())) {
+                t = stripSuffixUpToLinebreak(t);
             }
-        } else if (params.get(params.size() - 1) == typeParam) {
-            if (!typeParam.getFormatting().getSuffix().isEmpty()) {
-                t = stripSuffix(t);
+        } else if (params.get(0) == t) {
+            if (startsWithNonLinebreakWhitespace(t.getFormatting().getPrefix())) {
+                t = stripPrefixUpToLinebreak(t);
+            }
+        } else if (params.get(params.size() - 1) == t) {
+            if (startsWithNonLinebreakWhitespace(t.getFormatting().getSuffix())) {
+                t = stripSuffixUpToLinebreak(t);
             }
         }
 
         return t;
+    }
+
+    private static boolean startsWithNonLinebreakWhitespace(String prefixOrSuffix) {
+        return prefixOrSuffix.startsWith(" ") || prefixOrSuffix.startsWith("\t");
+    }
+
+    private static <T extends Tree> T stripSuffixUpToLinebreak(@Nullable T t) {
+        return t == null ? null : t.withSuffix(stripUpToLinebreak(t.getFormatting().getSuffix()));
+    }
+
+    private static <T extends Tree> T stripPrefixUpToLinebreak(@Nullable T t) {
+        return t == null ? null : t.withPrefix(stripUpToLinebreak(t.getFormatting().getPrefix()));
+    }
+
+    private static String stripUpToLinebreak(String prefixOrSuffix) {
+        StringBuilder sb = new StringBuilder();
+        boolean drop = true;
+        for (char c : prefixOrSuffix.toCharArray()) {
+            drop &= (c == ' ' || c == '\t');
+            if(!drop) {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 }

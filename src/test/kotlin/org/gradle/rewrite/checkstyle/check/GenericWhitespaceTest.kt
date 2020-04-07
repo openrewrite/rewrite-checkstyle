@@ -46,4 +46,44 @@ class GenericWhitespaceTest : JavaParser() {
             }
         """)
     }
+
+    @Test
+    fun stripUpToLinebreak() {
+        val a = parse("""
+            import java.util.HashMap;
+            
+            // extra space after 'HashMap<' and after 'Integer'
+            public class A extends HashMap< 
+                    String,
+                    Integer 
+                > {
+            }
+        """.trimIndent())
+
+        val fixed = a.refactor().visit(GenericWhitespace()).fix().fixed
+
+        assertRefactored(fixed, """
+            import java.util.HashMap;
+            
+            // extra space after 'HashMap<' and after 'Integer'
+            public class A extends HashMap<
+                    String,
+                    Integer
+                > {
+            }
+        """.trimIndent())
+    }
+
+    @Test
+    fun doesntConsiderLinebreaksWhitespace() {
+        assertUnchangedByRefactoring(GenericWhitespace(), """
+            import java.util.HashMap;
+            
+            public class A extends HashMap<
+                    String,
+                    String
+                > {
+            }
+        """)
+    }
 }
