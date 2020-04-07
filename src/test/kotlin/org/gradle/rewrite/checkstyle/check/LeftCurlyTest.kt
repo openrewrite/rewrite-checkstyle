@@ -1,8 +1,8 @@
 package org.gradle.rewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
 import org.gradle.rewrite.checkstyle.policy.LeftCurlyPolicy
 import org.junit.jupiter.api.Test
+import org.openrewrite.java.JavaParser
 
 open class LeftCurlyTest : JavaParser() {
     @Test

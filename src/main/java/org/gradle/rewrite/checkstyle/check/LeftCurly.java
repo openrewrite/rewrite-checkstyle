@@ -77,18 +77,25 @@ public class LeftCurly extends JavaRefactorVisitor {
     private boolean satisfiesPolicy(LeftCurlyPolicy option, J.Block<J> block, Tree containing, boolean spansMultipleLines) {
         switch (option) {
             case EOL:
-                return (ignoreEnums && containing instanceof J.Case) ||
-                        (
-                                !block.getFormatting().getPrefix().contains("\n") &&
-                                        (block.getStatic() == null || !block.getStatic().getFormatting().getSuffix().contains("\n"))
-                        );
+                if (ignoreEnums && containing instanceof J.Case) {
+                    return true;
+                }
+
+                if (block.getStatic() == null) {
+                    return !block.getFormatting().getPrefix().contains("\n");
+                } else {
+                    return !block.getStatic().getFormatting().getSuffix().contains("\n");
+                }
             case NL:
-                return block.getFormatting().getPrefix().contains("\n") &&
-                        (block.getStatic() == null || block.getStatic().getFormatting().getSuffix().contains("\n"));
+                if (block.getStatic() == null) {
+                    return block.getFormatting().getPrefix().contains("\n");
+                } else {
+                    return block.getStatic().getFormatting().getSuffix().contains("\n");
+                }
             case NLOW:
             default:
-                return (spansMultipleLines && satisfiesPolicy(NL, block, containing, spansMultipleLines)) ||
-                        (!spansMultipleLines && satisfiesPolicy(EOL, block, containing, spansMultipleLines));
+                return (spansMultipleLines && satisfiesPolicy(NL, block, containing, true)) ||
+                        (!spansMultipleLines && satisfiesPolicy(EOL, block, containing, false));
         }
     }
 
@@ -96,7 +103,7 @@ public class LeftCurly extends JavaRefactorVisitor {
         switch (option) {
             case EOL:
                 // a non-static class initializer can remain as it is
-                if(containing.getParentOrThrow().getTree() instanceof J.ClassDecl && block.getStatic() == null) {
+                if (containing.getParentOrThrow().getTree() instanceof J.ClassDecl && block.getStatic() == null) {
                     return block;
                 }
 
