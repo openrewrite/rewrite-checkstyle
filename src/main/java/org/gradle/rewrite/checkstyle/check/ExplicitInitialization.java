@@ -1,5 +1,6 @@
 package org.gradle.rewrite.checkstyle.check;
 
+import org.openrewrite.Cursor;
 import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
@@ -33,7 +34,8 @@ public class ExplicitInitialization extends JavaRefactorVisitor {
     public J visitVariable(J.VariableDecls.NamedVar variable) {
         J.VariableDecls.NamedVar v = refactor(variable, super::visitVariable);
 
-        if (!(getCursor().getParentOrThrow() // J.VariableDecls
+        Cursor variableDeclsCursor = getCursor().getParentOrThrow();
+        if (!(variableDeclsCursor // J.VariableDecls
                 .getParentOrThrow() // maybe J.Block
                 .getParentOrThrow() // maybe J.ClassDecl
                 .getTree() instanceof J.ClassDecl)) {
@@ -43,9 +45,16 @@ public class ExplicitInitialization extends JavaRefactorVisitor {
         JavaType.Primitive primitive = TypeUtils.asPrimitive(variable.getType());
         JavaType.Array array = TypeUtils.asArray(variable.getType());
 
+        J tree = variableDeclsCursor.getTree();
+        if(!(tree instanceof J.VariableDecls)) {
+            return v;
+        }
+
+        J.VariableDecls variableDecls = (J.VariableDecls) tree;
+
         J.Literal literalInit = variable.getInitializer() instanceof J.Literal ? (J.Literal) variable.getInitializer() : null;
 
-        if (literalInit != null) {
+        if (literalInit != null && !variableDecls.hasModifier("final")) {
             if (TypeUtils.asClass(variable.getType()) != null && JavaType.Primitive.Null.equals(literalInit.getType())) {
                 v = v.withInitializer(null).withName(stripSuffix(v.getName()));
             } else if (primitive != null && !onlyObjectReferences) {

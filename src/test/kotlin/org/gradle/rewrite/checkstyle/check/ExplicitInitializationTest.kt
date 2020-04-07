@@ -24,6 +24,8 @@ open class ExplicitInitializationTest : JavaParser() {
 
                 int k[] = null;
                 int l[] = new int[0];
+                
+                private final Long l = null;
             }
         """.trimIndent())
 
@@ -47,6 +49,8 @@ open class ExplicitInitializationTest : JavaParser() {
             
                 int k[];
                 int l[] = new int[0];
+                
+                private final Long l = null;
             }
         """)
     }
