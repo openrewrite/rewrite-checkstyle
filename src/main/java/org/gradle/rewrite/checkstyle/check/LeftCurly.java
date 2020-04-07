@@ -103,7 +103,8 @@ public class LeftCurly extends JavaRefactorVisitor {
         switch (option) {
             case EOL:
                 // a non-static class initializer can remain as it is
-                if (containing.getParentOrThrow().getTree() instanceof J.ClassDecl && block.getStatic() == null) {
+                Tree parent = containing.getParentOrThrow().getTree();
+                if ((parent instanceof J.ClassDecl || parent instanceof J.NewClass) && block.getStatic() == null) {
                     return block;
                 }
 

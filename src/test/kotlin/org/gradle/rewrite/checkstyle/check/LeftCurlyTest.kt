@@ -151,4 +151,20 @@ open class LeftCurlyTest : JavaParser() {
             }
         """)
     }
+
+    @Test
+    fun dontStripNewClassInstanceInitializers() {
+        assertUnchangedByRefactoring(LeftCurly.builder().build(), """
+            public class JacksonUtils {
+                static ObjectMapper stdConfigure(ObjectMapper mapper) {
+                    return mapper
+                        .registerModule(new SimpleModule() {
+                            {
+                                addSerializer(new InstantSerializer());
+                            }
+                        });
+                }
+            }
+        """)
+    }
 }
