@@ -13,6 +13,8 @@ group = "org.gradle.rewrite.plan"
 description = "Refactor checkstyle automatically"
 
 repositories {
+    maven { url = uri("http://oss.jfrog.org/oss-snapshot-local") }
+
     maven {
         url = uri("https://repo.gradle.org/gradle/enterprise-libs-releases-local/")
         credentials  {
@@ -33,12 +35,14 @@ repositories {
             create<BasicAuthentication>("basic")
         }
     }
-    mavenCentral {
+
+    jcenter {
         content {
             excludeVersionByRegex("com\\.fasterxml\\.jackson\\..*", ".*", ".*rc.*")
         }
     }
-    mavenCentral {
+
+    jcenter {
         content {
             includeVersionByRegex("com\\.fasterxml\\.jackson\\..*", ".*", "(\\d+\\.)*\\d+")
         }
@@ -67,7 +71,7 @@ dependencies {
     implementation("commons-cli:commons-cli:1.4")
 
     implementation("io.micrometer.prometheus:prometheus-rsocket-client:latest.release")
-    implementation("io.rsocket:rsocket-transport-netty:latest.release")
+    implementation("io.rsocket:rsocket-transport-netty:1.0.0-RC7-SNAPSHOT")
 
     implementation("ch.qos.logback:logback-classic:1.0.13")
 

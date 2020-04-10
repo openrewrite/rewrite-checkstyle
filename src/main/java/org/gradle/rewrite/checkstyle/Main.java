@@ -17,6 +17,7 @@ import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.tree.J;
 import org.slf4j.LoggerFactory;
 import reactor.netty.tcp.TcpClient;
+import reactor.util.retry.Retry;
 
 import java.io.*;
 import java.nio.file.*;
@@ -49,9 +50,11 @@ public class Main {
 
             if (line.hasOption("m")) {
                 PrometheusMeterRegistry prometheusMeterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
-                metricsClient = new PrometheusRSocketClient(prometheusMeterRegistry,
-                        TcpClientTransport.create(TcpClient.create().host("localhost").port(7001)),
-                        c -> c.retryBackoff(Long.MAX_VALUE, Duration.ofSeconds(10), Duration.ofMinutes(10)));
+                metricsClient = PrometheusRSocketClient
+                        .build(prometheusMeterRegistry, TcpClientTransport.create(TcpClient.create().host("localhost").port(7001)))
+                        .retry(Retry.backoff(Long.MAX_VALUE, Duration.ofSeconds(10)).maxBackoff(Duration.ofMinutes(10)))
+                        .connect();
+
                 Metrics.globalRegistry.add(prometheusMeterRegistry);
 
                 new JvmGcMetrics().bindTo(Metrics.globalRegistry);
@@ -112,7 +115,7 @@ public class Main {
                     });
         } finally {
             if (metricsClient != null) {
-                metricsClient.pushAndClose();
+                metricsClient.pushAndClose().block(Duration.ofSeconds(10));
             }
         }
     }
