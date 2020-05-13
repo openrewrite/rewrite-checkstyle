@@ -31,9 +31,9 @@ open class FinalClassTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.FinalClass()).fix().fixed
+        val fixed = a.refactor().visit(FinalClass()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public final class A {
                 private A(String s) {
                 }
@@ -56,9 +56,9 @@ open class FinalClassTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.FinalClass()).fix().fixed
+        val fixed = a.refactor().visit(FinalClass()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 private A(String s) {
                 }

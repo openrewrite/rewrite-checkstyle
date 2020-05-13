@@ -38,9 +38,9 @@ open class LeftCurlyTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.LeftCurly.builder().build()).fix().fixed
+        val fixed = a.refactor().visit(LeftCurly.builder().build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             class A {
                 {
                     if(1 == 2) {
@@ -69,11 +69,11 @@ open class LeftCurlyTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.LeftCurly.builder()
-                .option(_root_ide_package_.org.openrewrite.checkstyle.policy.LeftCurlyPolicy.NL)
+        val fixed = a.refactor().visit(LeftCurly.builder()
+                .option(LeftCurlyPolicy.NL)
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             class A
             {
                 {
@@ -109,11 +109,11 @@ open class LeftCurlyTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.LeftCurly.builder()
-                .option(_root_ide_package_.org.openrewrite.checkstyle.policy.LeftCurlyPolicy.NLOW)
+        val fixed = a.refactor().visit(LeftCurly.builder()
+                .option(LeftCurlyPolicy.NLOW)
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             class A {
                 {
                     if(1 == 2) {
@@ -148,11 +148,11 @@ open class LeftCurlyTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.LeftCurly.builder()
-                .option(_root_ide_package_.org.openrewrite.checkstyle.policy.LeftCurlyPolicy.EOL)
+        val fixed = a.refactor().visit(LeftCurly.builder()
+                .option(LeftCurlyPolicy.EOL)
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             class A {
                 {
                     switch(1) {
@@ -169,7 +169,7 @@ open class LeftCurlyTest : JavaParser() {
 
     @Test
     fun dontStripNewClassInstanceInitializers() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.LeftCurly.builder().build(), """
+        assertUnchangedByRefactoring(LeftCurly.builder().build(), """
             public class JacksonUtils {
                 static ObjectMapper stdConfigure(ObjectMapper mapper) {
                     return mapper

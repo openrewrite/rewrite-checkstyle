@@ -30,9 +30,9 @@ open class EmptyForIteratorPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyForIteratorPad()).fix().fixed
+        val fixed = a.refactor().visit(EmptyForIteratorPad()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     for (int i = 0; i < 2; i++ );
@@ -51,9 +51,9 @@ open class EmptyForIteratorPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyForIteratorPad()).fix().fixed
+        val fixed = a.refactor().visit(EmptyForIteratorPad()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     for (int i = 0; i < 2;);
@@ -72,9 +72,9 @@ open class EmptyForIteratorPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyForIteratorPad(PadPolicy.SPACE)).fix().fixed
+        val fixed = a.refactor().visit(EmptyForIteratorPad(PadPolicy.SPACE)).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     for (int i = 0; i < 2; );
@@ -94,9 +94,9 @@ open class EmptyForIteratorPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyForIteratorPad()).fix().fixed
+        val fixed = a.refactor().visit(EmptyForIteratorPad()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     for (int i = 0; i < 2;

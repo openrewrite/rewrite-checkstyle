@@ -52,12 +52,12 @@ open class NoWhitespaceBeforeTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.NoWhitespaceBefore.builder()
+        val fixed = a.refactor().visit(NoWhitespaceBefore.builder()
                 .tokens(setOf(COMMA, SEMI, POST_INC, POST_DEC, DOT, GENERIC_START,
                         GENERIC_END, ELLIPSIS, METHOD_REF))
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             package a;
             import java.util.*;
             public abstract class A {
@@ -100,12 +100,12 @@ open class NoWhitespaceBeforeTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.NoWhitespaceBefore.builder()
+        val fixed = a.refactor().visit(NoWhitespaceBefore.builder()
                 .tokens(setOf(DOT))
                 .allowLineBreaks(true)
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 int m;
             
@@ -119,7 +119,7 @@ open class NoWhitespaceBeforeTest : JavaParser() {
 
     @Test
     fun dontStripLastParameterSuffixInMethodDeclaration() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.NoWhitespaceBefore.builder().build(), """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
             package a;
             public abstract class A {
                 abstract A foo(
@@ -132,7 +132,7 @@ open class NoWhitespaceBeforeTest : JavaParser() {
 
     @Test
     fun dontStripLastArgumentSuffixInMethodInvocation() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.NoWhitespaceBefore.builder().build(), """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
             package a;
             public class A {
                 {
@@ -147,7 +147,7 @@ open class NoWhitespaceBeforeTest : JavaParser() {
 
     @Test
     fun dontStripChainedMethodInvocationsByDefault() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.NoWhitespaceBefore.builder().build(), """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
             package a;
             public class A {
                 public static A a(int... n) { return new A(); }
@@ -166,7 +166,7 @@ open class NoWhitespaceBeforeTest : JavaParser() {
 
     @Test
     fun dontStripStatementSuffixInTernaryConditionAndTrue() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.NoWhitespaceBefore.builder().build(), """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
             package a;
             import java.util.*;
             public class A {
@@ -180,7 +180,7 @@ open class NoWhitespaceBeforeTest : JavaParser() {
 
     @Test
     fun dontStripStatementSuffixPrecedingInstanceof() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.NoWhitespaceBefore.builder().build(), """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
             package a;
             import java.util.*;
             public class A {
@@ -194,7 +194,7 @@ open class NoWhitespaceBeforeTest : JavaParser() {
 
     @Test
     fun dontStripTryWithResourcesEndParens() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.NoWhitespaceBefore.builder().build(), """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
             import java.util.zip.*;
             import java.io.*;
             public class A {
@@ -213,7 +213,7 @@ open class NoWhitespaceBeforeTest : JavaParser() {
 
     @Test
     fun dontStripAnnotationArguments() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.NoWhitespaceBefore.builder().build(), """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
             public class A {
                 @SuppressFBWarnings(
                     value = "SECPR",

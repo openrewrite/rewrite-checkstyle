@@ -48,9 +48,9 @@ open class HiddenFieldTest : JavaParser() {
             }
         """.trimIndent(), b)
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.HiddenField.builder().build()).fix().fixed
+        val fixed = a.refactor().visit(HiddenField.builder().build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A extends B {
                 int n;
                 int n1;
@@ -80,11 +80,11 @@ open class HiddenFieldTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.HiddenField.builder()
+        val fixed = a.refactor().visit(HiddenField.builder()
                 .ignoreFormat(Pattern.compile("\\w+"))
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 int n;
                 
@@ -105,11 +105,11 @@ open class HiddenFieldTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.HiddenField.builder()
+        val fixed = a.refactor().visit(HiddenField.builder()
                 .ignoreConstructorParameter(true)
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 int n;
                 
@@ -134,11 +134,11 @@ open class HiddenFieldTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.HiddenField.builder()
+        val fixed = a.refactor().visit(HiddenField.builder()
                 .ignoreSetter(true)
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 int n;
                 
@@ -164,12 +164,12 @@ open class HiddenFieldTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.HiddenField.builder()
+        val fixed = a.refactor().visit(HiddenField.builder()
                 .ignoreSetter(true)
                 .setterCanReturnItsClass(true)
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 int n;
                 
@@ -190,11 +190,11 @@ open class HiddenFieldTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.HiddenField.builder()
+        val fixed = a.refactor().visit(HiddenField.builder()
                 .ignoreAbstractMethods(true)
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public abstract class A {
                 int n;
                 

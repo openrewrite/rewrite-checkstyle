@@ -65,12 +65,12 @@ open class NoWhitespaceAfterTest : JavaParser() {
             }
         """.trimIndent(), notNull)
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.NoWhitespaceAfter.builder()
+        val fixed = a.refactor().visit(NoWhitespaceAfter.builder()
                 .tokens(setOf(ARRAY_INIT, AT, INC, DEC, UNARY_MINUS, UNARY_PLUS, BNOT, LNOT, DOT,
                         TYPECAST, ARRAY_DECLARATOR, INDEX_OP, LITERAL_SYNCHRONIZED, METHOD_REF))
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 int m;
             
@@ -119,12 +119,12 @@ open class NoWhitespaceAfterTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.NoWhitespaceAfter.builder()
+        val fixed = a.refactor().visit(NoWhitespaceAfter.builder()
                 .tokens(setOf(DOT))
                 .allowLineBreaks(false)
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 int m;
             
@@ -141,7 +141,7 @@ open class NoWhitespaceAfterTest : JavaParser() {
      */
     @Test
     fun dontChangeAnnotationValueNewArrays() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.NoWhitespaceAfter.builder().build(), """
+        assertUnchangedByRefactoring(NoWhitespaceAfter.builder().build(), """
             @SuppressWarnings(value = {
                 "all",
                 "unchecked"
@@ -153,7 +153,7 @@ open class NoWhitespaceAfterTest : JavaParser() {
 
     @Test
     fun dontChangeFirstAndLastValuesOfArrayInitializer() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.NoWhitespaceAfter.builder().build(), """
+        assertUnchangedByRefactoring(NoWhitespaceAfter.builder().build(), """
             public class A {
                 int[] ns = {
                     0,

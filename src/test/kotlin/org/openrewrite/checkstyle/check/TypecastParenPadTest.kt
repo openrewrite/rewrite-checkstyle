@@ -40,13 +40,13 @@ open class TypecastParenPadTest : JavaParser() {
 
     @Test
     fun shouldPadTypecast() {
-        val fixed = parse(unpadded).refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.TypecastParenPad(PadPolicy.SPACE)).fix().fixed
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, padded)
+        val fixed = parse(unpadded).refactor().visit(TypecastParenPad(PadPolicy.SPACE)).fix().fixed
+        assertRefactored(fixed, padded)
     }
 
     @Test
     fun shouldUnpadTypecast() {
-        val fixed = parse(padded).refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.TypecastParenPad()).fix().fixed
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, unpadded)
+        val fixed = parse(padded).refactor().visit(TypecastParenPad()).fix().fixed
+        assertRefactored(fixed, unpadded)
     }
 }

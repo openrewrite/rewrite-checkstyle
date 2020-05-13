@@ -37,9 +37,9 @@ open class NeedBracesTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.NeedBraces.builder().build()).fix().fixed
+        val fixed = a.refactor().visit(NeedBraces.builder().build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 int n;
                 void foo() {
@@ -76,11 +76,11 @@ open class NeedBracesTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.NeedBraces.builder()
+        val fixed = a.refactor().visit(NeedBraces.builder()
                 .allowEmptyLoopBody(true)
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     while (true);
@@ -104,11 +104,11 @@ open class NeedBracesTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.NeedBraces.builder()
+        val fixed = a.refactor().visit(NeedBraces.builder()
                 .allowSingleLineStatement(true)
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 int n;
                 void foo() {
@@ -136,12 +136,12 @@ open class NeedBracesTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.NeedBraces.builder()
+        val fixed = a.refactor().visit(NeedBraces.builder()
                 .tokens(setOf(LITERAL_CASE, LITERAL_DEFAULT))
                 .allowSingleLineStatement(true)
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     int n = 1;
@@ -173,8 +173,8 @@ open class NeedBracesTest : JavaParser() {
 
         val a = parse(aSource)
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.NeedBraces.builder().build()).fix().fixed
+        val fixed = a.refactor().visit(NeedBraces.builder().build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, aSource)
+        assertRefactored(fixed, aSource)
     }
 }

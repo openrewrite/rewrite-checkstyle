@@ -33,9 +33,9 @@ open class  MultipleVariableDeclarationsTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.MultipleVariableDeclarations()).fix().fixed
+        val fixed = a.refactor().visit(MultipleVariableDeclarations()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             class Test {
                 int n = 0;
                 int m = 0;

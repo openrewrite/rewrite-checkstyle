@@ -18,8 +18,6 @@ package org.openrewrite.checkstyle;
 import com.puppycrawl.tools.checkstyle.ConfigurationLoader;
 import com.puppycrawl.tools.checkstyle.api.*;
 import com.puppycrawl.tools.checkstyle.filters.SuppressionsLoader;
-import org.gradle.rewrite.checkstyle.check.*;
-import org.gradle.rewrite.checkstyle.policy.*;
 import org.openrewrite.Refactor;
 import org.openrewrite.RefactorModule;
 import org.openrewrite.SourceVisitor;
@@ -39,10 +37,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static org.openrewrite.checkstyle.policy.OperatorToken.*;
-import static org.openrewrite.checkstyle.policy.ParenthesesToken.*;
-import static org.openrewrite.checkstyle.policy.PunctuationToken.*;
-import static org.openrewrite.checkstyle.policy.Token.*;
 
 public class RewriteCheckstyle implements RefactorModule<J.CompilationUnit, J> {
     // we just want to re-use the suppression filtering logic in Checkstyle without emitting messages

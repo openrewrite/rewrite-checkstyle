@@ -31,9 +31,9 @@ open class CovariantEqualsTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.CovariantEquals()).fix().fixed
+        val fixed = a.refactor().visit(CovariantEquals()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             class Test {
                 int n;
                 

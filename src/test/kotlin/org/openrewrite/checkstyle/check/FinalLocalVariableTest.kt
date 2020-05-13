@@ -31,9 +31,9 @@ open class FinalLocalVariableTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.FinalLocalVariable()).fix().fixed
+        val fixed = a.refactor().visit(FinalLocalVariable()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     final int n = 1;
@@ -55,10 +55,10 @@ open class FinalLocalVariableTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.FinalLocalVariable()).fix().fixed
+        val fixed = a.refactor().visit(FinalLocalVariable()).fix().fixed
 
         // the final only applies to any initialized variables (b in this case)
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     final int a, b = 1;

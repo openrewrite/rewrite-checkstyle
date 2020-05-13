@@ -37,9 +37,9 @@ open class SimplifyBooleanExpressionTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.SimplifyBooleanExpression()).fix().fixed
+        val fixed = a.refactor().visit(SimplifyBooleanExpression()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     boolean a = true;

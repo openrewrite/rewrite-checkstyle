@@ -31,9 +31,9 @@ open class EqualsAvoidsNullTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EqualsAvoidsNull(false)).fix().fixed
+        val fixed = a.refactor().visit(EqualsAvoidsNull(false)).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     String s = null;
@@ -57,9 +57,9 @@ open class EqualsAvoidsNullTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EqualsAvoidsNull(false)).fix().fixed
+        val fixed = a.refactor().visit(EqualsAvoidsNull(false)).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     String s = null;

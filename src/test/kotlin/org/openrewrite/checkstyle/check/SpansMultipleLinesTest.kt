@@ -44,14 +44,14 @@ class SpansMultipleLinesTest : JavaParser() {
 
         val init = a.classes[0].body.statements[1] as J.Block<*>
 
-        assertFalse(_root_ide_package_.org.openrewrite.checkstyle.check.SpansMultipleLines(init.statements[0], null).visit(init.statements[0]))
-        assertTrue(_root_ide_package_.org.openrewrite.checkstyle.check.SpansMultipleLines(init.statements[1], null).visit(init.statements[1]))
+        assertFalse(SpansMultipleLines(init.statements[0], null).visit(init.statements[0]))
+        assertTrue(SpansMultipleLines(init.statements[1], null).visit(init.statements[1]))
 
         val iff = init.statements[2] as J.If
-        assertFalse(_root_ide_package_.org.openrewrite.checkstyle.check.SpansMultipleLines(iff, iff.thenPart).visit(iff))
+        assertFalse(SpansMultipleLines(iff, iff.thenPart).visit(iff))
 
         val iff2 = init.statements[3] as J.If
-        assertTrue(_root_ide_package_.org.openrewrite.checkstyle.check.SpansMultipleLines(iff2, iff2.thenPart).visit(iff2))
+        assertTrue(SpansMultipleLines(iff2, iff2.thenPart).visit(iff2))
     }
 
     @Test
@@ -64,6 +64,6 @@ class SpansMultipleLinesTest : JavaParser() {
         """.trimIndent())
 
         val aClass = a.classes[0]
-        assertFalse(_root_ide_package_.org.openrewrite.checkstyle.check.SpansMultipleLines(aClass, aClass.body).visit(aClass))
+        assertFalse(SpansMultipleLines(aClass, aClass.body).visit(aClass))
     }
 }

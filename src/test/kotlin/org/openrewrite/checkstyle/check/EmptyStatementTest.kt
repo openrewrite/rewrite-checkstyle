@@ -37,9 +37,9 @@ open class EmptyStatementTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyStatement()).fix().fixed
+        val fixed = a.refactor().visit(EmptyStatement()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     if(1 == 2)

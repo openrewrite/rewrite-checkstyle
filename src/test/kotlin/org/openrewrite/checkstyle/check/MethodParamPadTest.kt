@@ -41,9 +41,9 @@ open class MethodParamPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.MethodParamPad.builder().build()).fix().fixed
+        val fixed = a.refactor().visit(MethodParamPad.builder().build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A extends B {
                 A() {
                     super();
@@ -84,9 +84,9 @@ open class MethodParamPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.MethodParamPad.builder().option(_root_ide_package_.org.openrewrite.checkstyle.policy.PadPolicy.SPACE).build()).fix().fixed
+        val fixed = a.refactor().visit(MethodParamPad.builder().option(PadPolicy.SPACE).build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A extends B {
                 A () {
                     super ();
@@ -115,10 +115,10 @@ open class MethodParamPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.MethodParamPad.builder()
+        val fixed = a.refactor().visit(MethodParamPad.builder()
                 .allowLineBreaks(true).build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A extends B {
                 void foo
                     (int n) {}

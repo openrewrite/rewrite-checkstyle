@@ -32,11 +32,11 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_SWITCH))
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     int i = 0;
@@ -57,11 +57,11 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_SYNCHRONIZED))
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     final Object o = new Object();
@@ -85,11 +85,11 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_TRY))
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                 }
@@ -113,11 +113,11 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_CATCH))
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             import java.io.IOException;
             import java.io.UncheckedIOException;
             import java.nio.file.*;
@@ -150,11 +150,11 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_CATCH, LITERAL_FINALLY))
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             import java.nio.file.*;
             
             public class A {
@@ -182,11 +182,11 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_WHILE, LITERAL_DO))
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 public void foo() {
                     while(true) {
@@ -209,11 +209,11 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(STATIC_INIT))
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {}
             }
@@ -229,11 +229,11 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(INSTANCE_INIT))
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 static {}
             }
@@ -267,11 +267,11 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_IF))
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 int n = sideEffect();
             
@@ -311,11 +311,11 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_IF))
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     if("foo".length() <= 3)   {
@@ -342,11 +342,11 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyBlock.builder()
+        val fixed = a.refactor().visit(EmptyBlock.builder()
                 .tokens(setOf(LITERAL_IF))
                 .build()).fix(1).fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     if("foo".length() <= 3) {

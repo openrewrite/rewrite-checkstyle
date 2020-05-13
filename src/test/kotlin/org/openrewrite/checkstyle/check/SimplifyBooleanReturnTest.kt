@@ -42,9 +42,9 @@ open class SimplifyBooleanReturnTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.SimplifyBooleanReturn()).fix().fixed
+        val fixed = a.refactor().visit(SimplifyBooleanReturn()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 boolean ifNoElse() {
                     return isOddMillis();
@@ -74,9 +74,9 @@ open class SimplifyBooleanReturnTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.SimplifyBooleanReturn()).fix().fixed
+        val fixed = a.refactor().visit(SimplifyBooleanReturn()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 public boolean absurdEquals(Object o) {
                     if(this == o) {
@@ -89,7 +89,7 @@ open class SimplifyBooleanReturnTest : JavaParser() {
 
     @Test
     fun nestedIfsWithNoBlock() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.SimplifyBooleanReturn(), """
+        assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
             public class A {
                 public boolean absurdEquals(Object o) {
                     if(this == o)
@@ -103,7 +103,7 @@ open class SimplifyBooleanReturnTest : JavaParser() {
 
     @Test
     fun dontAlterWhenElseIfPresent() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.SimplifyBooleanReturn(), """
+        assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
             public class A {
                 public boolean foo(int n) {
                     if (n == 1) {
@@ -122,7 +122,7 @@ open class SimplifyBooleanReturnTest : JavaParser() {
 
     @Test
     fun dontAlterWhenElseContainsSomethingOtherThanReturn() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.SimplifyBooleanReturn(), """
+        assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
             public class A {
                 public boolean foo(int n) {
                     if (n == 1) {
@@ -139,7 +139,7 @@ open class SimplifyBooleanReturnTest : JavaParser() {
 
     @Test
     fun onlySimplifyToReturnWhenLastStatement() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.SimplifyBooleanReturn(), """
+        assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
             import java.util.*;
             public class A {
                 public static boolean deepEquals(List<byte[]> l, List<byte[]> r) {
@@ -168,9 +168,9 @@ open class SimplifyBooleanReturnTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.SimplifyBooleanReturn()).fix().fixed
+        val fixed = a.refactor().visit(SimplifyBooleanReturn()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 Object failure;
                 public boolean equals(Object o) {

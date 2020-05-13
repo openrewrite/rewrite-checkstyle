@@ -43,10 +43,10 @@ open class UnnecessaryParenthesesTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.UnnecessaryParentheses.builder()
+        val fixed = a.refactor().visit(UnnecessaryParentheses.builder()
                 .build()).fix(1).fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             import java.util.*;
             public class A {
                 int square(int a, int b) {

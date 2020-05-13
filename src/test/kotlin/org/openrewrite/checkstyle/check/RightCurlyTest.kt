@@ -37,11 +37,11 @@ open class RightCurlyTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.RightCurly.builder()
+        val fixed = a.refactor().visit(RightCurly.builder()
                 .tokens(setOf(LITERAL_TRY, LITERAL_CATCH, LITERAL_FINALLY, LITERAL_IF, LITERAL_ELSE, METHOD_DEF))
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             class A {
                 {
                     if(1 == 2) {
@@ -87,11 +87,11 @@ open class RightCurlyTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.RightCurly.builder()
-                .option(_root_ide_package_.org.openrewrite.checkstyle.policy.RightCurlyPolicy.ALONE_OR_SINGLELINE)
+        val fixed = a.refactor().visit(RightCurly.builder()
+                .option(RightCurlyPolicy.ALONE_OR_SINGLELINE)
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             class A {
                 {
                     if(1 == 2) {}
@@ -132,11 +132,11 @@ open class RightCurlyTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.RightCurly.builder()
-                .option(_root_ide_package_.org.openrewrite.checkstyle.policy.RightCurlyPolicy.SAME)
+        val fixed = a.refactor().visit(RightCurly.builder()
+                .option(RightCurlyPolicy.SAME)
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             class A {
                 {
                     if(1 == 2) {} else if(2 == 3) {} else {}

@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test
 open class StaticVariableNameTest : JavaParser() {
     @Test
     fun snakeName() {
-        assertThat(_root_ide_package_.org.openrewrite.checkstyle.check.StaticVariableName.snakeCaseToCamel("CAMEL_CASE_NAME_1")).isEqualTo("camelCaseName1")
+        assertThat(StaticVariableName.snakeCaseToCamel("CAMEL_CASE_NAME_1")).isEqualTo("camelCaseName1")
     }
 
     @Test
@@ -34,9 +34,9 @@ open class StaticVariableNameTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.StaticVariableName.builder().build()).fix().fixed
+        val fixed = a.refactor().visit(StaticVariableName.builder().build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             import java.util.List;
             public class A {
                List MY_LIST;
@@ -57,9 +57,9 @@ open class StaticVariableNameTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.StaticVariableName.builder().build()).fix().fixed
+        val fixed = a.refactor().visit(StaticVariableName.builder().build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             import java.util.*;
             public class A {
                static List<String> myList;
@@ -83,14 +83,14 @@ open class StaticVariableNameTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.StaticVariableName.builder()
+        val fixed = a.refactor().visit(StaticVariableName.builder()
                 .applyToPublic(false)
                 .applyToPrivate(false)
                 .applyToPackage(false)
                 .build()
         ).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             import java.util.List;
             public class A {
                static List MY_LIST;

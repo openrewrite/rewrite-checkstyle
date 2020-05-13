@@ -40,9 +40,9 @@ class GenericWhitespaceTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.GenericWhitespace()).fix().fixed
+        val fixed = a.refactor().visit(GenericWhitespace()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             import java.util.*;
             public class A<T1, T2> {
                 Map<String, Integer> map;
@@ -75,9 +75,9 @@ class GenericWhitespaceTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.GenericWhitespace()).fix().fixed
+        val fixed = a.refactor().visit(GenericWhitespace()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             import java.util.HashMap;
             
             // extra space after 'HashMap<' and after 'Integer'
@@ -91,7 +91,7 @@ class GenericWhitespaceTest : JavaParser() {
 
     @Test
     fun doesntConsiderLinebreaksWhitespace() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.GenericWhitespace(), """
+        assertUnchangedByRefactoring(GenericWhitespace(), """
             import java.util.HashMap;
             
             public class A extends HashMap<

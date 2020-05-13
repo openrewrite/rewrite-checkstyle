@@ -40,9 +40,9 @@ open class DefaultComesLastTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.DefaultComesLast()).fix().fixed
+        val fixed = a.refactor().visit(DefaultComesLast()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             class Test {
                 int n;
                 {
@@ -83,9 +83,9 @@ open class DefaultComesLastTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.DefaultComesLast()).fix().fixed
+        val fixed = a.refactor().visit(DefaultComesLast()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             class Test {
                 int n;
                 {
@@ -124,9 +124,9 @@ open class DefaultComesLastTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.DefaultComesLast(true)).fix().fixed
+        val fixed = a.refactor().visit(DefaultComesLast(true)).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             class Test {
                 int n;
                 {
@@ -146,7 +146,7 @@ open class DefaultComesLastTest : JavaParser() {
 
     @Test
     fun defaultIsLastAndThrows() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.DefaultComesLast(), """
+        assertUnchangedByRefactoring(DefaultComesLast(), """
             class Test {
                 int n;
                 {
@@ -163,7 +163,7 @@ open class DefaultComesLastTest : JavaParser() {
 
     @Test
     fun defaultIsLastAndReturnsNonVoid() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.DefaultComesLast(), """
+        assertUnchangedByRefactoring(DefaultComesLast(), """
             class Test {
                 public int foo(int n) {
                     switch (n) {
@@ -179,7 +179,7 @@ open class DefaultComesLastTest : JavaParser() {
 
     @Test
     fun dontAddBreaksIfCasesArentMoving() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.DefaultComesLast(), """
+        assertUnchangedByRefactoring(DefaultComesLast(), """
             class Test {
                 int n;
                 boolean foo() {
@@ -197,7 +197,7 @@ open class DefaultComesLastTest : JavaParser() {
 
     @Test
     fun dontRemoveExtraneousDefaultCaseBreaks() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.DefaultComesLast(), """
+        assertUnchangedByRefactoring(DefaultComesLast(), """
             class Test {
                 int n;
                 void foo() {
@@ -212,7 +212,7 @@ open class DefaultComesLastTest : JavaParser() {
 
     @Test
     fun allCasesGroupedWithDefault() {
-        assertUnchangedByRefactoring(_root_ide_package_.org.openrewrite.checkstyle.check.DefaultComesLast(), """
+        assertUnchangedByRefactoring(DefaultComesLast(), """
             class Test {
                 int n;
                 boolean foo() {

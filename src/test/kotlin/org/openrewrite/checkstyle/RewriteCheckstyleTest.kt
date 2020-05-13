@@ -72,14 +72,14 @@ class RewriteCheckstyleTest {
         val main = J.CompilationUnit.buildEmptyClass(Path.of("src", "main"), "", "Main")
         val generated = J.CompilationUnit.buildEmptyClass(Path.of("src", "generated"), "", "Generated")
 
-        val rewriteCheckstyle = _root_ide_package_.org.openrewrite.checkstyle.RewriteCheckstyle(checkstyleConfig.byteInputStream(),
+        val rewriteCheckstyle = RewriteCheckstyle(checkstyleConfig.byteInputStream(),
                 setOf("CovariantEquals"),
                 mapOf("config_loc" to tempDir.toFile().toString()))
 
         assertThat(rewriteCheckstyle.apply(main.refactor()).visitors)
-                .hasAtLeastOneElementOfType(_root_ide_package_.org.openrewrite.checkstyle.check.DefaultComesLast::class.java)
-                .hasAtLeastOneElementOfType(_root_ide_package_.org.openrewrite.checkstyle.check.SimplifyBooleanExpression::class.java)
-                .hasAtLeastOneElementOfType(_root_ide_package_.org.openrewrite.checkstyle.check.SimplifyBooleanReturn::class.java)
+                .hasAtLeastOneElementOfType(DefaultComesLast::class.java)
+                .hasAtLeastOneElementOfType(SimplifyBooleanExpression::class.java)
+                .hasAtLeastOneElementOfType(SimplifyBooleanReturn::class.java)
 
         assertThat(rewriteCheckstyle.apply(generated.refactor()).visitors).isEmpty()
     }

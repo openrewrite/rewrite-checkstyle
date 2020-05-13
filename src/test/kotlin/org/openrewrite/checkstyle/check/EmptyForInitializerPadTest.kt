@@ -30,9 +30,9 @@ open class EmptyForInitializerPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyForInitializerPad()).fix().fixed
+        val fixed = a.refactor().visit(EmptyForInitializerPad()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     for (; i < j; i++, j--);
@@ -51,9 +51,9 @@ open class EmptyForInitializerPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyForInitializerPad(PadPolicy.SPACE)).fix().fixed
+        val fixed = a.refactor().visit(EmptyForInitializerPad(PadPolicy.SPACE)).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     for ( ; i < j; i++, j--);
@@ -73,9 +73,9 @@ open class EmptyForInitializerPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.EmptyForInitializerPad()).fix().fixed
+        val fixed = a.refactor().visit(EmptyForInitializerPad()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
                 {
                     for (

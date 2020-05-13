@@ -53,11 +53,11 @@ open class OperatorWrapTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.OperatorWrap.builder()
-                .tokens(_root_ide_package_.org.openrewrite.checkstyle.policy.OperatorToken.values().toSet())
+        val fixed = a.refactor().visit(OperatorWrap.builder()
+                .tokens(OperatorToken.values().toSet())
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             import java.io.*;
             class A {
                 {
@@ -120,12 +120,12 @@ open class OperatorWrapTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.OperatorWrap.builder()
-                .option(_root_ide_package_.org.openrewrite.checkstyle.policy.WrapPolicy.EOL)
-                .tokens(_root_ide_package_.org.openrewrite.checkstyle.policy.OperatorToken.values().toSet())
+        val fixed = a.refactor().visit(OperatorWrap.builder()
+                .option(WrapPolicy.EOL)
+                .tokens(OperatorToken.values().toSet())
                 .build()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             import java.io.*;
             class A {
                 {

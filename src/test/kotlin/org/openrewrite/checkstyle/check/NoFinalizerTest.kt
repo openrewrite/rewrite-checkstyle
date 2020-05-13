@@ -30,9 +30,9 @@ open class NoFinalizerTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(_root_ide_package_.org.openrewrite.checkstyle.check.NoFinalizer()).fix().fixed
+        val fixed = a.refactor().visit(NoFinalizer()).fix().fixed
 
-        _root_ide_package_.org.openrewrite.checkstyle.check.assertRefactored(fixed, """
+        assertRefactored(fixed, """
             public class A {
             }
         """)
