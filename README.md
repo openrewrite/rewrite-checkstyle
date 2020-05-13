@@ -1,4 +1,8 @@
-# About
+# Rewrite Checkstyle - Eliminate Checkstyle issues. Automatically.
+
+[![Build Status](https://circleci.com/gh/openrewrite/rewrite-checkstyle.svg?style=shield)](https://circleci.com/gh/openrewrite/rewrite-checkstyle)
+[![Apache 2.0](https://img.shields.io/github/license/openrewrite/rewrite-checkstyle.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![Maven Central](https://img.shields.io/maven-central/v/org.openrewrite.plan/rewrite-checkstyle.svg)](https://mvnrepository.com/artifact/org.openrewrite.plan/rewrite-checkstyle)
 
 This module checks for and auto-remediates common Checkstyle issues. The check and remediation go together, so it does _not_ use Checkstyle for the checking, but rather performs an equivalent check according to the Checkstyle documentation. Each Rewrite Checkstyle rule provides the full set of options for the corresponding Checkstyle check.
 
