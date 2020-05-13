@@ -1,52 +1,44 @@
+import io.spring.gradle.bintray.SpringBintrayExtension
+import nl.javadude.gradle.plugins.license.LicenseExtension
+import java.util.*
+import nebula.plugin.info.InfoBrokerPlugin
+import nebula.plugin.contacts.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.net.URI
+import org.jfrog.gradle.plugin.artifactory.dsl.*
+import org.w3c.dom.Element
+
+buildscript {
+    repositories {
+        jcenter()
+        gradlePluginPortal()
+    }
+
+    dependencies {
+        classpath("io.spring.gradle:spring-release-plugin:0.20.1")
+
+        constraints {
+            classpath("org.jfrog.buildinfo:build-info-extractor-gradle:4.13.0") {
+                because("Need recent version for Gradle 6+ compatibility")
+            }
+        }
+    }
+}
 
 plugins {
     `java-library`
     id("org.jetbrains.kotlin.jvm") version "1.3.71"
-    id("nebula.release") version "13.2.1"
-    id("nebula.maven-publish") version "17.2.1"
-    id("nebula.maven-resolved-dependencies") version "17.2.1"
+    id("io.spring.release") version "0.20.1"
 }
 
-group = "org.gradle.rewrite.plan"
-description = "Refactor checkstyle automatically"
+apply(plugin = "license")
+apply(plugin = "nebula.maven-resolved-dependencies")
+apply(plugin = "io.spring.publishing")
+
+group = "org.openrewrite.plan"
+description = "Eliminate Checkstyle issues. Automatically."
 
 repositories {
-    maven { url = uri("http://oss.jfrog.org/oss-snapshot-local") }
-
-    maven {
-        url = uri("https://repo.gradle.org/gradle/enterprise-libs-releases-local/")
-        credentials  {
-            username = project.findProperty("artifactoryUsername") as String
-            password = project.findProperty("artifactoryPassword") as String
-        }
-        authentication {
-            create<BasicAuthentication>("basic")
-        }
-    }
-    maven {
-        url = uri("https://repo.gradle.org/gradle/enterprise-libs-snapshots-local/")
-        credentials  {
-            username = project.findProperty("artifactoryUsername") as String
-            password = project.findProperty("artifactoryPassword") as String
-        }
-        authentication {
-            create<BasicAuthentication>("basic")
-        }
-    }
-
-    jcenter {
-        content {
-            excludeVersionByRegex("com\\.fasterxml\\.jackson\\..*", ".*", ".*rc.*")
-        }
-    }
-
-    jcenter {
-        content {
-            includeVersionByRegex("com\\.fasterxml\\.jackson\\..*", ".*", "(\\d+\\.)*\\d+")
-        }
-    }
+    mavenCentral()
 }
 
 configurations.all {
@@ -61,7 +53,7 @@ java {
 }
 
 dependencies {
-    implementation("org.gradle.rewrite:rewrite-java:latest.integration")
+    implementation("org.openrewrite:rewrite-java:latest.integration")
 
     implementation("com.puppycrawl.tools:checkstyle:latest.release")
 
@@ -71,7 +63,7 @@ dependencies {
     implementation("commons-cli:commons-cli:1.4")
 
     implementation("io.micrometer.prometheus:prometheus-rsocket-client:latest.release")
-    implementation("io.rsocket:rsocket-transport-netty:1.0.0-RC7-SNAPSHOT")
+    implementation("io.rsocket:rsocket-transport-netty:1.0.0-RC7")
 
     implementation("ch.qos.logback:logback-classic:1.0.13")
 
@@ -105,33 +97,105 @@ tasks.named<Jar>("jar") {
     }
 }
 
-fun shouldUseReleaseRepo(): Boolean {
-    return project.gradle.startParameter.taskNames.contains("final") || project.gradle.startParameter.taskNames.contains(":final")
+configure<ContactsExtension> {
+    val j = Contact("jkschneider@gmail.com")
+    j.moniker("Jonathan Schneider")
+
+    people["jkschneider@gmail.com"] = j
 }
 
-project.gradle.taskGraph.whenReady(object: Action<TaskExecutionGraph> {
-    override fun execute(graph: TaskExecutionGraph) {
-            if (graph.hasTask(":snapshot") || graph.hasTask(":immutableSnapshot")) {
-                throw GradleException("You cannot use the snapshot or immutableSnapshot task from the release plugin. Please use the devSnapshot task.")
-            }
-    }
-})
+configure<LicenseExtension> {
+    ext.set("year", Calendar.getInstance().get(Calendar.YEAR))
+    skipExistingHeaders = true
+    header = project.rootProject.file("gradle/licenseHeader.txt")
+    mapping(mapOf("kt" to "SLASHSTAR_STYLE", "java" to "SLASHSTAR_STYLE"))
+    strictCheck = true
+}
 
-publishing {
-    repositories {
-        maven {
-            name = "GradleEnterprise"
-            url = if(shouldUseReleaseRepo()) {
-                URI.create("https://repo.gradle.org/gradle/enterprise-libs-releases-local")
-            } else {
-                URI.create("https://repo.gradle.org/gradle/enterprise-libs-snapshots-local")
-            }
-            credentials {
-                username = project.findProperty("artifactoryUsername") as String?
-                password = project.findProperty("artifactoryPassword") as String?
+configure<PublishingExtension> {
+    publications {
+        named("nebula", MavenPublication::class.java) {
+            suppressPomMetadataWarningsFor("runtimeElements")
+
+            pom.withXml {
+                (asElement().getElementsByTagName("dependencies").item(0) as Element).let { dependencies ->
+                    dependencies.getElementsByTagName("dependency").let { dependencyList ->
+                        (0 until dependencyList.length).forEach { i ->
+                            (dependencyList.item(i) as Element).let { dependency ->
+                                if ((dependency.getElementsByTagName("scope")
+                                                .item(0) as Element).textContent == "provided") {
+                                    dependencies.removeChild(dependency)
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
-project.rootProject.tasks.getByName("postRelease").dependsOn(project.tasks.getByName("publishNebulaPublicationToGradleEnterpriseRepository"))
+configure<SpringBintrayExtension> {
+    org = "openrewrite"
+    repo = "maven"
+}
+
+project.withConvention(ArtifactoryPluginConvention::class) {
+    setContextUrl("https://oss.jfrog.org/artifactory")
+    publisherConfig.let {
+        val repository: PublisherConfig.Repository = it.javaClass
+                .getDeclaredField("repository")
+                .apply { isAccessible = true }
+                .get(it) as PublisherConfig.Repository
+
+        repository.setRepoKey("oss-snapshot-local")
+        repository.setUsername(project.findProperty("bintrayUser"))
+        repository.setPassword(project.findProperty("bintrayKey"))
+    }
+}
+
+tasks.withType<GenerateMavenPom> {
+    doLast {
+        // because pom.withXml adds blank lines
+        destination.writeText(
+                destination.readLines().filter { it.isNotBlank() }.joinToString("\n")
+        )
+    }
+
+    doFirst {
+        val runtimeClasspath = configurations.getByName("runtimeClasspath")
+
+        val gav = { dep: ResolvedDependency ->
+            "${dep.moduleGroup}:${dep.moduleName}:${dep.moduleVersion}"
+        }
+
+        val observedDependencies = TreeSet<ResolvedDependency> { d1, d2 ->
+            gav(d1).compareTo(gav(d2))
+        }
+
+        fun reduceDependenciesAtIndent(indent: Int):
+                (List<String>, ResolvedDependency) -> List<String> =
+                { dependenciesAsList: List<String>, dep: ResolvedDependency ->
+                    dependenciesAsList + listOf(" ".repeat(indent) + dep.module.id.toString()) + (
+                            if (observedDependencies.add(dep)) {
+                                dep.children
+                                        .sortedBy(gav)
+                                        .fold(emptyList(), reduceDependenciesAtIndent(indent + 2))
+                            } else {
+                                // this dependency subtree has already been printed, so skip it
+                                emptyList()
+                            }
+                            )
+                }
+
+        project.plugins.withType<InfoBrokerPlugin> {
+            add("Resolved-Dependencies", runtimeClasspath
+                    .resolvedConfiguration
+                    .lenientConfiguration
+                    .firstLevelModuleDependencies
+                    .sortedBy(gav)
+                    .fold(emptyList(), reduceDependenciesAtIndent(6))
+                    .joinToString("\n", "\n", "\n" + " ".repeat(4)))
+        }
+    }
+}

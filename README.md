@@ -27,7 +27,7 @@ changes where Checkstyle wouldn't report an issue at all (e.g. Rewrite's `Simpli
 
 # To release
 
-`./gradlew final` or `./gradlew devSnapshot`
+`./gradlew final` or `./gradlew snapshot`
 
 Nebula release will automatically determine the next minor release version, tag the repository,
 and set the project version accordingly.
