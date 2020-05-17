@@ -8,7 +8,7 @@ This module checks for and auto-remediates common Checkstyle issues. The check a
 
 Since all of the rules check for syntactic and not semantic patterns, there is no need to ensure that the ASTs evaluated by Rewrite Checkstyle are fully type-attributed (i.e. there is no need to provide the compile classpath to `JavaParser`).
 
-```
+```java
 // produce ASTs for all Java sources to check
 List<J.CompilationUnit> cus = new JavaParser()
     .setLogCompilationWarningsAndErrors(false)
