@@ -11,6 +11,8 @@ This project implements a [Rewrite module](https://github.com/openrewrite/rewrit
 
 ### How do I use it?
 
+This module parses your _existing_ Checkstyle configuration, supporting all the same configuration options that the Checkstyle check supports. It does its own checking, matching exactly the Checkstyle definition of each rule, and where it finds violations, fixes them automatically!
+
 Since all of the rules check for syntactic and not semantic patterns, there is no need to ensure that the ASTs evaluated by Rewrite Checkstyle are fully type-attributed (i.e. there is no need to provide the compile classpath to `JavaParser`).
 
 ```java
