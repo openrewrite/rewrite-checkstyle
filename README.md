@@ -33,7 +33,8 @@ for(J.CompilationUnit cu : cus) {
 }
 ```
 
-In some cases, the Rewrite Checkstyle rule is a bit "smarter" than the original Checkstyle check, and so may make
-changes where Checkstyle wouldn't report an issue at all (e.g. Rewrite's `SimplifyBooleanExpression` is aware of operator associativity and precedence where Checkstyle's check is not).
+### Supported checks
+
+The list of currently supported checks is [here](https://github.com/openrewrite/rewrite-checkstyle/tree/master/src/main/java/org/openrewrite/checkstyle/check). Submit an issue to add support for additional checks. Even better, submit a PR!
 
 This project also contains a [`Main`](https://github.com/openrewrite/rewrite-checkstyle/blob/master/src/main/java/org/openrewrite/checkstyle/Main.java) class with a number of options that can be used to fix a project's source based on a checkstyle configuration file.
