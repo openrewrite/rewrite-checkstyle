@@ -43,8 +43,8 @@ open class UnnecessaryParenthesesTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(UnnecessaryParentheses.builder()
-                .build()).fix(1).fixed
+        val fixed = a.refactor().visit(UnnecessaryParentheses.configure(emptyModule("UnnecessaryParentheses")))
+                .fix(1).fixed
 
         assertRefactored(fixed, """
             import java.util.*;

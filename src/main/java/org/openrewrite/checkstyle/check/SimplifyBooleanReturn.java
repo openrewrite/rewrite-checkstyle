@@ -15,9 +15,10 @@
  */
 package org.openrewrite.checkstyle.check;
 
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.Cursor;
 import org.openrewrite.java.refactor.DeleteStatement;
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
@@ -32,15 +33,15 @@ import static org.openrewrite.Formatting.EMPTY;
 import static org.openrewrite.Formatting.format;
 import static org.openrewrite.Tree.randomId;
 
-public class SimplifyBooleanReturn extends JavaRefactorVisitor {
-    @Override
-    public String getName() {
-        return "checkstyle.SimplifyBooleanReturn";
+public class SimplifyBooleanReturn extends CheckstyleRefactorVisitor {
+    public SimplifyBooleanReturn() {
+        super("checkstyle.SimplifyBooleanReturn");
+        setCursoringOn();
     }
 
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static SimplifyBooleanReturn configure(Config config) {
+        return fromModule(config, "SimplifyBooleanReturn", m -> new SimplifyBooleanReturn());
     }
 
     @Override
@@ -92,7 +93,7 @@ public class SimplifyBooleanReturn extends JavaRefactorVisitor {
                         returnThenPart = true;
                     }
 
-                    if(returnThenPart) {
+                    if (returnThenPart) {
                         //  we need to NOT the expression inside the if condition
                         var maybeParenthesizedCondition = ifCondition instanceof J.Binary || ifCondition instanceof J.Ternary ?
                                 new J.Parentheses<>(randomId(), ifCondition, EMPTY) :

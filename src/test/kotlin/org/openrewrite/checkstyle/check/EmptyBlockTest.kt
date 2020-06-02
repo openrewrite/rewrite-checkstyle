@@ -15,11 +15,26 @@
  */
 package org.openrewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
-import org.openrewrite.checkstyle.policy.Token.*
 import org.junit.jupiter.api.Test
+import org.openrewrite.config.MapConfigSource.mapConfig
+import org.openrewrite.java.JavaParser
 
 open class EmptyBlockTest : JavaParser() {
+    private fun tokens(vararg tokens: String) =
+            mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="EmptyBlock">
+                                <property name="tokens" value="${tokens.joinToString(",")}"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent())
+
     @Test
     fun emptySwitch() {
         val a = parse("""
@@ -32,9 +47,8 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(EmptyBlock.builder()
-                .tokens(setOf(LITERAL_SWITCH))
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(EmptyBlock.configure(tokens("LITERAL_SWITCH")))
+                .fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -57,9 +71,8 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(EmptyBlock.builder()
-                .tokens(setOf(LITERAL_SYNCHRONIZED))
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(EmptyBlock.configure(tokens("LITERAL_SYNCHRONIZED")))
+                .fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -85,9 +98,8 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(EmptyBlock.builder()
-                .tokens(setOf(LITERAL_TRY))
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(EmptyBlock.configure(tokens("LITERAL_TRY")))
+                .fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -113,9 +125,8 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(EmptyBlock.builder()
-                .tokens(setOf(LITERAL_CATCH))
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(EmptyBlock.configure(tokens("LITERAL_CATCH")))
+                .fix().fixed
 
         assertRefactored(fixed, """
             import java.io.IOException;
@@ -150,9 +161,8 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(EmptyBlock.builder()
-                .tokens(setOf(LITERAL_CATCH, LITERAL_FINALLY))
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(EmptyBlock.configure(tokens("LITERAL_CATCH", "LITERAL_FINALLY")))
+                .fix().fixed
 
         assertRefactored(fixed, """
             import java.nio.file.*;
@@ -182,9 +192,8 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(EmptyBlock.builder()
-                .tokens(setOf(LITERAL_WHILE, LITERAL_DO))
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(EmptyBlock.configure(tokens("LITERAL_WHILE", "LITERAL_DO")))
+                .fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -209,9 +218,8 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(EmptyBlock.builder()
-                .tokens(setOf(STATIC_INIT))
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(EmptyBlock.configure(tokens("STATIC_INIT")))
+                .fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -229,9 +237,8 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(EmptyBlock.builder()
-                .tokens(setOf(INSTANCE_INIT))
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(EmptyBlock.configure(tokens("INSTANCE_INIT")))
+                .fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -267,9 +274,8 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(EmptyBlock.builder()
-                .tokens(setOf(LITERAL_IF))
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(EmptyBlock.configure(tokens("LITERAL_IF")))
+                .fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -311,9 +317,8 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(EmptyBlock.builder()
-                .tokens(setOf(LITERAL_IF))
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(EmptyBlock.configure(tokens("LITERAL_IF")))
+                .fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -342,9 +347,8 @@ open class EmptyBlockTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(EmptyBlock.builder()
-                .tokens(setOf(LITERAL_IF))
-                .build()).fix(1).fixed
+        val fixed = a.refactor().visit(EmptyBlock.configure(tokens("LITERAL_IF")))
+                .fix(1).fixed
 
         assertRefactored(fixed, """
             public class A {

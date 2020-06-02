@@ -15,8 +15,9 @@
  */
 package org.openrewrite.checkstyle.check;
 
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.Formatting;
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 
 import java.util.List;
@@ -25,10 +26,14 @@ import static org.openrewrite.Formatting.format;
 import static org.openrewrite.Formatting.formatFirstPrefix;
 import static org.openrewrite.Tree.randomId;
 
-public class FinalClass extends JavaRefactorVisitor {
-    @Override
-    public String getName() {
-        return "checkstyle.FinalClass";
+public class FinalClass extends CheckstyleRefactorVisitor {
+    public FinalClass() {
+        super("checkstyle.FinalClass");
+    }
+
+    @AutoConfigure
+    public static FinalClass configure(Config config) {
+        return fromModule(config, "FinalClass", m -> new FinalClass());
     }
 
     @Override

@@ -15,7 +15,8 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.Flag;
 import org.openrewrite.java.tree.J;
@@ -27,10 +28,14 @@ import static java.util.Collections.singletonList;
 import static org.openrewrite.Formatting.EMPTY;
 import static org.openrewrite.Tree.randomId;
 
-public class StringLiteralEquality extends JavaRefactorVisitor {
-    @Override
-    public String getName() {
-        return "checkstyle.StringLiteralEquality";
+public class StringLiteralEquality extends CheckstyleRefactorVisitor {
+    public StringLiteralEquality() {
+        super("checkstyle.StringLiteralEquality");
+    }
+
+    @AutoConfigure
+    public static StringLiteralEquality configure(Config config) {
+        return fromModule(config, "StringLiteralEquality", m -> new StringLiteralEquality());
     }
 
     @Override

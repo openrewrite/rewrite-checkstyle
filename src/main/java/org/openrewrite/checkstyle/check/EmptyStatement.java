@@ -15,11 +15,12 @@
  */
 package org.openrewrite.checkstyle.check;
 
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.Cursor;
 import org.openrewrite.Tree;
 import org.openrewrite.java.refactor.DeleteStatement;
 import org.openrewrite.java.refactor.JavaRefactorVisitor;
-import org.openrewrite.java.refactor.ScopedJavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Statement;
 
@@ -27,15 +28,15 @@ import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
 
-public class EmptyStatement extends JavaRefactorVisitor {
-    @Override
-    public String getName() {
-        return "checkstyle.EmptyStatement";
+public class EmptyStatement extends CheckstyleRefactorVisitor {
+    public EmptyStatement() {
+        super("checkstyle.EmptyStatement");
+        setCursoringOn();
     }
 
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static EmptyStatement configure(Config config) {
+        return fromModule(config, "EmptyStatement", m -> new EmptyStatement());
     }
 
     @Override
@@ -98,18 +99,20 @@ public class EmptyStatement extends JavaRefactorVisitor {
         return statement instanceof J.Empty;
     }
 
-    private static class RemoveStatementFromParentBlock extends ScopedJavaRefactorVisitor {
+    private static class RemoveStatementFromParentBlock extends JavaRefactorVisitor {
+        private final Tree scope;
         private final Statement statement;
 
         public RemoveStatementFromParentBlock(Cursor cursor, Statement statement) {
-            super(cursor.getParentOrThrow().getTree().getId());
+            super("checkstyle.RemoveStatementFromParentBlock");
+            this.scope = cursor.getParentOrThrow().getTree();
             this.statement = statement;
         }
 
         @Override
         public J visitBlock(J.Block<J> block) {
             J.Block<J> b = refactor(block, super::visitBlock);
-            if (isScope()) {
+            if (scope.isScope(block)) {
                 b = b.withStatements(b.getStatements().stream()
                         .filter(s -> s != statement)
                         .collect(toList()));

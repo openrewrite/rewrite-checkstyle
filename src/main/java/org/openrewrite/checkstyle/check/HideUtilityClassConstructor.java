@@ -15,7 +15,8 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.java.tree.J;
 
 import java.util.List;
@@ -23,10 +24,14 @@ import java.util.List;
 import static java.util.stream.Collectors.toList;
 import static org.openrewrite.Tree.randomId;
 
-public class HideUtilityClassConstructor extends JavaRefactorVisitor {
-    @Override
-    public String getName() {
-        return "checkstyle.HideUtilityClassConstructor";
+public class HideUtilityClassConstructor extends CheckstyleRefactorVisitor {
+    public HideUtilityClassConstructor() {
+        super("checkstyle.HideUtilityClassConstructor");
+    }
+
+    @AutoConfigure
+    public static HideUtilityClassConstructor configure(Config config) {
+        return fromModule(config, "HideUtilityClassConstructor", m -> new HideUtilityClassConstructor());
     }
 
     @Override

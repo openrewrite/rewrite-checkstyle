@@ -15,13 +15,11 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import lombok.Builder;
-import org.openrewrite.checkstyle.check.internal.WhitespaceChecks;
-import org.openrewrite.checkstyle.policy.PunctuationToken;
-import org.openrewrite.Formatting;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.Tree;
+import org.openrewrite.checkstyle.policy.PunctuationToken;
 import org.openrewrite.internal.lang.Nullable;
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Statement;
@@ -33,32 +31,40 @@ import java.util.function.Function;
 
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
-import static org.openrewrite.checkstyle.check.internal.WhitespaceChecks.stripPrefixUpToLinebreak;
-import static org.openrewrite.checkstyle.check.internal.WhitespaceChecks.stripSuffixUpToLinebreak;
-import static org.openrewrite.checkstyle.policy.PunctuationToken.*;
 import static org.openrewrite.Formatting.stripSuffix;
+import static org.openrewrite.checkstyle.check.WhitespaceChecks.stripPrefixUpToLinebreak;
+import static org.openrewrite.checkstyle.check.WhitespaceChecks.stripSuffixUpToLinebreak;
+import static org.openrewrite.checkstyle.policy.PunctuationToken.*;
 
-@Builder
-public class NoWhitespaceBefore extends JavaRefactorVisitor {
-    /**
-     * Only applies to DOT.
-     */
-    @Builder.Default
-    private final boolean allowLineBreaks = false;
-
-    @Builder.Default
-    private final Set<PunctuationToken> tokens = Set.of(
+public class NoWhitespaceBefore extends CheckstyleRefactorVisitor {
+    private static final Set<PunctuationToken> DEFAULT_TOKENS = Set.of(
             COMMA, SEMI, POST_INC, POST_DEC, ELLIPSIS
     );
 
-    @Override
-    public String getName() {
-        return "checkstyle.NoWhitespaceBefore";
+    /**
+     * Only applies to DOT.
+     */
+    private final boolean allowLineBreaks;
+
+    private final Set<PunctuationToken> tokens;
+
+    public NoWhitespaceBefore(boolean allowLineBreaks, Set<PunctuationToken> tokens) {
+        super("checkstyle.NoWhitespaceBefore");
+        this.allowLineBreaks = allowLineBreaks;
+        this.tokens = tokens;
+        setCursoringOn();
     }
 
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static NoWhitespaceBefore configure(Config config) {
+        return fromModule(
+                config,
+                "NoWhitespaceBefore",
+                m -> new NoWhitespaceBefore(
+                        m.prop("allowLineBreaks", false),
+                        m.propAsTokens(PunctuationToken.class, DEFAULT_TOKENS)
+                )
+        );
     }
 
     @Override

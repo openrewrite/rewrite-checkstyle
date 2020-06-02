@@ -15,11 +15,14 @@
  */
 package org.openrewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
-import org.openrewrite.checkstyle.policy.PadPolicy
 import org.junit.jupiter.api.Test
+import org.openrewrite.config.MapConfigSource
+import org.openrewrite.config.MapConfigSource.mapConfig
+import org.openrewrite.java.JavaParser
 
 open class MethodParamPadTest: JavaParser() {
+    private val defaultConfig = emptyModule("MethodParamPad")
+    
     @Test
     fun noSpaceInitializerPadding() {
         val a = parse("""
@@ -41,7 +44,7 @@ open class MethodParamPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(MethodParamPad.builder().build()).fix().fixed
+        val fixed = a.refactor().visit(MethodParamPad.configure(defaultConfig)).fix().fixed
 
         assertRefactored(fixed, """
             public class A extends B {
@@ -84,7 +87,19 @@ open class MethodParamPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(MethodParamPad.builder().option(PadPolicy.SPACE).build()).fix().fixed
+        val fixed = a.refactor().visit(MethodParamPad.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="MethodParamPad">
+                                <property name="option" value="SPACE"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             public class A extends B {
@@ -115,8 +130,19 @@ open class MethodParamPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(MethodParamPad.builder()
-                .allowLineBreaks(true).build()).fix().fixed
+        val fixed = a.refactor().visit(MethodParamPad.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="MethodParamPad">
+                                <property name="allowLineBreaks" value="true"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             public class A extends B {

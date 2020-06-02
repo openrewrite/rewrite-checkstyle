@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.openrewrite.checkstyle.check.internal;
+package org.openrewrite.checkstyle.check;
 
 import org.openrewrite.Tree;
 import org.openrewrite.internal.lang.Nullable;
 
-public class WhitespaceChecks {
+final class WhitespaceChecks {
     private WhitespaceChecks() {
     }
 

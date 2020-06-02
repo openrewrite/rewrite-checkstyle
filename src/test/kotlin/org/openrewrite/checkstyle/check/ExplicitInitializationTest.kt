@@ -15,10 +15,12 @@
  */
 package org.openrewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
+import org.openrewrite.java.JavaParser
 
 open class ExplicitInitializationTest : JavaParser() {
+    private val defaultConfig = emptyModule("ExplicitInitialization")
+    
     @Test
     fun removeExplicitInitialization() {
         val a = parse("""
@@ -44,7 +46,7 @@ open class ExplicitInitializationTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(ExplicitInitialization()).fix().fixed
+        val fixed = a.refactor().visit(ExplicitInitialization.configure(defaultConfig)).fix().fixed
 
         assertRefactored(fixed, """
             class Test {

@@ -15,14 +15,12 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import lombok.Builder;
-import org.openrewrite.checkstyle.policy.PadPolicy;
-import org.openrewrite.checkstyle.policy.Token;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.Tree;
 import org.openrewrite.checkstyle.policy.PadPolicy;
 import org.openrewrite.checkstyle.policy.Token;
 import org.openrewrite.internal.lang.Nullable;
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.J.MethodDecl;
 import org.openrewrite.java.tree.J.MethodInvocation;
@@ -32,30 +30,34 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static org.openrewrite.checkstyle.policy.PadPolicy.NOSPACE;
-import static org.openrewrite.checkstyle.policy.Token.*;
-
-@Builder
-public class MethodParamPad extends JavaRefactorVisitor {
-    @Builder.Default
-    private final boolean allowLineBreaks = false;
-
-    @Builder.Default
-    private final PadPolicy option = PadPolicy.NOSPACE;
-
-    @Builder.Default
-    private final Set<Token> tokens = Set.of(
+public class MethodParamPad extends CheckstyleRefactorVisitor {
+    private static final Set<Token> DEFAULT_TOKENS = Set.of(
             Token.CTOR_DEF, Token.LITERAL_NEW, Token.METHOD_CALL, Token.METHOD_DEF, Token.SUPER_CTOR_CALL, Token.ENUM_CONSTANT_DEF
     );
 
-    @Override
-    public String getName() {
-        return "checkstyle.MethodParamPad";
+    private final boolean allowLineBreaks;
+    private final PadPolicy option;
+    private final Set<Token> tokens;
+
+    public MethodParamPad(boolean allowLineBreaks, PadPolicy option, Set<Token> tokens) {
+        super("checkstyle.MethodParamPad");
+        this.allowLineBreaks = allowLineBreaks;
+        this.option = option;
+        this.tokens = tokens;
+        setCursoringOn();
     }
 
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static MethodParamPad configure(Config config) {
+        return fromModule(
+                config,
+                "MethodParamPad",
+                m -> new MethodParamPad(
+                        m.prop("allowLineBreaks", false),
+                        m.propAsOptionValue(PadPolicy::valueOf, PadPolicy.NOSPACE),
+                        m.propAsTokens(Token.class, DEFAULT_TOKENS)
+                )
+        );
     }
 
     @Override
@@ -75,9 +77,9 @@ public class MethodParamPad extends JavaRefactorVisitor {
     }
 
     private <T extends J, U extends Tree> T maybeFixFormatting(@Nullable T t, Function<T, Tree> callSuper,
-                                                                Function<T, U> getter,
-                                                                BiFunction<T, U, T> setter,
-                                                                Token... tokensToMatch) {
+                                                               Function<T, U> getter,
+                                                               BiFunction<T, U, T> setter,
+                                                               Token... tokensToMatch) {
         t = refactor(t, callSuper);
 
         if (getter.apply(t) != null && Token.matchesOneOf(tokens, getCursor(), tokensToMatch) && hasWrongSpacing(getter.apply(t))) {

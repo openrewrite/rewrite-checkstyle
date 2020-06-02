@@ -15,11 +15,13 @@
  */
 package org.openrewrite.checkstyle.check
 
-import org.openrewrite.checkstyle.policy.LeftCurlyPolicy
 import org.junit.jupiter.api.Test
+import org.openrewrite.config.MapConfigSource.mapConfig
 import org.openrewrite.java.JavaParser
 
 open class LeftCurlyTest : JavaParser() {
+    private val defaultConfig = emptyModule("LeftCurly")
+    
     @Test
     fun eol() {
         val a = parse("""
@@ -38,7 +40,7 @@ open class LeftCurlyTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(LeftCurly.builder().build()).fix().fixed
+        val fixed = a.refactor().visit(LeftCurly.configure(defaultConfig)).fix().fixed
 
         assertRefactored(fixed, """
             class A {
@@ -69,9 +71,19 @@ open class LeftCurlyTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(LeftCurly.builder()
-                .option(LeftCurlyPolicy.NL)
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(LeftCurly.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="LeftCurly">
+                                <property name="option" value="NL"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             class A
@@ -109,9 +121,19 @@ open class LeftCurlyTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(LeftCurly.builder()
-                .option(LeftCurlyPolicy.NLOW)
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(LeftCurly.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="LeftCurly">
+                                <property name="option" value="NLOW"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             class A {
@@ -133,7 +155,7 @@ open class LeftCurlyTest : JavaParser() {
     }
 
     @Test
-    fun ignoreEnums() {
+    fun caseBlocks() {
         val a = parse("""
             class A {
                 {
@@ -148,16 +170,25 @@ open class LeftCurlyTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(LeftCurly.builder()
-                .option(LeftCurlyPolicy.EOL)
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(LeftCurly.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="LeftCurly">
+                                <property name="option" value="EOL"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             class A {
                 {
                     switch(1) {
-                    case 1:
-                    {
+                    case 1: {
                     }
                     case 2: {
                     }
@@ -169,7 +200,7 @@ open class LeftCurlyTest : JavaParser() {
 
     @Test
     fun dontStripNewClassInstanceInitializers() {
-        assertUnchangedByRefactoring(LeftCurly.builder().build(), """
+        assertUnchangedByRefactoring(LeftCurly.configure(defaultConfig), """
             public class JacksonUtils {
                 static ObjectMapper stdConfigure(ObjectMapper mapper) {
                     return mapper

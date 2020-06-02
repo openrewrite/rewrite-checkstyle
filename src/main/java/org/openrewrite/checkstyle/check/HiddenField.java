@@ -15,61 +15,65 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import lombok.Builder;
-import lombok.RequiredArgsConstructor;
-import org.openrewrite.checkstyle.policy.Token;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.Cursor;
 import org.openrewrite.Tree;
 import org.openrewrite.checkstyle.policy.Token;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.JavaSourceVisitor;
 import org.openrewrite.java.refactor.JavaRefactorVisitor;
-import org.openrewrite.java.refactor.ScopedJavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static org.openrewrite.checkstyle.policy.Token.*;
 import static org.openrewrite.java.tree.TypeUtils.getVisibleSupertypeMembers;
 
-@Builder
-public class HiddenField extends JavaRefactorVisitor {
+public class HiddenField extends CheckstyleRefactorVisitor {
     private static final Pattern NAME_PATTERN = Pattern.compile("(.+)(\\d+)");
+    private static final Set<Token> DEFAULT_TOKENS = Set.of(Token.VARIABLE_DEF, Token.PARAMETER_DEF, Token.LAMBDA);
 
-    @Builder.Default
     @Nullable
-    Pattern ignoreFormat = null;
+    private final Pattern ignoreFormat;
 
-    @Builder.Default
-    boolean ignoreConstructorParameter = false;
+    private final boolean ignoreConstructorParameter;
+    private final boolean ignoreSetter;
+    private final boolean setterCanReturnItsClass;
+    private final boolean ignoreAbstractMethods;
+    private final Set<Token> tokens;
 
-    @Builder.Default
-    boolean ignoreSetter = false;
-
-    @Builder.Default
-    boolean setterCanReturnItsClass = false;
-
-    @Builder.Default
-    boolean ignoreAbstractMethods = false;
-
-    @Builder.Default
-    Set<Token> tokens = Set.of(Token.VARIABLE_DEF, Token.PARAMETER_DEF, Token.LAMBDA);
-
-    @Override
-    public String getName() {
-        return "checkstyle.HiddenField";
+    public HiddenField(@Nullable Pattern ignoreFormat, boolean ignoreConstructorParameter, boolean ignoreSetter,
+                       boolean setterCanReturnItsClass, boolean ignoreAbstractMethods, Set<Token> tokens) {
+        super("checkstyle.HiddenField");
+        this.ignoreFormat = ignoreFormat;
+        this.ignoreConstructorParameter = ignoreConstructorParameter;
+        this.ignoreSetter = ignoreSetter;
+        this.setterCanReturnItsClass = setterCanReturnItsClass;
+        this.ignoreAbstractMethods = ignoreAbstractMethods;
+        this.tokens = tokens;
+        setCursoringOn();
     }
 
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static HiddenField configure(Config config) {
+        return fromModule(
+                config,
+                "HiddenField",
+                m -> new HiddenField(
+                        m.prop("ignoreFormat", null),
+                        m.prop("ignoreConstructorParameter", false),
+                        m.prop("ignoreSetter", false),
+                        m.prop("setterCanReturnItsClass", false),
+                        m.prop("ignoreAbstractMethods", false),
+                        m.propAsTokens(Token.class, DEFAULT_TOKENS)
+                )
+        );
     }
 
     @Override
@@ -82,7 +86,7 @@ public class HiddenField extends JavaRefactorVisitor {
                 .collect(toList());
 
         if (!shadows.isEmpty()) {
-            shadows.forEach(shadow -> andThen(new RenameShadowedName(shadow.getId(), visibleSupertypeMembers)));
+            shadows.forEach(shadow -> andThen(new RenameShadowedName(shadow, visibleSupertypeMembers)));
         }
 
         return super.visitClassDecl(classDecl);
@@ -99,7 +103,7 @@ public class HiddenField extends JavaRefactorVisitor {
             J.ClassDecl classDecl = parent.getTree();
             List<J.VariableDecls.NamedVar> shadows = new FindNameShadows(variable, enclosingClass()).visit(enclosingBlock());
             if (!shadows.isEmpty()) {
-                shadows.forEach(shadow -> andThen(new RenameShadowedName(shadow.getId(), getVisibleSupertypeMembers(classDecl.getType()))));
+                shadows.forEach(shadow -> andThen(new RenameShadowedName(shadow, getVisibleSupertypeMembers(classDecl.getType()))));
             }
         }
 
@@ -114,20 +118,19 @@ public class HiddenField extends JavaRefactorVisitor {
         private final J.ClassDecl enclosingClass;
 
         public FindNameShadows(J.VariableDecls.NamedVar thatLookLike, J.ClassDecl enclosingClass) {
+            super("checkstyle.FindNameShadows");
+            this.enclosingClass = enclosingClass;
             this.thatLookLike = thatLookLike;
             this.thatLookLikeName = thatLookLike.getSimpleName();
-            this.enclosingClass = enclosingClass;
+            setCursoringOn();
         }
 
         public FindNameShadows(String thatLookLikeName, J.ClassDecl enclosingClass) {
-            this.enclosingClass = enclosingClass;
+            super("checkstyle.FindNameShadows");
             this.thatLookLike = null;
             this.thatLookLikeName = thatLookLikeName;
-        }
-
-        @Override
-        public boolean isCursored() {
-            return true;
+            this.enclosingClass = enclosingClass;
+            setCursoringOn();
         }
 
         @Override
@@ -163,7 +166,6 @@ public class HiddenField extends JavaRefactorVisitor {
                 J.MethodDecl methodDecl = (J.MethodDecl) maybeMethodDecl;
                 String methodName = methodDecl.getSimpleName();
 
-                //noinspection ConstantConditions
                 isIgnorableSetter = methodName.startsWith("set") &&
                         methodDecl.getReturnTypeExpr() != null &&
                         (setterCanReturnItsClass ?
@@ -191,14 +193,15 @@ public class HiddenField extends JavaRefactorVisitor {
         }
     }
 
-    @RequiredArgsConstructor
     private static class ShadowsName extends JavaSourceVisitor<Boolean> {
         private final Cursor scope;
         private final String name;
 
-        @Override
-        public boolean isCursored() {
-            return true;
+        private ShadowsName(Cursor scope, String name) {
+            super("checkstyle.ShadowsName");
+            this.scope = scope;
+            this.name = name;
+            setCursoringOn();
         }
 
         @Override
@@ -215,19 +218,22 @@ public class HiddenField extends JavaRefactorVisitor {
         }
     }
 
-    private static class RenameShadowedName extends ScopedJavaRefactorVisitor {
+    private static class RenameShadowedName extends JavaRefactorVisitor {
+        private final J.VariableDecls.NamedVar scope;
         private final List<JavaType.Var> supertypeMembers;
 
-        public RenameShadowedName(UUID scope, List<JavaType.Var> supertypeMembers) {
-            super(scope);
+        public RenameShadowedName(J.VariableDecls.NamedVar scope, List<JavaType.Var> supertypeMembers) {
+            super("checkstyle.RenameShadowedName");
+            this.scope = scope;
             this.supertypeMembers = supertypeMembers;
+            setCursoringOn();
         }
 
         @Override
         public J visitVariable(J.VariableDecls.NamedVar variable) {
             J.VariableDecls.NamedVar v = refactor(variable, super::visitVariable);
 
-            if(isScope()) {
+            if (scope.isScope(variable)) {
                 String nextName = nextName(v.getSimpleName());
                 while (matchesSupertypeMember(nextName) ||
                         new ShadowsName(getCursor(), nextName).visit(enclosingCompilationUnit())) {

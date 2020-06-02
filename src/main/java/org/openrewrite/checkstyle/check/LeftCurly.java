@@ -15,32 +15,18 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import lombok.Builder;
-import org.openrewrite.checkstyle.policy.LeftCurlyPolicy;
-import org.openrewrite.checkstyle.policy.Token;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.Cursor;
 import org.openrewrite.Tree;
 import org.openrewrite.checkstyle.policy.LeftCurlyPolicy;
 import org.openrewrite.checkstyle.policy.Token;
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 
 import java.util.Set;
 
-import static org.openrewrite.checkstyle.policy.LeftCurlyPolicy.EOL;
-import static org.openrewrite.checkstyle.policy.LeftCurlyPolicy.NL;
-import static org.openrewrite.checkstyle.policy.Token.*;
-
-@Builder
-public class LeftCurly extends JavaRefactorVisitor {
-    @Builder.Default
-    private final LeftCurlyPolicy option = LeftCurlyPolicy.EOL;
-
-    @Builder.Default
-    private final boolean ignoreEnums = true;
-
-    @Builder.Default
-    private final Set<Token> tokens = Set.of(
+public class LeftCurly extends CheckstyleRefactorVisitor {
+    private static final Set<Token> DEFAULT_TOKENS =Set.of(
             Token.ANNOTATION_DEF,
             Token.CLASS_DEF,
             Token.CTOR_DEF,
@@ -65,14 +51,29 @@ public class LeftCurly extends JavaRefactorVisitor {
             Token.STATIC_INIT
     );
 
-    @Override
-    public String getName() {
-        return "checkstyle.LeftCurly";
+    private final LeftCurlyPolicy option;
+    private final boolean ignoreEnums;
+    private final Set<Token> tokens;
+
+    public LeftCurly(LeftCurlyPolicy option, boolean ignoreEnums, Set<Token> tokens) {
+        super("checkstyle.LeftCurly");
+        this.option = option;
+        this.ignoreEnums = ignoreEnums;
+        this.tokens = tokens;
+        setCursoringOn();
     }
 
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static LeftCurly configure(Config config) {
+        return fromModule(
+                config,
+                "LeftCurly",
+                m -> new LeftCurly(
+                        m.propAsOptionValue(LeftCurlyPolicy::valueOf, LeftCurlyPolicy.EOL),
+                        m.prop("ignoreEnums", false),
+                        m.propAsTokens(Token.class, DEFAULT_TOKENS)
+                )
+        );
     }
 
     @Override

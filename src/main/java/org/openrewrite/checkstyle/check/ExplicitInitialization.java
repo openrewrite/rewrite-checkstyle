@@ -15,8 +15,9 @@
  */
 package org.openrewrite.checkstyle.check;
 
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.Cursor;
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 import org.openrewrite.java.tree.TypeUtils;
@@ -24,25 +25,22 @@ import org.openrewrite.java.tree.TypeUtils;
 import static org.openrewrite.Formatting.formatLastSuffix;
 import static org.openrewrite.Formatting.stripSuffix;
 
-public class ExplicitInitialization extends JavaRefactorVisitor {
+public class ExplicitInitialization extends CheckstyleRefactorVisitor {
     private final boolean onlyObjectReferences;
 
     public ExplicitInitialization(boolean onlyObjectReferences) {
+        super("checkstyle.ExplicitInitialization");
         this.onlyObjectReferences = onlyObjectReferences;
+        setCursoringOn();
     }
 
-    public ExplicitInitialization() {
-        this(false);
-    }
-
-    @Override
-    public String getName() {
-        return "checkstyle.ExplicitInitialization";
-    }
-
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static ExplicitInitialization configure(Config config) {
+        return fromModule(
+                config,
+                "ExplicitInitialization",
+                m -> new ExplicitInitialization(m.prop("onlyObjectReferences", false))
+        );
     }
 
     @Override

@@ -15,12 +15,11 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import lombok.Builder;
-import lombok.RequiredArgsConstructor;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.Tree;
 import org.openrewrite.java.JavaSourceVisitor;
 import org.openrewrite.java.refactor.JavaRefactorVisitor;
-import org.openrewrite.java.refactor.ScopedJavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Statement;
 
@@ -29,24 +28,28 @@ import java.util.regex.Pattern;
 
 import static org.openrewrite.Tree.randomId;
 
-@Builder
-public class FallThrough extends JavaRefactorVisitor {
-    @Builder.Default
-    private final boolean checkLastCaseGroup = false;
-
-    @Builder.Default
-    private final Pattern reliefPattern = Pattern.compile("falls?[ -]?thr(u|ough)");
+public class FallThrough extends CheckstyleRefactorVisitor {
+    private final boolean checkLastCaseGroup;
+    private final Pattern reliefPattern;
 
     private final Set<UUID> casesToAddBreak = new HashSet<>();
 
-    @Override
-    public String getName() {
-        return "checkstyle.FallThrough";
+    public FallThrough(boolean checkLastCaseGroup, Pattern reliefPattern) {
+        super("checkstyle.FallThrough");
+        this.checkLastCaseGroup = checkLastCaseGroup;
+        this.reliefPattern = reliefPattern;
+        setCursoringOn();
     }
 
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static FallThrough configure(Config config) {
+        return fromModule(
+                config,
+                "FallThrough",
+                m -> new FallThrough(
+                        m.prop("checkLastCaseGroup", false),
+                        m.prop("reliefPattern", Pattern.compile("falls?[ -]?thr(u|ough)")))
+        );
     }
 
     @Override
@@ -60,7 +63,7 @@ public class FallThrough extends JavaRefactorVisitor {
         J.Switch switzh = getCursor().getParentOrThrow().getParentOrThrow().getTree();
         if ((checkLastCaseGroup || !isLastCase(caze)) && !new LastLineBreaksOrFallsThrough(caze).visit(switzh)) {
             if (casesToAddBreak.add(caze.getId())) {
-                andThen(new AddBreak(caze.getId()));
+                andThen(new AddBreak(caze));
             }
         }
         return super.visitCase(caze);
@@ -71,16 +74,20 @@ public class FallThrough extends JavaRefactorVisitor {
         return caze == switchBlock.getStatements().get(switchBlock.getStatements().size() - 1);
     }
 
-    private static class AddBreak extends ScopedJavaRefactorVisitor {
-        public AddBreak(UUID scope) {
-            super(scope);
+    private static class AddBreak extends JavaRefactorVisitor {
+        private final J.Case scope;
+
+        public AddBreak(J.Case scope) {
+            super("checkstyle.AddBreak");
+            this.scope = scope;
+            setCursoringOn();
         }
 
         @Override
         public J visitCase(J.Case caze) {
             J.Case c = refactor(caze, super::visitCase);
 
-            if (isScope() &&
+            if (scope.isScope(caze) &&
                     c.getStatements().stream().noneMatch(s -> s instanceof J.Break) &&
                     c.getStatements().stream()
                             .reduce((s1, s2) -> s2)
@@ -99,7 +106,7 @@ public class FallThrough extends JavaRefactorVisitor {
         public J visitBlock(J.Block<J> block) {
             J.Block<J> b = refactor(block, super::visitBlock);
 
-            if (isScopeInCursorPath() &&
+            if (getCursor().isScopeInPath(scope) &&
                     block.getStatements().stream().noneMatch(s -> s instanceof J.Break) &&
                     block.getStatements().stream()
                             .reduce((s1, s2) -> s2)
@@ -114,9 +121,13 @@ public class FallThrough extends JavaRefactorVisitor {
         }
     }
 
-    @RequiredArgsConstructor
     private class LastLineBreaksOrFallsThrough extends JavaSourceVisitor<Boolean> {
         private final J.Case scope;
+
+        private LastLineBreaksOrFallsThrough(J.Case scope) {
+            super("checkstyle.LastLineBreaksOrFallsThrough");
+            this.scope = scope;
+        }
 
         @Override
         public Boolean defaultTo(Tree t) {

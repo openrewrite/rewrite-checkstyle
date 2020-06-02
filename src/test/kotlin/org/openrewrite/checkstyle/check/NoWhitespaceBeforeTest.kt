@@ -15,11 +15,14 @@
  */
 package org.openrewrite.checkstyle.check
 
-import org.openrewrite.checkstyle.policy.PunctuationToken.*
 import org.junit.jupiter.api.Test
+import org.openrewrite.config.MapConfigSource
+import org.openrewrite.config.MapConfigSource.mapConfig
 import org.openrewrite.java.JavaParser
 
 open class NoWhitespaceBeforeTest : JavaParser() {
+    private val defaultConfig = emptyModule("NoWhitespaceBefore")
+    
     @Test
     fun noWhitespaceBefore() {
         val a = parse("""
@@ -52,10 +55,19 @@ open class NoWhitespaceBeforeTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(NoWhitespaceBefore.builder()
-                .tokens(setOf(COMMA, SEMI, POST_INC, POST_DEC, DOT, GENERIC_START,
-                        GENERIC_END, ELLIPSIS, METHOD_REF))
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(NoWhitespaceBefore.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="NoWhitespaceBefore">
+                                <property name="tokens" value="COMMA,SEMI,POST_INC,POST_DEC,DOT,GENERIC_START,GENERIC_END,ELLIPSIS,METHOD_REF"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             package a;
@@ -100,10 +112,20 @@ open class NoWhitespaceBeforeTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(NoWhitespaceBefore.builder()
-                .tokens(setOf(DOT))
-                .allowLineBreaks(true)
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(NoWhitespaceBefore.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="NoWhitespaceBefore">
+                                <property name="tokens" value="DOT"/>
+                                <property name="allowLineBreaks" value="true"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -119,7 +141,7 @@ open class NoWhitespaceBeforeTest : JavaParser() {
 
     @Test
     fun dontStripLastParameterSuffixInMethodDeclaration() {
-        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.configure(defaultConfig), """
             package a;
             public abstract class A {
                 abstract A foo(
@@ -132,7 +154,7 @@ open class NoWhitespaceBeforeTest : JavaParser() {
 
     @Test
     fun dontStripLastArgumentSuffixInMethodInvocation() {
-        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.configure(defaultConfig), """
             package a;
             public class A {
                 {
@@ -147,7 +169,7 @@ open class NoWhitespaceBeforeTest : JavaParser() {
 
     @Test
     fun dontStripChainedMethodInvocationsByDefault() {
-        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.configure(defaultConfig), """
             package a;
             public class A {
                 public static A a(int... n) { return new A(); }
@@ -166,7 +188,7 @@ open class NoWhitespaceBeforeTest : JavaParser() {
 
     @Test
     fun dontStripStatementSuffixInTernaryConditionAndTrue() {
-        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.configure(defaultConfig), """
             package a;
             import java.util.*;
             public class A {
@@ -180,7 +202,7 @@ open class NoWhitespaceBeforeTest : JavaParser() {
 
     @Test
     fun dontStripStatementSuffixPrecedingInstanceof() {
-        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.configure(defaultConfig), """
             package a;
             import java.util.*;
             public class A {
@@ -194,7 +216,7 @@ open class NoWhitespaceBeforeTest : JavaParser() {
 
     @Test
     fun dontStripTryWithResourcesEndParens() {
-        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.configure(defaultConfig), """
             import java.util.zip.*;
             import java.io.*;
             public class A {
@@ -213,7 +235,7 @@ open class NoWhitespaceBeforeTest : JavaParser() {
 
     @Test
     fun dontStripAnnotationArguments() {
-        assertUnchangedByRefactoring(NoWhitespaceBefore.builder().build(), """
+        assertUnchangedByRefactoring(NoWhitespaceBefore.configure(defaultConfig), """
             public class A {
                 @SuppressFBWarnings(
                     value = "SECPR",

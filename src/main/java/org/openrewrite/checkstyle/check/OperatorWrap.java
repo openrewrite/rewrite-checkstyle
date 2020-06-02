@@ -15,11 +15,11 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import lombok.Builder;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
+import org.openrewrite.Tree;
 import org.openrewrite.checkstyle.policy.OperatorToken;
 import org.openrewrite.checkstyle.policy.WrapPolicy;
-import org.openrewrite.Tree;
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.TypeTree;
 
@@ -27,16 +27,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.openrewrite.checkstyle.policy.OperatorToken.*;
 import static org.openrewrite.Formatting.*;
+import static org.openrewrite.checkstyle.policy.OperatorToken.*;
 
-@Builder
-public class OperatorWrap extends JavaRefactorVisitor {
-    @Builder.Default
-    private final WrapPolicy option = WrapPolicy.NL;
-
-    @Builder.Default
-    private final Set<OperatorToken> tokens = Set.of(
+public class OperatorWrap extends CheckstyleRefactorVisitor {
+    private static final Set<OperatorToken> DEFAULT_TOKENS = Set.of(
             QUESTION,
             COLON,
             EQUAL,
@@ -62,9 +57,25 @@ public class OperatorWrap extends JavaRefactorVisitor {
             LITERAL_INSTANCEOF
     );
 
-    @Override
-    public String getName() {
-        return "checkstyle.OperatorWrap{policy=" + option + "}";
+    private final WrapPolicy option;
+    private final Set<OperatorToken> tokens;
+
+    public OperatorWrap(WrapPolicy option, Set<OperatorToken> tokens) {
+        super("checkstyle.OperatorWrap", "policy", option.toString());
+        this.option = option;
+        this.tokens = tokens;
+    }
+
+    @AutoConfigure
+    public static OperatorWrap configure(Config config) {
+        return fromModule(
+                config,
+                "OperatorWrap",
+                m -> new OperatorWrap(
+                        m.propAsOptionValue(WrapPolicy::valueOf, WrapPolicy.NL),
+                        m.propAsTokens(OperatorToken.class, DEFAULT_TOKENS)
+                )
+        );
     }
 
     @Override
@@ -263,7 +274,6 @@ public class OperatorWrap extends JavaRefactorVisitor {
         return a;
     }
 
-    @SuppressWarnings("ConstantConditions")
     @Override
     public J visitVariable(J.VariableDecls.NamedVar variable) {
         J.VariableDecls.NamedVar v = refactor(variable, super::visitVariable);

@@ -15,10 +15,10 @@
  */
 package org.openrewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
-import org.openrewrite.checkstyle.policy.OperatorToken
-import org.openrewrite.checkstyle.policy.WrapPolicy
 import org.junit.jupiter.api.Test
+import org.openrewrite.checkstyle.policy.OperatorToken
+import org.openrewrite.config.MapConfigSource.mapConfig
+import org.openrewrite.java.JavaParser
 
 open class OperatorWrapTest : JavaParser() {
     @Test
@@ -53,9 +53,19 @@ open class OperatorWrapTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(OperatorWrap.builder()
-                .tokens(OperatorToken.values().toSet())
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(OperatorWrap.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="OperatorWrap">
+                                <property name="tokens" value="${OperatorToken.values().joinToString(",")}"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             import java.io.*;
@@ -120,10 +130,20 @@ open class OperatorWrapTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(OperatorWrap.builder()
-                .option(WrapPolicy.EOL)
-                .tokens(OperatorToken.values().toSet())
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(OperatorWrap.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="OperatorWrap">
+                                <property name="option" value="EOL"/>
+                                <property name="tokens" value="${OperatorToken.values().joinToString(",")}"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             import java.io.*;

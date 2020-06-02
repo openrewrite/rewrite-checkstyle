@@ -15,35 +15,37 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import lombok.RequiredArgsConstructor;
-import org.openrewrite.checkstyle.policy.PadPolicy;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.Formatting;
 import org.openrewrite.checkstyle.policy.PadPolicy;
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 
-import static org.openrewrite.checkstyle.policy.PadPolicy.NOSPACE;
 import static org.openrewrite.Formatting.EMPTY;
 import static org.openrewrite.Formatting.format;
 
-@RequiredArgsConstructor
-public class TypecastParenPad extends JavaRefactorVisitor {
+public class TypecastParenPad extends CheckstyleRefactorVisitor {
     private final PadPolicy option;
 
-    public TypecastParenPad() {
-        this(PadPolicy.NOSPACE);
+    public TypecastParenPad(PadPolicy option) {
+        super("checkstyle.TypecastParenPad", "option", option.toString());
+        this.option = option;
     }
 
-    @Override
-    public String getName() {
-        return "checkstyle.TypecastParenPad";
+    @AutoConfigure
+    public static TypecastParenPad configure(Config config) {
+        return fromModule(
+                config,
+                "TypecastParenPad",
+                m -> new TypecastParenPad(m.propAsOptionValue(PadPolicy::valueOf, PadPolicy.NOSPACE))
+        );
     }
 
     @Override
     public J visitTypeCast(J.TypeCast typeCast) {
         J.TypeCast tc = refactor(typeCast, super::visitTypeCast);
         Formatting formatting = typeCast.getClazz().getTree().getFormatting();
-        if((option == PadPolicy.NOSPACE) != formatting.equals(EMPTY)) {
+        if ((option == PadPolicy.NOSPACE) != formatting.equals(EMPTY)) {
             tc = tc.withClazz(tc.getClazz().withTree(tc.getClazz().getTree()
                     .withFormatting(option == PadPolicy.NOSPACE ? EMPTY : format(" ", " "))));
         }

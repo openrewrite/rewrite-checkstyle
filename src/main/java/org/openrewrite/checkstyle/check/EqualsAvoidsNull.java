@@ -15,45 +15,40 @@
  */
 package org.openrewrite.checkstyle.check;
 
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.Tree;
 import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.refactor.JavaRefactorVisitor;
-import org.openrewrite.java.refactor.ScopedJavaRefactorVisitor;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
-
-import java.util.UUID;
 
 import static java.util.Collections.singletonList;
 import static org.openrewrite.Formatting.EMPTY;
 import static org.openrewrite.Formatting.stripPrefix;
 
-public class EqualsAvoidsNull extends JavaRefactorVisitor {
+public class EqualsAvoidsNull extends CheckstyleRefactorVisitor {
     private static final MethodMatcher STRING_EQUALS = new MethodMatcher("String equals(java.lang.Object)");
     private static final MethodMatcher STRING_EQUALS_IGNORE_CASE = new MethodMatcher("String equalsIgnoreCase(java.lang.String)");
 
     private final boolean ignoreEqualsIgnoreCase;
 
     public EqualsAvoidsNull(boolean ignoreEqualsIgnoreCase) {
+        super("checkstyle.EqualsAvoidsNull");
         this.ignoreEqualsIgnoreCase = ignoreEqualsIgnoreCase;
+        setCursoringOn();
     }
 
-    public EqualsAvoidsNull() {
-        this(false);
+    @AutoConfigure
+    public static EqualsAvoidsNull configure(Config config) {
+        return fromModule(
+                config,
+                "EqualsAvoidsNull",
+                m -> new EqualsAvoidsNull(m.prop("ignoreEqualsIgnoreCase", false))
+        );
     }
 
-    @Override
-    public String getName() {
-        return "checkstyle.EqualsAvoidsNull";
-    }
-
-    @Override
-    public boolean isCursored() {
-        return true;
-    }
-
-    @SuppressWarnings("ConstantConditions")
     @Override
     public J visitMethodInvocation(J.MethodInvocation method) {
         J.MethodInvocation m = refactor(method, super::visitMethodInvocation);
@@ -68,7 +63,7 @@ public class EqualsAvoidsNull extends JavaRefactorVisitor {
                     J.Binary potentialNullCheck = (J.Binary) binary.getLeft();
                     if ((isNullLiteral(potentialNullCheck.getLeft()) && matchesSelect(potentialNullCheck.getRight(), m.getSelect())) ||
                             (isNullLiteral(potentialNullCheck.getRight()) && matchesSelect(potentialNullCheck.getLeft(), m.getSelect()))) {
-                        andThen(new RemoveUnnecessaryNullCheck(binary.getId()));
+                        andThen(new RemoveUnnecessaryNullCheck(binary));
                     }
                 }
             }
@@ -88,16 +83,20 @@ public class EqualsAvoidsNull extends JavaRefactorVisitor {
         return expression.printTrimmed().replaceAll("\\s", "").equals(select.printTrimmed().replaceAll("\\s", ""));
     }
 
-    private static class RemoveUnnecessaryNullCheck extends ScopedJavaRefactorVisitor {
-        public RemoveUnnecessaryNullCheck(UUID scope) {
-            super(scope);
+    private static class RemoveUnnecessaryNullCheck extends JavaRefactorVisitor {
+        private final J.Binary scope;
+
+        public RemoveUnnecessaryNullCheck(J.Binary scope) {
+            super("checkstyle.RemoveUnnecessaryNullCheck");
+            this.scope = scope;
+            setCursoringOn();
         }
 
         @Override
         public J visitBinary(J.Binary binary) {
             maybeUnwrapParentheses(getCursor().getParent());
 
-            if (isScope()) {
+            if (scope.isScope(binary)) {
                 return stripPrefix(binary.getRight());
             }
 

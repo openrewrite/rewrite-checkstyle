@@ -26,7 +26,7 @@ buildscript {
 
 plugins {
     `java-library`
-    id("org.jetbrains.kotlin.jvm") version "1.3.71"
+    id("org.jetbrains.kotlin.jvm") version "1.3.72"
     id("io.spring.release") version "0.20.1"
 }
 
@@ -77,6 +77,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:latest.release")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:latest.release")
 
+    testRuntimeOnly("org.microbean:microbean-microprofile-config:latest.release")
+
     testImplementation("org.assertj:assertj-core:latest.release")
 }
 
@@ -93,7 +95,7 @@ tasks.named<Test>("test") {
 
 tasks.named<Jar>("jar") {
     manifest {
-        attributes(listOf("Main-Class" to "org.gradle.rewrite.checkstyle.Main").toMap())
+        attributes(listOf("Main-Class" to "org.openrewrite.checkstyle.Main").toMap())
     }
 }
 

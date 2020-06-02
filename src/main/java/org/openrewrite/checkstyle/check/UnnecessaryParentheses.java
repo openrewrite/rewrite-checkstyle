@@ -15,10 +15,10 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import lombok.Builder;
-import org.openrewrite.checkstyle.policy.ParenthesesToken;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.Cursor;
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
+import org.openrewrite.checkstyle.policy.ParenthesesToken;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
@@ -27,10 +27,8 @@ import java.util.Set;
 
 import static org.openrewrite.checkstyle.policy.ParenthesesToken.*;
 
-@Builder
-public class UnnecessaryParentheses extends JavaRefactorVisitor {
-    @Builder.Default
-    private final Set<ParenthesesToken> tokens = Set.of(
+public class UnnecessaryParentheses extends CheckstyleRefactorVisitor {
+    private static final Set<ParenthesesToken> DEFAULT_TOKENS = Set.of(
             EXPR,
             IDENT,
             NUM_DOUBLE,
@@ -56,14 +54,21 @@ public class UnnecessaryParentheses extends JavaRefactorVisitor {
             LAMBDA
     );
 
-    @Override
-    public String getName() {
-        return "checkstyle.UnnecessaryParentheses";
+    private final Set<ParenthesesToken> tokens;
+
+    public UnnecessaryParentheses(Set<ParenthesesToken> tokens) {
+        super("checkstyle.UnnecessaryParentheses");
+        this.tokens = tokens;
+        setCursoringOn();
     }
 
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static UnnecessaryParentheses configure(Config config) {
+        return fromModule(
+                config,
+                "UnnecessaryParentheses",
+                m -> new UnnecessaryParentheses(m.propAsTokens(ParenthesesToken.class, DEFAULT_TOKENS))
+        );
     }
 
     @Override

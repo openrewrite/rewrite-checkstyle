@@ -15,8 +15,9 @@
  */
 package org.openrewrite.checkstyle.check;
 
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.Tree;
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.search.FindReferencesToVariable;
 import org.openrewrite.java.tree.J;
 
@@ -26,15 +27,15 @@ import java.util.List;
 import static org.openrewrite.Formatting.*;
 import static org.openrewrite.Tree.randomId;
 
-public class FinalLocalVariable extends JavaRefactorVisitor {
-    @Override
-    public String getName() {
-        return "checkstyle.FinalLocalVariable";
+public class FinalLocalVariable extends CheckstyleRefactorVisitor {
+    public FinalLocalVariable() {
+        super("checkstyle.FinalLocalVariable");
+        setCursoringOn();
     }
 
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static FinalLocalVariable configure(Config config) {
+        return fromModule(config, "FinalLocalVariable", m -> new FinalLocalVariable());
     }
 
     @Override

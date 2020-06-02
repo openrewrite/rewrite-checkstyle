@@ -15,7 +15,8 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.java.tree.J;
 
 import java.util.ArrayList;
@@ -28,15 +29,15 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.openrewrite.Tree.randomId;
 
-public class MultipleVariableDeclarations extends JavaRefactorVisitor {
-    @Override
-    public String getName() {
-        return "checkstyle.MultipleVariableDeclarations";
+public class MultipleVariableDeclarations extends CheckstyleRefactorVisitor {
+    public MultipleVariableDeclarations() {
+        super("checkstyle.MultipleVariableDeclarations");
+        setCursoringOn();
     }
 
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static MultipleVariableDeclarations configure(Config config) {
+        return fromModule(config, "MultipleVariableDeclarations", m -> new MultipleVariableDeclarations());
     }
 
     @Override

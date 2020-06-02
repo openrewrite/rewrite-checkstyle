@@ -15,16 +15,21 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 
 import static java.util.stream.Collectors.toList;
 
-public class NoFinalizer extends JavaRefactorVisitor {
-    @Override
-    public String getName() {
-        return "checkstyle.NoFinalizer";
+public class NoFinalizer extends CheckstyleRefactorVisitor {
+    public NoFinalizer() {
+        super("checkstyle.NoFinalizer");
+    }
+
+    @AutoConfigure
+    public static NoFinalizer configure(Config config) {
+        return fromModule(config, "NoFinalizer", m -> new NoFinalizer());
     }
 
     @Override

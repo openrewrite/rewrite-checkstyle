@@ -15,12 +15,13 @@
  */
 package org.openrewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
-import org.openrewrite.checkstyle.policy.Token.LITERAL_CASE
-import org.openrewrite.checkstyle.policy.Token.LITERAL_DEFAULT
 import org.junit.jupiter.api.Test
+import org.openrewrite.config.MapConfigSource.mapConfig
+import org.openrewrite.java.JavaParser
 
 open class NeedBracesTest : JavaParser() {
+    private val defaultConfig = emptyModule("NeedBraces")
+    
     @Test
     fun addBraces() {
         val a = parse("""
@@ -37,7 +38,7 @@ open class NeedBracesTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(NeedBraces.builder().build()).fix().fixed
+        val fixed = a.refactor().visit(NeedBraces.configure(defaultConfig)).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -76,9 +77,19 @@ open class NeedBracesTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(NeedBraces.builder()
-                .allowEmptyLoopBody(true)
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(NeedBraces.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="NeedBraces">
+                                <property name="allowEmptyLoopBody" value="true"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -104,9 +115,19 @@ open class NeedBracesTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(NeedBraces.builder()
-                .allowSingleLineStatement(true)
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(NeedBraces.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="NeedBraces">
+                                <property name="allowSingleLineStatement" value="true"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -136,10 +157,20 @@ open class NeedBracesTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(NeedBraces.builder()
-                .tokens(setOf(LITERAL_CASE, LITERAL_DEFAULT))
-                .allowSingleLineStatement(true)
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(NeedBraces.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="NeedBraces">
+                                <property name="allowSingleLineStatements" value="true"/>
+                                <property name="tokens" value="LITERAL_CASE,LITERAL_DEFAULT"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -173,7 +204,7 @@ open class NeedBracesTest : JavaParser() {
 
         val a = parse(aSource)
 
-        val fixed = a.refactor().visit(NeedBraces.builder().build()).fix().fixed
+        val fixed = a.refactor().visit(NeedBraces.configure(defaultConfig)).fix().fixed
 
         assertRefactored(fixed, aSource)
     }

@@ -15,11 +15,13 @@
  */
 package org.openrewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
-import org.openrewrite.checkstyle.policy.PadPolicy
 import org.junit.jupiter.api.Test
+import org.openrewrite.checkstyle.policy.PadPolicy
+import org.openrewrite.java.JavaParser
 
 open class EmptyForInitializerPadTest: JavaParser() {
+    private val defaultConfig = emptyModule("EmptyForInitializerPad")
+    
     @Test
     fun noSpaceInitializerPadding() {
         val a = parse("""
@@ -30,7 +32,7 @@ open class EmptyForInitializerPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(EmptyForInitializerPad()).fix().fixed
+        val fixed = a.refactor().visit(EmptyForInitializerPad.configure(defaultConfig)).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -73,7 +75,7 @@ open class EmptyForInitializerPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(EmptyForInitializerPad()).fix().fixed
+        val fixed = a.refactor().visit(EmptyForInitializerPad.configure(defaultConfig)).fix().fixed
 
         assertRefactored(fixed, """
             public class A {

@@ -15,10 +15,12 @@
  */
 package org.openrewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
+import org.openrewrite.java.JavaParser
 
 open class FallThroughTest : JavaParser() {
+    private val defaultConfig = emptyModule("FallThrough")
+    
     @Test
     fun addBreaksFallthroughCases() {
         val a = parse("""
@@ -57,7 +59,7 @@ open class FallThroughTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(FallThrough.builder().build()).fix().fixed
+        val fixed = a.refactor().visit(FallThrough.configure(defaultConfig)).fix().fixed
 
         assertRefactored(fixed, """
             public class A {

@@ -15,11 +15,14 @@
  */
 package org.openrewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
-import org.openrewrite.checkstyle.policy.PunctuationToken.*
 import org.junit.jupiter.api.Test
+import org.openrewrite.config.MapConfigSource
+import org.openrewrite.config.MapConfigSource.mapConfig
+import org.openrewrite.java.JavaParser
 
 open class NoWhitespaceAfterTest : JavaParser() {
+    private val defaultConfig = emptyModule("NoWhitespaceAfter")
+
     @Test
     fun noWhitespaceAfter() {
         val notNull = """
@@ -65,10 +68,19 @@ open class NoWhitespaceAfterTest : JavaParser() {
             }
         """.trimIndent(), notNull)
 
-        val fixed = a.refactor().visit(NoWhitespaceAfter.builder()
-                .tokens(setOf(ARRAY_INIT, AT, INC, DEC, UNARY_MINUS, UNARY_PLUS, BNOT, LNOT, DOT,
-                        TYPECAST, ARRAY_DECLARATOR, INDEX_OP, LITERAL_SYNCHRONIZED, METHOD_REF))
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(NoWhitespaceAfter.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="NoWhitespaceAfter">
+                                <property name="tokens" value="ARRAY_INIT,AT,INC,DEC,UNARY_MINUS,UNARY_PLUS,BNOT,LNOT,DOT,TYPECAST,ARRAY_DECLARATOR,INDEX_OP,LITERAL_SYNCHRONIZED,METHOD_REF"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -119,10 +131,20 @@ open class NoWhitespaceAfterTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(NoWhitespaceAfter.builder()
-                .tokens(setOf(DOT))
-                .allowLineBreaks(false)
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(NoWhitespaceAfter.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="NoWhitespaceAfter">
+                                <property name="tokens" value="DOT"/>
+                                <property name="allowLineBreaks" value="false"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -141,7 +163,7 @@ open class NoWhitespaceAfterTest : JavaParser() {
      */
     @Test
     fun dontChangeAnnotationValueNewArrays() {
-        assertUnchangedByRefactoring(NoWhitespaceAfter.builder().build(), """
+        assertUnchangedByRefactoring(NoWhitespaceAfter.configure(defaultConfig), """
             @SuppressWarnings(value = {
                 "all",
                 "unchecked"
@@ -153,7 +175,7 @@ open class NoWhitespaceAfterTest : JavaParser() {
 
     @Test
     fun dontChangeFirstAndLastValuesOfArrayInitializer() {
-        assertUnchangedByRefactoring(NoWhitespaceAfter.builder().build(), """
+        assertUnchangedByRefactoring(NoWhitespaceAfter.configure(defaultConfig), """
             public class A {
                 int[] ns = {
                     0,

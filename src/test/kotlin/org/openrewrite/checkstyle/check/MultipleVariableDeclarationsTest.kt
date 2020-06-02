@@ -15,8 +15,8 @@
  */
 package org.openrewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
+import org.openrewrite.java.JavaParser
 
 open class  MultipleVariableDeclarationsTest : JavaParser() {
     @Test

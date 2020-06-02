@@ -15,31 +15,26 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 
 import static org.openrewrite.Tree.randomId;
 
-public class SimplifyBooleanExpression extends JavaRefactorVisitor {
-    private int pass = 0;
-
-    public SimplifyBooleanExpression() {
-    }
+public class SimplifyBooleanExpression extends CheckstyleRefactorVisitor {
+    private final int pass;
 
     public SimplifyBooleanExpression(int pass) {
+        super("checkstyle.SimplifyBooleanExpression");
         this.pass = pass;
+        setCursoringOn();
     }
 
-    @Override
-    public String getName() {
-        return "checkstyle.SimplifyBooleanExpression";
-    }
-
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static SimplifyBooleanExpression configure(Config config) {
+        return fromModule(config, "SimplifyBooleanExpression", m -> new SimplifyBooleanExpression(0));
     }
 
     @Override
@@ -102,7 +97,7 @@ public class SimplifyBooleanExpression extends JavaRefactorVisitor {
             } else if (isLiteralFalse(u.getExpr())) {
                 maybeUnwrapParentheses();
                 return new J.Literal(randomId(), true, "true",
-                            JavaType.Primitive.Boolean, u.getFormatting());
+                        JavaType.Primitive.Boolean, u.getFormatting());
             } else if (u.getExpr() instanceof J.Unary && ((J.Unary) u.getExpr()).getOperator() instanceof J.Unary.Operator.Not) {
                 maybeUnwrapParentheses();
                 return ((J.Unary) u.getExpr()).getExpr().withFormatting(u.getFormatting());

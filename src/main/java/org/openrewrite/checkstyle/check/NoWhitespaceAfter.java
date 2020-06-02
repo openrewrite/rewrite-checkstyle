@@ -15,14 +15,11 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import lombok.Builder;
-import org.openrewrite.checkstyle.check.internal.WhitespaceChecks;
-import org.openrewrite.checkstyle.policy.PunctuationToken;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.Tree;
-import org.openrewrite.checkstyle.check.internal.WhitespaceChecks;
 import org.openrewrite.checkstyle.policy.PunctuationToken;
 import org.openrewrite.internal.lang.Nullable;
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 
@@ -32,32 +29,38 @@ import java.util.Optional;
 import java.util.Set;
 
 import static java.util.stream.Collectors.toList;
-import static org.openrewrite.checkstyle.check.internal.WhitespaceChecks.*;
-import static org.openrewrite.checkstyle.policy.PunctuationToken.*;
 import static org.openrewrite.Formatting.EMPTY;
 import static org.openrewrite.Formatting.stripPrefix;
 
-@Builder
-public class NoWhitespaceAfter extends JavaRefactorVisitor {
-    /**
-     * Only applies to DOT.
-     */
-    @Builder.Default
-    private final boolean allowLineBreaks = true;
-
-    @Builder.Default
-    private final Set<PunctuationToken> tokens = Set.of(
+public class NoWhitespaceAfter extends CheckstyleRefactorVisitor {
+    private static final Set<PunctuationToken> DEFAULT_TOKENS = Set.of(
             PunctuationToken.ARRAY_INIT, PunctuationToken.AT, PunctuationToken.INC, PunctuationToken.DEC, PunctuationToken.UNARY_MINUS, PunctuationToken.UNARY_PLUS, PunctuationToken.BNOT, PunctuationToken.LNOT, PunctuationToken.DOT, PunctuationToken.ARRAY_DECLARATOR, PunctuationToken.INDEX_OP
     );
 
-    @Override
-    public String getName() {
-        return "checkstyle.NoWhitespaceAfter";
+    /**
+     * Only applies to DOT.
+     */
+    private final boolean allowLineBreaks;
+
+    private final Set<PunctuationToken> tokens;
+
+    public NoWhitespaceAfter(boolean allowLineBreaks, Set<PunctuationToken> tokens) {
+        super("checkstyle.NoWhitespaceAfter");
+        this.allowLineBreaks = allowLineBreaks;
+        this.tokens = tokens;
+        setCursoringOn();
     }
 
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static NoWhitespaceAfter configure(Config config) {
+        return fromModule(
+                config,
+                "NoWhitespaceAfter",
+                m -> new NoWhitespaceAfter(
+                        m.prop("allowLineBreaks", true),
+                        m.propAsTokens(PunctuationToken.class, DEFAULT_TOKENS)
+                )
+        );
     }
 
     @Override
@@ -119,8 +122,7 @@ public class NoWhitespaceAfter extends JavaRefactorVisitor {
                         .map(init -> !init.isEmpty() && (WhitespaceChecks.prefixStartsWithNonLinebreakWhitespace(init.get(0)) ||
                                 WhitespaceChecks.suffixStartsWithNonLinebreakWhitespace(init.get(init.size() - 1))))
                         .orElse(false)) {
-            @SuppressWarnings("ConstantConditions") List<Expression> fixedInit =
-                    new ArrayList<>(n.getInitializer().getElements());
+            List<Expression> fixedInit = new ArrayList<>(n.getInitializer().getElements());
 
             if (fixedInit.size() == 1) {
                 fixedInit.set(0, fixedInit.get(0).withFormatting(EMPTY));

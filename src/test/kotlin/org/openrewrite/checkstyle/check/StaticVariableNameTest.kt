@@ -15,11 +15,15 @@
  */
 package org.openrewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.openrewrite.config.MapConfigSource
+import org.openrewrite.config.MapConfigSource.mapConfig
+import org.openrewrite.java.JavaParser
 
 open class StaticVariableNameTest : JavaParser() {
+    private val defaultConfig = emptyModule("StaticVariableName")
+
     @Test
     fun snakeName() {
         assertThat(StaticVariableName.snakeCaseToCamel("CAMEL_CASE_NAME_1")).isEqualTo("camelCaseName1")
@@ -34,7 +38,7 @@ open class StaticVariableNameTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(StaticVariableName.builder().build()).fix().fixed
+        val fixed = a.refactor().visit(StaticVariableName.configure(defaultConfig)).fix().fixed
 
         assertRefactored(fixed, """
             import java.util.List;
@@ -57,7 +61,7 @@ open class StaticVariableNameTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(StaticVariableName.builder().build()).fix().fixed
+        val fixed = a.refactor().visit(StaticVariableName.configure(defaultConfig)).fix().fixed
 
         assertRefactored(fixed, """
             import java.util.*;
@@ -83,12 +87,21 @@ open class StaticVariableNameTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(StaticVariableName.builder()
-                .applyToPublic(false)
-                .applyToPrivate(false)
-                .applyToPackage(false)
-                .build()
-        ).fix().fixed
+        val fixed = a.refactor().visit(StaticVariableName.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="StaticVariableName">
+                                <property name="applyToPublic" value="false"/>
+                                <property name="applyToPackage" value="false"/>
+                                <property name="applyToPrivate" value="false"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             import java.util.List;

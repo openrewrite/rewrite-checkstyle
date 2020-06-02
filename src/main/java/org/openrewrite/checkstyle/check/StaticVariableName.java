@@ -15,52 +15,58 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import lombok.Builder;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.java.refactor.ChangeFieldName;
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 import org.openrewrite.java.tree.TypeUtils;
 
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 /**
  * Fix for <a href="https://checkstyle.sourceforge.io/config_naming.html#StaticVariableName">StaticVariableName</a>.
  */
-@Builder
-public class StaticVariableName extends JavaRefactorVisitor {
-    @Builder.Default
-    private String format = "^[a-z][a-zA-Z0-9]*$";
+public class StaticVariableName extends CheckstyleRefactorVisitor {
+    // TODO should this be configurable?
+    private static final Function<String, String> renamer = StaticVariableName::snakeCaseToCamel;
 
-    @Builder.Default
-    private final Function<String, String> renamer = StaticVariableName::snakeCaseToCamel;
+    private final Pattern format;
+    private final boolean applyToPublic;
+    private final boolean applyToProtected;
+    private final boolean applyToPackage;
+    private final boolean applyToPrivate;
 
-    @Builder.Default
-    private final boolean applyToPublic = true;
-
-    @Builder.Default
-    private final boolean applyToProtected = true;
-
-    @Builder.Default
-    private final boolean applyToPackage = true;
-
-    @Builder.Default
-    private final boolean applyToPrivate = true;
-
-    @Override
-    public String getName() {
-        return "checkstyle.StaticVariableName";
+    public StaticVariableName(Pattern format, boolean applyToPublic, boolean applyToProtected, boolean applyToPackage, boolean applyToPrivate) {
+        super("checkstyle.StaticVariableName");
+        this.format = format;
+        this.applyToPublic = applyToPublic;
+        this.applyToProtected = applyToProtected;
+        this.applyToPackage = applyToPackage;
+        this.applyToPrivate = applyToPrivate;
+        setCursoringOn();
     }
 
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static StaticVariableName configure(Config config) {
+        return fromModule(
+                config,
+                "StaticVariableName",
+                m -> new StaticVariableName(
+                        m.prop("format", Pattern.compile("^[a-z][a-zA-Z0-9]*$")),
+                        m.prop("applyToPublic", true),
+                        m.prop("applyToProtected", true),
+                        m.prop("applyToPackage", true),
+                        m.prop("applyToPrivate", true)
+                )
+        );
     }
 
     @Override
     public J visitVariable(J.VariableDecls.NamedVar variable) {
         J.VariableDecls multiVariable = getCursor().getParentOrThrow().getTree();
-        if(multiVariable.hasModifier("static") && (
+        if (multiVariable.hasModifier("static") && !format.matcher(variable.getSimpleName()).matches() && (
                 (applyToPublic && multiVariable.hasModifier("public")) ||
                         (applyToProtected && multiVariable.hasModifier("protected")) ||
                         (applyToPrivate && multiVariable.hasModifier("private")) ||

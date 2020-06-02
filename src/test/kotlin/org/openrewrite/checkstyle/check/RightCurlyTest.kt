@@ -15,10 +15,9 @@
  */
 package org.openrewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
-import org.openrewrite.checkstyle.policy.RightCurlyPolicy
-import org.openrewrite.checkstyle.policy.Token.*
 import org.junit.jupiter.api.Test
+import org.openrewrite.config.MapConfigSource.mapConfig
+import org.openrewrite.java.JavaParser
 
 open class RightCurlyTest : JavaParser() {
     @Test
@@ -37,9 +36,20 @@ open class RightCurlyTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(RightCurly.builder()
-                .tokens(setOf(LITERAL_TRY, LITERAL_CATCH, LITERAL_FINALLY, LITERAL_IF, LITERAL_ELSE, METHOD_DEF))
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(RightCurly.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="RightCurly">
+                                <property name="tokens" value="LITERAL_TRY,LITERAL_CATCH,LITERAL_FINALLY,LITERAL_IF,LITERAL_ELSE,METHOD_DEF"/>
+                                <property name="option" value="alone"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             class A {
@@ -87,9 +97,19 @@ open class RightCurlyTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(RightCurly.builder()
-                .option(RightCurlyPolicy.ALONE_OR_SINGLELINE)
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(RightCurly.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="RightCurly">
+                                <property name="option" value="ALONE_OR_SINGLELINE"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             class A {
@@ -132,9 +152,19 @@ open class RightCurlyTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(RightCurly.builder()
-                .option(RightCurlyPolicy.SAME)
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(RightCurly.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="RightCurly">
+                                <property name="option" value="SAME"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             class A {

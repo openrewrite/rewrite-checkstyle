@@ -15,9 +15,9 @@
  */
 package org.openrewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
-import org.openrewrite.checkstyle.policy.PadPolicy
 import org.junit.jupiter.api.Test
+import org.openrewrite.checkstyle.policy.PadPolicy
+import org.openrewrite.java.JavaParser
 
 open class TypecastParenPadTest : JavaParser() {
     private val padded = """
@@ -40,13 +40,15 @@ open class TypecastParenPadTest : JavaParser() {
 
     @Test
     fun shouldPadTypecast() {
-        val fixed = parse(unpadded).refactor().visit(TypecastParenPad(PadPolicy.SPACE)).fix().fixed
+        val fixed = parse(unpadded).refactor().visit(TypecastParenPad(PadPolicy.SPACE))
+                .fix().fixed
         assertRefactored(fixed, padded)
     }
 
     @Test
     fun shouldUnpadTypecast() {
-        val fixed = parse(padded).refactor().visit(TypecastParenPad()).fix().fixed
+        val fixed = parse(padded).refactor().visit(TypecastParenPad.configure(emptyModule("TypecastParenPad")))
+                .fix().fixed
         assertRefactored(fixed, unpadded)
     }
 }

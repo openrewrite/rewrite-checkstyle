@@ -15,8 +15,8 @@
  */
 package org.openrewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
+import org.openrewrite.java.JavaParser
 
 open class SimplifyBooleanExpressionTest : JavaParser() {
     @Test
@@ -37,7 +37,7 @@ open class SimplifyBooleanExpressionTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(SimplifyBooleanExpression()).fix().fixed
+        val fixed = a.refactor().visit(SimplifyBooleanExpression(0)).fix().fixed
 
         assertRefactored(fixed, """
             public class A {

@@ -15,10 +15,10 @@
  */
 package org.openrewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.openrewrite.java.JavaParser
 import org.openrewrite.java.tree.J
 
 class SpansMultipleLinesTest : JavaParser() {

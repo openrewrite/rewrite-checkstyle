@@ -15,12 +15,11 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import lombok.Builder;
-import org.openrewrite.checkstyle.policy.Token;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.Tree;
 import org.openrewrite.checkstyle.policy.Token;
 import org.openrewrite.java.refactor.JavaFormatter;
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Statement;
 
@@ -28,38 +27,42 @@ import java.util.Set;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.openrewrite.checkstyle.policy.Token.*;
 import static org.openrewrite.Formatting.format;
 import static org.openrewrite.Tree.randomId;
 
-@Builder
-public class NeedBraces extends JavaRefactorVisitor {
-    @Builder.Default
-    private final boolean allowSingleLineStatement = false;
-
-    @Builder.Default
-    private final boolean allowEmptyLoopBody = false;
-
-    @Builder.Default
-    private final Set<Token> tokens = Set.of(
+public class NeedBraces extends CheckstyleRefactorVisitor {
+    private static final Set<Token> DEFAULT_TOKENS = Set.of(
             Token.LITERAL_DO, Token.LITERAL_ELSE, Token.LITERAL_FOR, Token.LITERAL_IF, Token.LITERAL_WHILE
     );
 
-    @Override
-    public String getName() {
-        return "checkstyle.NeedBraces";
+    private final boolean allowSingleLineStatement;
+    private final boolean allowEmptyLoopBody;
+    private final Set<Token> tokens;
+
+    public NeedBraces(boolean allowSingleLineStatement, boolean allowEmptyLoopBody, Set<Token> tokens) {
+        super("checkstyle.NeedBraces");
+        this.allowSingleLineStatement = allowSingleLineStatement;
+        this.allowEmptyLoopBody = allowEmptyLoopBody;
+        this.tokens = tokens;
+        setCursoringOn();
     }
 
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static NeedBraces configure(Config config) {
+        return fromModule(
+                config,
+                "NeedBraces",
+                m -> new NeedBraces(m.prop("allowSingleLineStatement", false),
+                        m.prop("allowEmptyLoopBody", false),
+                        m.propAsTokens(Token.class, DEFAULT_TOKENS))
+        );
     }
 
     @Override
     public J visitIf(J.If iff) {
         J.If i = refactor(iff, super::visitIf);
 
-        if(tokens.contains(Token.LITERAL_IF) &&
+        if (tokens.contains(Token.LITERAL_IF) &&
                 !(iff.getThenPart() instanceof J.Block) &&
                 isNotAllowableSingleLine()) {
             i = i.withThenPart(addBraces(i.getThenPart()));
@@ -91,7 +94,7 @@ public class NeedBraces extends JavaRefactorVisitor {
                 body instanceof J.Empty || body instanceof J.Block :
                 body instanceof J.Block;
 
-        if(tokens.contains(Token.LITERAL_WHILE) &&
+        if (tokens.contains(Token.LITERAL_WHILE) &&
                 !hasAllowableBodyType &&
                 isNotAllowableSingleLine()) {
             w = w.withBody(addBraces(w.getBody()));
@@ -104,7 +107,7 @@ public class NeedBraces extends JavaRefactorVisitor {
     public J visitDoWhileLoop(J.DoWhileLoop doWhileLoop) {
         J.DoWhileLoop w = refactor(doWhileLoop, super::visitDoWhileLoop);
 
-        if(tokens.contains(Token.LITERAL_DO) &&
+        if (tokens.contains(Token.LITERAL_DO) &&
                 !(w.getBody() instanceof J.Block) &&
                 isNotAllowableSingleLine()) {
             w = w.withBody(addBraces(w.getBody()));
@@ -122,7 +125,7 @@ public class NeedBraces extends JavaRefactorVisitor {
                 body instanceof J.Empty || body instanceof J.Block :
                 body instanceof J.Block;
 
-        if(tokens.contains(Token.LITERAL_FOR) &&
+        if (tokens.contains(Token.LITERAL_FOR) &&
                 !hasAllowableBodyType &&
                 isNotAllowableSingleLine()) {
             f = f.withBody(addBraces(f.getBody()));
@@ -138,7 +141,7 @@ public class NeedBraces extends JavaRefactorVisitor {
 
     @SuppressWarnings("ConstantConditions")
     private Statement addBraces(Statement body) {
-        if(body instanceof J.Block) {
+        if (body instanceof J.Block) {
             return body;
         }
 

@@ -15,11 +15,13 @@
  */
 package org.openrewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
-import org.openrewrite.checkstyle.policy.PadPolicy
 import org.junit.jupiter.api.Test
+import org.openrewrite.checkstyle.policy.PadPolicy
+import org.openrewrite.java.JavaParser
 
 open class EmptyForIteratorPadTest: JavaParser() {
+    private val defaultConfig = emptyModule("EmptyForIteratorPad")
+    
     @Test
     fun doesntChangeIfIteratorIsPresent() {
         val a = parse("""
@@ -30,7 +32,8 @@ open class EmptyForIteratorPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(EmptyForIteratorPad()).fix().fixed
+        val fixed = a.refactor().visit(EmptyForIteratorPad.configure(defaultConfig))
+                .fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -51,7 +54,8 @@ open class EmptyForIteratorPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(EmptyForIteratorPad()).fix().fixed
+        val fixed = a.refactor().visit(EmptyForIteratorPad.configure(defaultConfig))
+                .fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -72,7 +76,8 @@ open class EmptyForIteratorPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(EmptyForIteratorPad(PadPolicy.SPACE)).fix().fixed
+        val fixed = a.refactor().visit(EmptyForIteratorPad(PadPolicy.SPACE))
+                .fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -94,7 +99,8 @@ open class EmptyForIteratorPadTest: JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(EmptyForIteratorPad()).fix().fixed
+        val fixed = a.refactor().visit(EmptyForIteratorPad.configure(defaultConfig))
+                .fix().fixed
 
         assertRefactored(fixed, """
             public class A {

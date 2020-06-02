@@ -15,7 +15,8 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Statement;
 
@@ -25,15 +26,22 @@ import java.util.List;
 import static java.util.Collections.emptyList;
 import static org.openrewrite.Tree.randomId;
 
-public class DefaultComesLast extends JavaRefactorVisitor {
+public class DefaultComesLast extends CheckstyleRefactorVisitor {
     private final boolean skipIfLastAndSharedWithCase;
 
     public DefaultComesLast(boolean skipIfLastAndSharedWithCase) {
+        super("checkstyle.DefaultComesLast", "skipIfLastAndSharedWithCase",
+                skipIfLastAndSharedWithCase ? "true" : "false");
         this.skipIfLastAndSharedWithCase = skipIfLastAndSharedWithCase;
     }
 
-    public DefaultComesLast() {
-        this(false);
+    @AutoConfigure
+    public static DefaultComesLast configure(Config config) {
+        return fromModule(
+                config,
+                "DefaultComesLast",
+                m -> new DefaultComesLast(m.prop("skipIfLastAndSharedWithCase", false))
+        );
     }
 
     @Override
@@ -154,7 +162,7 @@ public class DefaultComesLast extends JavaRefactorVisitor {
         J.Case defaultCase = null;
         J.Case prior = null;
         for (J.Case aCase : switzh.getCases().getStatements()) {
-            if(defaultCase != null) {
+            if (defaultCase != null) {
                 // default case was not last
                 return false;
             }

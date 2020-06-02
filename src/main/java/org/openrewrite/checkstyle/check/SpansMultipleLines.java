@@ -16,32 +16,27 @@
 package org.openrewrite.checkstyle.check;
 
 import lombok.Getter;
-import org.openrewrite.ScopedVisitorSupport;
 import org.openrewrite.Tree;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.JavaSourceVisitor;
 import org.openrewrite.java.tree.J;
 
 import java.util.Spliterators;
-import java.util.UUID;
 
 import static java.util.stream.StreamSupport.stream;
 
-class SpansMultipleLines extends JavaSourceVisitor<Boolean> implements ScopedVisitorSupport {
+class SpansMultipleLines extends JavaSourceVisitor<Boolean> {
     @Getter
-    private final UUID scope;
+    private final J scope;
 
     @Nullable
     private final J skip;
 
     SpansMultipleLines(J scope, J skip) {
-        this.scope = scope.getId();
+        super("checkstyle.SpansMultipleLines");
+        this.scope = scope;
         this.skip = skip;
-    }
-
-    @Override
-    public boolean isCursored() {
-        return true;
+        setCursoringOn();
     }
 
     @Override
@@ -51,14 +46,14 @@ class SpansMultipleLines extends JavaSourceVisitor<Boolean> implements ScopedVis
 
     @Override
     public Boolean visitTree(Tree tree) {
-        if (isScope()) {
+        if (scope.isScope(tree)) {
             if (tree instanceof J.Block && ((J.Block<?>) tree).getEndOfBlockSuffix().contains("\n")) {
                 return true;
             }
 
             // don't look at the prefix of the scope that we are testing, we are interested in its contents
             return super.visitTree(tree);
-        } else if (isScopeInCursorPath() && !isSkipInCursorPath()) {
+        } else if (getCursor().isScopeInPath(scope) && !isSkipInCursorPath()) {
             if (tree instanceof J.Block && ((J.Block<?>) tree).getEndOfBlockSuffix().contains("\n")) {
                 return true;
             }

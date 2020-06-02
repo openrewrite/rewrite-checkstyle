@@ -15,21 +15,29 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import lombok.RequiredArgsConstructor;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.checkstyle.policy.PadPolicy;
-import org.openrewrite.checkstyle.policy.PadPolicy;
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 
 import static org.openrewrite.Formatting.formatLastSuffix;
 import static org.openrewrite.Formatting.lastSuffix;
 
-@RequiredArgsConstructor
-public class EmptyForIteratorPad extends JavaRefactorVisitor {
+public class EmptyForIteratorPad extends CheckstyleRefactorVisitor {
     private final PadPolicy option;
 
-    public EmptyForIteratorPad() {
-        this(PadPolicy.NOSPACE);
+    public EmptyForIteratorPad(PadPolicy option) {
+        super("checkstyle.EmptyForInitializerPad");
+        this.option = option;
+    }
+
+    @AutoConfigure
+    public static EmptyForIteratorPad configure(Config config) {
+        return fromModule(
+                config,
+                "EmptyForIteratorPad",
+                m -> new EmptyForIteratorPad(m.propAsOptionValue(PadPolicy::valueOf, PadPolicy.NOSPACE))
+        );
     }
 
     @Override

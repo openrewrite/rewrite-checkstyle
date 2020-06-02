@@ -15,11 +15,13 @@
  */
 package org.openrewrite.checkstyle.check
 
-import org.openrewrite.java.JavaParser
 import org.junit.jupiter.api.Test
-import java.util.regex.Pattern
+import org.openrewrite.config.MapConfigSource.mapConfig
+import org.openrewrite.java.JavaParser
 
 open class HiddenFieldTest : JavaParser() {
+    private val defaultConfig = emptyModule("HiddenField")
+    
     @Test
     fun renameHiddenFields() {
         val b = """
@@ -48,7 +50,7 @@ open class HiddenFieldTest : JavaParser() {
             }
         """.trimIndent(), b)
 
-        val fixed = a.refactor().visit(HiddenField.builder().build()).fix().fixed
+        val fixed = a.refactor().visit(HiddenField.configure(defaultConfig)).fix().fixed
 
         assertRefactored(fixed, """
             public class A extends B {
@@ -80,9 +82,19 @@ open class HiddenFieldTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(HiddenField.builder()
-                .ignoreFormat(Pattern.compile("\\w+"))
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(HiddenField.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="HiddenField">
+                                <property name="ignoreFormat" value="\w+"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -105,9 +117,19 @@ open class HiddenFieldTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(HiddenField.builder()
-                .ignoreConstructorParameter(true)
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(HiddenField.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="HiddenField">
+                                <property name="ignoreConstructorParameter" value="true"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -134,9 +156,19 @@ open class HiddenFieldTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(HiddenField.builder()
-                .ignoreSetter(true)
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(HiddenField.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="HiddenField">
+                                <property name="ignoreSetter" value="true"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -164,10 +196,20 @@ open class HiddenFieldTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(HiddenField.builder()
-                .ignoreSetter(true)
-                .setterCanReturnItsClass(true)
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(HiddenField.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="HiddenField">
+                                <property name="ignoreSetter" value="true"/>
+                                <property name="setterCanReturnItsClass" value="true"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             public class A {
@@ -190,9 +232,19 @@ open class HiddenFieldTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(HiddenField.builder()
-                .ignoreAbstractMethods(true)
-                .build()).fix().fixed
+        val fixed = a.refactor().visit(HiddenField.configure(mapConfig("checkstyle.config", """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="HiddenField">
+                                <property name="ignoreAbstractMethods" value="true"/>
+                            </module>
+                        </module>
+                    </module>
+                """.trimIndent()))).fix().fixed
 
         assertRefactored(fixed, """
             public abstract class A {

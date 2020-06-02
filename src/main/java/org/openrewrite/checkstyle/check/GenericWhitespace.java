@@ -15,23 +15,24 @@
  */
 package org.openrewrite.checkstyle.check;
 
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.Tree;
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 
 import java.util.List;
 
-import static org.openrewrite.checkstyle.check.internal.WhitespaceChecks.*;
+import static org.openrewrite.checkstyle.check.WhitespaceChecks.*;
 
-public class GenericWhitespace extends JavaRefactorVisitor {
-    @Override
-    public String getName() {
-        return "checkstyle.GenericWhitespace";
+public class GenericWhitespace extends CheckstyleRefactorVisitor {
+    public GenericWhitespace() {
+        super("checkstyle.GenericWhitespace");
+        setCursoringOn();
     }
 
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static GenericWhitespace configure(Config config) {
+        return fromModule(config, "GenericWhitespace", m -> new GenericWhitespace());
     }
 
     @Override

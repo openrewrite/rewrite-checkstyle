@@ -19,6 +19,8 @@ import org.junit.jupiter.api.Test
 import org.openrewrite.java.JavaParser
 
 open class DefaultComesLastTest : JavaParser() {
+    private val defaultConfig = emptyModule("DefaultComesLast")
+
     @Test
     fun moveDefaultToLastAlongWithItsStatementsAndAddBreakIfNecessary() {
         val a = parse("""
@@ -40,7 +42,8 @@ open class DefaultComesLastTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(DefaultComesLast()).fix().fixed
+        val fixed = a.refactor().visit(DefaultComesLast.configure(defaultConfig))
+                .fix().fixed
 
         assertRefactored(fixed, """
             class Test {
@@ -83,7 +86,7 @@ open class DefaultComesLastTest : JavaParser() {
             }
         """.trimIndent())
 
-        val fixed = a.refactor().visit(DefaultComesLast()).fix().fixed
+        val fixed = a.refactor().visit(DefaultComesLast.configure(defaultConfig)).fix().fixed
 
         assertRefactored(fixed, """
             class Test {
@@ -146,7 +149,7 @@ open class DefaultComesLastTest : JavaParser() {
 
     @Test
     fun defaultIsLastAndThrows() {
-        assertUnchangedByRefactoring(DefaultComesLast(), """
+        assertUnchangedByRefactoring(DefaultComesLast.configure(defaultConfig), """
             class Test {
                 int n;
                 {
@@ -163,7 +166,7 @@ open class DefaultComesLastTest : JavaParser() {
 
     @Test
     fun defaultIsLastAndReturnsNonVoid() {
-        assertUnchangedByRefactoring(DefaultComesLast(), """
+        assertUnchangedByRefactoring(DefaultComesLast.configure(defaultConfig), """
             class Test {
                 public int foo(int n) {
                     switch (n) {
@@ -179,7 +182,7 @@ open class DefaultComesLastTest : JavaParser() {
 
     @Test
     fun dontAddBreaksIfCasesArentMoving() {
-        assertUnchangedByRefactoring(DefaultComesLast(), """
+        assertUnchangedByRefactoring(DefaultComesLast.configure(defaultConfig), """
             class Test {
                 int n;
                 boolean foo() {
@@ -197,7 +200,7 @@ open class DefaultComesLastTest : JavaParser() {
 
     @Test
     fun dontRemoveExtraneousDefaultCaseBreaks() {
-        assertUnchangedByRefactoring(DefaultComesLast(), """
+        assertUnchangedByRefactoring(DefaultComesLast.configure(defaultConfig), """
             class Test {
                 int n;
                 void foo() {
@@ -212,7 +215,7 @@ open class DefaultComesLastTest : JavaParser() {
 
     @Test
     fun allCasesGroupedWithDefault() {
-        assertUnchangedByRefactoring(DefaultComesLast(), """
+        assertUnchangedByRefactoring(DefaultComesLast.configure(defaultConfig), """
             class Test {
                 int n;
                 boolean foo() {

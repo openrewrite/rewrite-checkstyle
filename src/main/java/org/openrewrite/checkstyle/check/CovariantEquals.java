@@ -15,8 +15,9 @@
  */
 package org.openrewrite.checkstyle.check;
 
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.Cursor;
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.*;
 
 import java.util.ArrayList;
@@ -27,15 +28,15 @@ import static java.util.stream.Collectors.toList;
 import static org.openrewrite.Formatting.*;
 import static org.openrewrite.Tree.randomId;
 
-public class CovariantEquals extends JavaRefactorVisitor {
-    @Override
-    public String getName() {
-        return "checkstyle.CovariantEquals";
+public class CovariantEquals extends CheckstyleRefactorVisitor {
+    public CovariantEquals() {
+        super("checkstyle.CovariantEquals");
+        setCursoringOn();
     }
 
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static CovariantEquals configure(Config config) {
+        return fromModule(config, "CovariantEquals", m -> new CovariantEquals());
     }
 
     @Override
@@ -78,7 +79,6 @@ public class CovariantEquals extends JavaRefactorVisitor {
                         "if (" + paramNameStr + " == null || getClass() != " + paramNameStr + ".getClass()) return false;\n" +
                         "Test " + oldParamName.printTrimmed() + " = (Test) " + paramNameStr + ";\n");
 
-        //noinspection ConstantConditions
         equalsBody.addAll(method.getBody().getStatements());
 
         return method.withBody(method.getBody().withStatements(equalsBody));

@@ -15,39 +15,41 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import lombok.Builder;
-import org.openrewrite.checkstyle.policy.RightCurlyPolicy;
-import org.openrewrite.checkstyle.policy.Token;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.Cursor;
 import org.openrewrite.Tree;
 import org.openrewrite.checkstyle.policy.RightCurlyPolicy;
 import org.openrewrite.checkstyle.policy.Token;
-import org.openrewrite.java.refactor.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;
 
 import java.util.Set;
 
-import static org.openrewrite.checkstyle.policy.RightCurlyPolicy.*;
-import static org.openrewrite.checkstyle.policy.Token.*;
-
-@Builder
-public class RightCurly extends JavaRefactorVisitor {
-    @Builder.Default
-    private final RightCurlyPolicy option = RightCurlyPolicy.ALONE;
-
-    @Builder.Default
-    private final Set<Token> tokens = Set.of(
+public class RightCurly extends CheckstyleRefactorVisitor {
+    private static final Set<Token> DEFAULT_TOKENS = Set.of(
             Token.LITERAL_TRY, Token.LITERAL_CATCH, Token.LITERAL_FINALLY, Token.LITERAL_IF, Token.LITERAL_ELSE
     );
 
-    @Override
-    public String getName() {
-        return "checkstyle.RightCurly";
+    private final RightCurlyPolicy option;
+    private final Set<Token> tokens;
+
+    public RightCurly(RightCurlyPolicy option, Set<Token> tokens) {
+        super("checkstyle.RightCurly");
+        this.option = option;
+        this.tokens = tokens;
+        setCursoringOn();
     }
 
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static RightCurly configure(Config config) {
+        return fromModule(
+                config,
+                "RightCurly",
+                m -> new RightCurly(
+                        m.propAsOptionValue(RightCurlyPolicy::valueOf, RightCurlyPolicy.SAME),
+                        m.propAsTokens(Token.class, DEFAULT_TOKENS)
+                )
+        );
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -61,7 +63,7 @@ public class RightCurly extends JavaRefactorVisitor {
                 parentCursor.getTree() instanceof J.Block;
 
         boolean satisfiesPolicy = block.getEndOfBlockSuffix().contains("\n") ||
-                (option != RightCurlyPolicy.ALONE && !new SpansMultipleLines(block,null).visit(block));
+                (option != RightCurlyPolicy.ALONE && !new SpansMultipleLines(block, null).visit(block));
 
         if (tokenMatches && !satisfiesPolicy && parentCursor.firstEnclosing(J.Block.class) != null) {
             String suffix = formatter.findIndent(getCursor().getParentOrThrow()

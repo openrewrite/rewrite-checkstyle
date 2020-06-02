@@ -15,14 +15,12 @@
  */
 package org.openrewrite.checkstyle.check;
 
-import lombok.Builder;
-import org.openrewrite.checkstyle.policy.BlockPolicy;
-import org.openrewrite.checkstyle.policy.Token;
+import org.eclipse.microprofile.config.Config;
+import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.checkstyle.policy.BlockPolicy;
 import org.openrewrite.checkstyle.policy.Token;
 import org.openrewrite.java.refactor.DeleteStatement;
 import org.openrewrite.java.refactor.JavaRefactorVisitor;
-import org.openrewrite.java.refactor.ScopedJavaRefactorVisitor;
 import org.openrewrite.java.tree.*;
 
 import java.util.ArrayList;
@@ -35,7 +33,6 @@ import java.util.stream.Collectors;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.IntStream.range;
-import static org.openrewrite.checkstyle.policy.Token.*;
 import static org.openrewrite.Formatting.EMPTY;
 import static org.openrewrite.Formatting.format;
 import static org.openrewrite.Tree.randomId;
@@ -43,13 +40,8 @@ import static org.openrewrite.Tree.randomId;
 /**
  * TODO offer option to log if a logger field is available instead of rethrowing as an unchecked exception.
  */
-@Builder
-public class EmptyBlock extends JavaRefactorVisitor {
-    @Builder.Default
-    BlockPolicy block = BlockPolicy.Statement;
-
-    @Builder.Default
-    Set<Token> tokens = Set.of(
+public class EmptyBlock extends CheckstyleRefactorVisitor {
+    private static final Set<Token> DEFAULT_TOKENS = Set.of(
             Token.LITERAL_WHILE,
             Token.LITERAL_TRY,
             Token.LITERAL_FINALLY,
@@ -63,14 +55,26 @@ public class EmptyBlock extends JavaRefactorVisitor {
             Token.LITERAL_SYNCHRONIZED
     );
 
-    @Override
-    public String getName() {
-        return "checkstyle.EmptyBlock";
+    private final BlockPolicy block;
+    private final Set<Token> tokens;
+
+    public EmptyBlock(BlockPolicy block, Set<Token> tokens) {
+        super("checkstyle.EmptyBlock");
+        this.block = block;
+        this.tokens = tokens;
+        setCursoringOn();
     }
 
-    @Override
-    public boolean isCursored() {
-        return true;
+    @AutoConfigure
+    public static EmptyBlock configure(Config config) {
+        return fromModule(
+                config,
+                "EmptyBlock",
+                m -> new EmptyBlock(
+                        m.propAsOptionValue(BlockPolicy::valueOf, BlockPolicy.Statement),
+                        m.propAsTokens(Token.class, DEFAULT_TOKENS)
+                )
+        );
     }
 
     @SuppressWarnings("unchecked")
@@ -108,7 +112,7 @@ public class EmptyBlock extends JavaRefactorVisitor {
         AtomicBoolean filtered = new AtomicBoolean(false);
         List<J> statements = b.getStatements().stream()
                 .map(s -> {
-                    if(!(s instanceof J.Block)) {
+                    if (!(s instanceof J.Block)) {
                         return s;
                     }
 
@@ -273,18 +277,20 @@ public class EmptyBlock extends JavaRefactorVisitor {
                 ((J.Block<?>) blockNode).getStatements().isEmpty();
     }
 
-    private static class ExtractSideEffectsOfIfCondition extends ScopedJavaRefactorVisitor {
+    private static class ExtractSideEffectsOfIfCondition extends JavaRefactorVisitor {
+        private final J.Block<?> enclosingBlock;
         private final J.If toExtract;
 
         public ExtractSideEffectsOfIfCondition(J.Block<?> enclosingBlock, J.If toExtract) {
-            super(enclosingBlock.getId());
+            super("checkstyle.ExtractSideEffectsOfIfCondition");
+            this.enclosingBlock = enclosingBlock;
             this.toExtract = toExtract;
         }
 
         @Override
         public J visitBlock(J.Block<J> block) {
             J.Block<J> b = refactor(block, super::visitBlock);
-            if (isScope()) {
+            if (enclosingBlock.isScope(block)) {
                 List<J> statements = new ArrayList<>(b.getStatements().size());
                 for (J statement : b.getStatements()) {
                     if (statement == toExtract) {
