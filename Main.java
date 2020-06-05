@@ -25,7 +25,6 @@ import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.micrometer.prometheus.rsocket.PrometheusRSocketClient;
 import io.rsocket.transport.netty.client.TcpClientTransport;
-import org.apache.commons.cli.*;
 import org.openrewrite.Change;
 import org.openrewrite.Refactor;
 import org.openrewrite.java.JavaParser;
@@ -34,8 +33,6 @@ import org.slf4j.LoggerFactory;
 import reactor.netty.tcp.TcpClient;
 import reactor.util.retry.Retry;
 
-import java.io.*;
-import java.nio.file.*;
 import java.time.Duration;
 import java.util.List;
 import java.util.stream.Stream;

@@ -15,7 +15,6 @@
  */
 package org.openrewrite.checkstyle;
 
-import org.eclipse.microprofile.config.Config;
 import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;

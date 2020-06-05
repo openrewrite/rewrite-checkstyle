@@ -20,8 +20,8 @@ import org.openrewrite.Tree;
 import org.openrewrite.checkstyle.policy.Token;
 import org.openrewrite.config.AutoConfigure;
 import org.openrewrite.internal.lang.Nullable;
-import org.openrewrite.java.JavaSourceVisitor;
 import org.openrewrite.java.JavaRefactorVisitor;
+import org.openrewrite.java.JavaSourceVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 

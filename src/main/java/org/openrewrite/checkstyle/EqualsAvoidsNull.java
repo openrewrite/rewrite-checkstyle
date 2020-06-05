@@ -17,8 +17,8 @@ package org.openrewrite.checkstyle;
 
 import org.openrewrite.Tree;
 import org.openrewrite.config.AutoConfigure;
-import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.JavaRefactorVisitor;
+import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
