@@ -26,6 +26,7 @@ import org.xml.sax.InputSource;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -42,6 +43,14 @@ public abstract class CheckstyleRefactorVisitor extends JavaRefactorVisitor {
             "bundle", "key", new String[0], null, CheckstyleRefactorVisitor.class, null);
 
     private static final Map<File, LoadedConfiguration> loadedConfigurationsByPath = new HashMap<>();
+
+    /**
+     * Used, especially by build tools, to relativize {@link #configFile} against some
+     * root directory. This is optional, and {@link #configFile} can itself be an absolute
+     * or resolvable relative path independent of this.
+     */
+    @Nullable
+    private Path baseDir;
 
     private File configFile;
     private String config;
@@ -61,6 +70,10 @@ public abstract class CheckstyleRefactorVisitor extends JavaRefactorVisitor {
         validate();
     }
 
+    public void setBaseDir(@Nullable Path baseDir) {
+        this.baseDir = baseDir;
+    }
+
     public void setConfigFile(File configFile) {
         this.configFile = configFile;
         validate();
@@ -77,22 +90,31 @@ public abstract class CheckstyleRefactorVisitor extends JavaRefactorVisitor {
     @Override
     public final Validated validate() {
         try {
-            LoadedConfiguration loadedConfiguration;
-            if (configFile != null && configFile.exists()) {
-                loadedConfiguration = loadedConfigurationsByPath.get(configFile);
-                if (loadedConfiguration == null) {
-                    try (InputStream inputStream = new FileInputStream(configFile)) {
-                        loadedConfiguration = loadConfiguration(inputStream);
-                        loadedConfigurationsByPath.put(configFile, loadedConfiguration);
+            LoadedConfiguration loadedConfiguration = null;
+            if (configFile != null) {
+                File absoluteConfigFile = baseDir == null ? configFile :
+                        baseDir.resolve(configFile.toPath()).toFile();
+
+                if(absoluteConfigFile.exists()) {
+                    loadedConfiguration = loadedConfigurationsByPath.get(absoluteConfigFile);
+                    if (loadedConfiguration == null) {
+                        try (InputStream inputStream = new FileInputStream(absoluteConfigFile)) {
+                            loadedConfiguration = loadConfiguration(inputStream);
+                            loadedConfigurationsByPath.put(absoluteConfigFile, loadedConfiguration);
+                        }
                     }
                 }
-            } else if (config != null) {
-                try (InputStream inputStream = new ByteArrayInputStream(config.getBytes(Charset.defaultCharset()))) {
-                    loadedConfiguration = loadConfiguration(inputStream);
+            }
+
+            if(loadedConfiguration == null) {
+                if (config != null) {
+                    try (InputStream inputStream = new ByteArrayInputStream(config.getBytes(Charset.defaultCharset()))) {
+                        loadedConfiguration = loadConfiguration(inputStream);
+                    }
+                } else {
+                    return Validated.missing("config", null,
+                            "Either config or configFile must be specified");
                 }
-            } else {
-                return Validated.missing("config", null,
-                        "Either config or configFile must be specified");
             }
 
             Module module = loadedConfiguration.modulesByName.get(getClass().getSimpleName());

@@ -50,10 +50,6 @@ configurations.all {
     }
 }
 
-java {
-    withSourcesJar()
-}
-
 dependencies {
     implementation("org.openrewrite:rewrite-java:latest.integration")
 
