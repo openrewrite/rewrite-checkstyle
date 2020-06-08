@@ -86,10 +86,13 @@ public abstract class CheckstyleRefactorVisitor extends JavaRefactorVisitor {
                         loadedConfigurationsByPath.put(configFile, loadedConfiguration);
                     }
                 }
-            } else {
+            } else if (config != null) {
                 try (InputStream inputStream = new ByteArrayInputStream(config.getBytes(Charset.defaultCharset()))) {
                     loadedConfiguration = loadConfiguration(inputStream);
                 }
+            } else {
+                return Validated.missing("config", null,
+                        "Either config or configFile must be specified");
             }
 
             Module module = loadedConfiguration.modulesByName.get(getClass().getSimpleName());
