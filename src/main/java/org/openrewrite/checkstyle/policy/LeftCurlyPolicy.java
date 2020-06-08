@@ -18,8 +18,11 @@ package org.openrewrite.checkstyle.policy;
 public enum LeftCurlyPolicy {
     /**
      * The brace must always be on the end of the line. For example:#
+     * <pre>{@code
      * if (condition) {
      * ...
+     * }
+     * }</pre>
      */
     EOL,
 
@@ -29,6 +32,7 @@ public enum LeftCurlyPolicy {
      * if (condition)
      * {
      * ...
+     * }
      * }</pre>
      */
     NL,
@@ -40,10 +44,13 @@ public enum LeftCurlyPolicy {
      * ...
      * <p>
      * But for a statement spanning multiple lines:
+     * <pre>{@code
      * if (condition1 && condition2 &&
      * condition3 && condition4)
      * {
      * ...
+     * }
+     * }</pre>
      */
     NLOW
 }
