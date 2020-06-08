@@ -17,7 +17,7 @@ package org.openrewrite.checkstyle;
 
 import org.openrewrite.Cursor;
 import org.openrewrite.checkstyle.policy.ParenthesesToken;
-import org.openrewrite.config.AutoConfigure;
+import org.openrewrite.AutoConfigure;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;

@@ -17,7 +17,7 @@ package org.openrewrite.checkstyle;
 
 import org.openrewrite.Cursor;
 import org.openrewrite.Tree;
-import org.openrewrite.config.AutoConfigure;
+import org.openrewrite.AutoConfigure;
 import org.openrewrite.java.DeleteStatement;
 import org.openrewrite.java.JavaRefactorVisitor;
 import org.openrewrite.java.tree.J;

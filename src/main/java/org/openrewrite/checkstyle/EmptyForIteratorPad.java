@@ -16,7 +16,7 @@
 package org.openrewrite.checkstyle;
 
 import org.openrewrite.checkstyle.policy.PadPolicy;
-import org.openrewrite.config.AutoConfigure;
+import org.openrewrite.AutoConfigure;
 import org.openrewrite.java.tree.J;
 
 import static org.openrewrite.Formatting.formatLastSuffix;

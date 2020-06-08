@@ -19,7 +19,7 @@ import org.openrewrite.Cursor;
 import org.openrewrite.Tree;
 import org.openrewrite.checkstyle.policy.LeftCurlyPolicy;
 import org.openrewrite.checkstyle.policy.Token;
-import org.openrewrite.config.AutoConfigure;
+import org.openrewrite.AutoConfigure;
 import org.openrewrite.java.tree.J;
 
 import java.util.Set;

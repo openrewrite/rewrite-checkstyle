@@ -16,7 +16,7 @@
 package org.openrewrite.checkstyle;
 
 import org.openrewrite.Cursor;
-import org.openrewrite.config.AutoConfigure;
+import org.openrewrite.AutoConfigure;
 import org.openrewrite.java.tree.*;
 
 import java.util.ArrayList;

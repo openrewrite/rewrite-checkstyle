@@ -17,7 +17,7 @@ package org.openrewrite.checkstyle;
 
 import org.openrewrite.Tree;
 import org.openrewrite.checkstyle.policy.PunctuationToken;
-import org.openrewrite.config.AutoConfigure;
+import org.openrewrite.AutoConfigure;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;

@@ -17,7 +17,7 @@ package org.openrewrite.checkstyle;
 
 import org.openrewrite.checkstyle.policy.BlockPolicy;
 import org.openrewrite.checkstyle.policy.Token;
-import org.openrewrite.config.AutoConfigure;
+import org.openrewrite.AutoConfigure;
 import org.openrewrite.java.DeleteStatement;
 import org.openrewrite.java.JavaRefactorVisitor;
 import org.openrewrite.java.tree.*;

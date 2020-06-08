@@ -20,7 +20,7 @@ import io.micrometer.core.instrument.Tags;
 import org.openrewrite.Tree;
 import org.openrewrite.checkstyle.policy.OperatorToken;
 import org.openrewrite.checkstyle.policy.WrapPolicy;
-import org.openrewrite.config.AutoConfigure;
+import org.openrewrite.AutoConfigure;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.TypeTree;
 

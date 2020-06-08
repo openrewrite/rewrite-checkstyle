@@ -18,7 +18,7 @@ package org.openrewrite.checkstyle;
 import org.openrewrite.Tree;
 import org.openrewrite.checkstyle.policy.PadPolicy;
 import org.openrewrite.checkstyle.policy.Token;
-import org.openrewrite.config.AutoConfigure;
+import org.openrewrite.AutoConfigure;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.J.MethodDecl;
