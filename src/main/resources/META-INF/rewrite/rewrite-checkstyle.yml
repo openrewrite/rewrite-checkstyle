@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-profile: checkstyle
-
+type: beta.openrewrite.org/v1/profile
+name: checkstyle
 include:
-    - org.openrewrite.checkstyle.*
+    - 'org.openrewrite.checkstyle.*'
