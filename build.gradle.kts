@@ -40,7 +40,7 @@ group = "org.openrewrite.plan"
 description = "Eliminate Checkstyle issues. Automatically."
 
 repositories {
-    mavenCentral()
+    jcenter()
 }
 
 configurations.all {
