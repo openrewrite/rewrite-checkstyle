@@ -75,8 +75,6 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:latest.release")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:latest.release")
 
-    testRuntimeOnly("org.microbean:microbean-microprofile-config:latest.release")
-
     testImplementation("org.assertj:assertj-core:latest.release")
 }
 
@@ -91,10 +89,13 @@ tasks.named<Test>("test") {
     jvmArgs = listOf("-XX:+UnlockDiagnosticVMOptions", "-XX:+ShowHiddenFrames")
 }
 
-tasks.named<Jar>("jar") {
-    manifest {
-        attributes(listOf("Main-Class" to "org.openrewrite.checkstyle.Main").toMap())
-    }
+tasks.named<JavaCompile>("compileJava") {
+    sourceCompatibility = JavaVersion.VERSION_1_8.toString()
+    targetCompatibility = JavaVersion.VERSION_1_8.toString()
+
+    options.isFork = true
+    options.forkOptions.executable = "javac"
+    options.compilerArgs.addAll(listOf("--release", "8"))
 }
 
 configure<ContactsExtension> {
