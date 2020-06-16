@@ -23,17 +23,20 @@ import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Statement;
 
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toSet;
 import static org.openrewrite.Formatting.format;
 import static org.openrewrite.Tree.randomId;
 
 @AutoConfigure
 public class NeedBraces extends CheckstyleRefactorVisitor {
-    private static final Set<Token> DEFAULT_TOKENS = Set.of(
+    private static final Set<Token> DEFAULT_TOKENS = Stream.of(
             Token.LITERAL_DO, Token.LITERAL_ELSE, Token.LITERAL_FOR, Token.LITERAL_IF, Token.LITERAL_WHILE
-    );
+    ).collect(toSet());
 
     private boolean allowSingleLineStatement;
     private boolean allowEmptyLoopBody;

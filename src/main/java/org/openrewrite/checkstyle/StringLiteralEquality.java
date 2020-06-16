@@ -21,8 +21,10 @@ import org.openrewrite.java.tree.Flag;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 
+import java.util.Collections;
 import java.util.Set;
 
+import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static org.openrewrite.Formatting.EMPTY;
 import static org.openrewrite.Tree.randomId;
@@ -44,7 +46,7 @@ public class StringLiteralEquality extends CheckstyleRefactorVisitor {
                     new J.MethodInvocation.Arguments(randomId(), singletonList(right.withFormatting(EMPTY)), EMPTY),
                     JavaType.Method.build(JavaType.Class.build("java.lang.Object"), "equals",
                             null, null, singletonList("o"),
-                            Set.of(Flag.Public)),
+                            singleton(Flag.Public)),
                     binary.getFormatting());
         }
 

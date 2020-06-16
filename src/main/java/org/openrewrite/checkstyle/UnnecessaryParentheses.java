@@ -23,12 +23,15 @@ import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.toSet;
 import static org.openrewrite.checkstyle.policy.ParenthesesToken.*;
 
 @AutoConfigure
 public class UnnecessaryParentheses extends CheckstyleRefactorVisitor {
-    private static final Set<ParenthesesToken> DEFAULT_TOKENS = Set.of(
+    private static final Set<ParenthesesToken> DEFAULT_TOKENS = Stream.of(
             EXPR,
             IDENT,
             NUM_DOUBLE,
@@ -52,7 +55,7 @@ public class UnnecessaryParentheses extends CheckstyleRefactorVisitor {
             SR_ASSIGN,
             STAR_ASSIGN,
             LAMBDA
-    );
+    ).collect(toSet());
 
     private Set<ParenthesesToken> tokens;
 

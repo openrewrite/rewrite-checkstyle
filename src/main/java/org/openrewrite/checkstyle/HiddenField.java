@@ -29,15 +29,22 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.openrewrite.java.tree.TypeUtils.getVisibleSupertypeMembers;
 
 @AutoConfigure
 public class HiddenField extends CheckstyleRefactorVisitor {
     private static final Pattern NAME_PATTERN = Pattern.compile("(.+)(\\d+)");
-    private static final Set<Token> DEFAULT_TOKENS = Set.of(Token.VARIABLE_DEF, Token.PARAMETER_DEF, Token.LAMBDA);
+    private static final Set<Token> DEFAULT_TOKENS = Stream.of(
+            Token.VARIABLE_DEF,
+            Token.PARAMETER_DEF,
+            Token.LAMBDA
+    ).collect(toSet());
 
     @Nullable
     private Pattern ignoreFormat;

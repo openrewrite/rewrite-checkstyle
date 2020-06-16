@@ -27,13 +27,16 @@ import org.openrewrite.java.tree.TypeTree;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.toSet;
 import static org.openrewrite.Formatting.*;
 import static org.openrewrite.checkstyle.policy.OperatorToken.*;
 
 @AutoConfigure
 public class OperatorWrap extends CheckstyleRefactorVisitor {
-    private static final Set<OperatorToken> DEFAULT_TOKENS = Set.of(
+    private static final Set<OperatorToken> DEFAULT_TOKENS = Stream.of(
             QUESTION,
             COLON,
             EQUAL,
@@ -57,7 +60,7 @@ public class OperatorWrap extends CheckstyleRefactorVisitor {
             LAND,
             TYPE_EXTENSION_AND,
             LITERAL_INSTANCEOF
-    );
+    ).collect(toSet());
 
     private WrapPolicy option;
     private Set<OperatorToken> tokens;

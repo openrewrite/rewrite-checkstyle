@@ -23,10 +23,14 @@ import org.openrewrite.AutoConfigure;
 import org.openrewrite.java.tree.J;
 
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toSet;
 
 @AutoConfigure
 public class LeftCurly extends CheckstyleRefactorVisitor {
-    private static final Set<Token> DEFAULT_TOKENS = Set.of(
+    private static final Set<Token> DEFAULT_TOKENS = Stream.of(
             Token.ANNOTATION_DEF,
             Token.CLASS_DEF,
             Token.CTOR_DEF,
@@ -49,7 +53,7 @@ public class LeftCurly extends CheckstyleRefactorVisitor {
             Token.METHOD_DEF,
             Token.OBJBLOCK,
             Token.STATIC_INIT
-    );
+    ).collect(toSet());
 
     private LeftCurlyPolicy option;
     private boolean ignoreEnums;

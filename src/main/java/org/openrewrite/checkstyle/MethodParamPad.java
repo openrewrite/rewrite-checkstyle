@@ -28,12 +28,16 @@ import org.openrewrite.java.tree.J.NewClass;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toSet;
 
 @AutoConfigure
 public class MethodParamPad extends CheckstyleRefactorVisitor {
-    private static final Set<Token> DEFAULT_TOKENS = Set.of(
+    private static final Set<Token> DEFAULT_TOKENS = Stream.of(
             Token.CTOR_DEF, Token.LITERAL_NEW, Token.METHOD_CALL, Token.METHOD_DEF, Token.SUPER_CTOR_CALL, Token.ENUM_CONSTANT_DEF
-    );
+    ).collect(toSet());
 
     private boolean allowLineBreaks;
     private PadPolicy option;

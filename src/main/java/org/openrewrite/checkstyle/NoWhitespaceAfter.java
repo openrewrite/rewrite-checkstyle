@@ -26,16 +26,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.openrewrite.Formatting.EMPTY;
 import static org.openrewrite.Formatting.stripPrefix;
 
 @AutoConfigure
 public class NoWhitespaceAfter extends CheckstyleRefactorVisitor {
-    private static final Set<PunctuationToken> DEFAULT_TOKENS = Set.of(
+    private static final Set<PunctuationToken> DEFAULT_TOKENS = Stream.of(
             PunctuationToken.ARRAY_INIT, PunctuationToken.AT, PunctuationToken.INC, PunctuationToken.DEC, PunctuationToken.UNARY_MINUS, PunctuationToken.UNARY_PLUS, PunctuationToken.BNOT, PunctuationToken.LNOT, PunctuationToken.DOT, PunctuationToken.ARRAY_DECLARATOR, PunctuationToken.INDEX_OP
-    );
+    ).collect(toSet());
 
     /**
      * Only applies to DOT.

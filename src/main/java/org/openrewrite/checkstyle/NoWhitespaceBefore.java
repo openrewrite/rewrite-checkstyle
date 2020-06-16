@@ -27,9 +27,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.openrewrite.Formatting.stripSuffix;
 import static org.openrewrite.checkstyle.WhitespaceChecks.stripPrefixUpToLinebreak;
 import static org.openrewrite.checkstyle.WhitespaceChecks.stripSuffixUpToLinebreak;
@@ -37,9 +40,9 @@ import static org.openrewrite.checkstyle.policy.PunctuationToken.*;
 
 @AutoConfigure
 public class NoWhitespaceBefore extends CheckstyleRefactorVisitor {
-    private static final Set<PunctuationToken> DEFAULT_TOKENS = Set.of(
+    private static final Set<PunctuationToken> DEFAULT_TOKENS = Stream.of(
             COMMA, SEMI, POST_INC, POST_DEC, ELLIPSIS
-    );
+    ).collect(toSet());
 
     /**
      * Only applies to DOT.
