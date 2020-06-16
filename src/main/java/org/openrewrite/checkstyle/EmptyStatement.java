@@ -24,6 +24,7 @@ import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Statement;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.stream.Collectors.toList;
 
@@ -81,9 +82,13 @@ public class EmptyStatement extends CheckstyleRefactorVisitor {
     @SuppressWarnings("unchecked")
     private Optional<Statement> nextStatement() {
         Tree parent = getCursor().getParentOrThrow().getTree();
+        AtomicBoolean dropWhile = new AtomicBoolean(false);
         return parent instanceof J.Block ?
                 ((J.Block<Statement>) parent).getStatements().stream()
-                        .dropWhile(s -> s != getCursor().getTree())
+                        .filter(s -> {
+                            dropWhile.set(dropWhile.get() || s == getCursor().getTree());
+                            return dropWhile.get();
+                        })
                         .skip(1)
                         .findFirst() :
                 Optional.empty();
