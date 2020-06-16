@@ -21,7 +21,7 @@ import org.openrewrite.checkstyle.policy.PadPolicy
 open class EmptyForInitializerPadTest: CheckstyleRefactorVisitorTest(EmptyForInitializerPad::class) {
     @Test
     fun noSpaceInitializerPadding() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 {
                     for (; i < j; i++, j--);
@@ -42,7 +42,7 @@ open class EmptyForInitializerPadTest: CheckstyleRefactorVisitorTest(EmptyForIni
 
     @Test
     fun spaceInitializerPadding() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 {
                     for (; i < j; i++, j--);
@@ -63,7 +63,7 @@ open class EmptyForInitializerPadTest: CheckstyleRefactorVisitorTest(EmptyForIni
 
     @Test
     fun noCheckIfInitializerStartsWithLineTerminator() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 {
                     for (

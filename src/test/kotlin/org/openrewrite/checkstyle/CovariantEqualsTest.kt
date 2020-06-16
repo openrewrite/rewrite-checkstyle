@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 open class CovariantEqualsTest : CheckstyleRefactorVisitorTest(CovariantEquals::class) {
     @Test
     fun replaceWithNonCovariantEquals() {
-        val a = parse("""
+        val a = jp.parse("""
             class Test {
                 int n;
                 

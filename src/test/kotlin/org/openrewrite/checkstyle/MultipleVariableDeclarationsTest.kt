@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 open class MultipleVariableDeclarationsTest: CheckstyleRefactorVisitorTest(MultipleVariableDeclarations::class) {
     @Test
     fun replaceWithSingleVariableDeclarations() {
-        val a = parse("""
+        val a = jp.parse("""
             class Test {
                 int n = 0, m = 0;
                 int o = 0, p;

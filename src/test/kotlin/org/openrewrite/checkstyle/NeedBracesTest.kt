@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 open class NeedBracesTest: CheckstyleRefactorVisitorTest(NeedBraces::class) {
     @Test
     fun addBraces() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 int n;
                 void foo() {
@@ -64,7 +64,7 @@ open class NeedBracesTest: CheckstyleRefactorVisitorTest(NeedBraces::class) {
 
     @Test
     fun allowEmptyLoopBody() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 {
                     while (true);
@@ -88,7 +88,7 @@ open class NeedBracesTest: CheckstyleRefactorVisitorTest(NeedBraces::class) {
 
     @Test
     fun allowSingleLineStatement() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 int n;
                 void foo() {
@@ -118,7 +118,7 @@ open class NeedBracesTest: CheckstyleRefactorVisitorTest(NeedBraces::class) {
 
     @Test
     fun allowSingleLineStatementInSwitch() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 {
                     int n = 1;
@@ -164,7 +164,7 @@ open class NeedBracesTest: CheckstyleRefactorVisitorTest(NeedBraces::class) {
             }
         """.trimIndent()
 
-        val a = parse(aSource)
+        val a = jp.parse(aSource)
 
         val fixed = a.refactor().visit(configXml()).fix().fixed
 

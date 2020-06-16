@@ -18,13 +18,15 @@ package org.openrewrite.checkstyle
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.openrewrite.java.JavaParser
+import org.openrewrite.java.Java11Parser
 import org.openrewrite.java.tree.J
 
-class SpansMultipleLinesTest: JavaParser() {
+class SpansMultipleLinesTest {
+    private val jp = Java11Parser.builder().build()
+
     @Test
     fun spansMultipleLines() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 int m, n;
                 {
@@ -56,7 +58,7 @@ class SpansMultipleLinesTest: JavaParser() {
 
     @Test
     fun classDecl() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 {
                 }

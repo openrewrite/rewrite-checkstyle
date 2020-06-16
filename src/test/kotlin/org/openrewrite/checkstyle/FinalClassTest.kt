@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 open class FinalClassTest : CheckstyleRefactorVisitorTest(FinalClass::class) {
     @Test
     fun shouldBeconfigXml() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 private A(String s) {
                 }
@@ -45,7 +45,7 @@ open class FinalClassTest : CheckstyleRefactorVisitorTest(FinalClass::class) {
 
     @Test
     fun shouldNotBeconfigXml() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 private A(String s) {
                 }

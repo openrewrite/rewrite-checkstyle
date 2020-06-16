@@ -26,7 +26,7 @@ open class StaticVariableNameTest: CheckstyleRefactorVisitorTest(StaticVariableN
 
     @Test
     fun dontChangeEveryField() {
-        val a = parse("""
+        val a = jp.parse("""
             import java.util.List;
             public class A {
                List MY_LIST;
@@ -45,7 +45,7 @@ open class StaticVariableNameTest: CheckstyleRefactorVisitorTest(StaticVariableN
 
     @Test
     fun changeSingleVariableFieldAndReference() {
-        val a = parse("""
+        val a = jp.parse("""
             import java.util.*;
             public class A {
                static List<String> MY_LIST;
@@ -72,7 +72,7 @@ open class StaticVariableNameTest: CheckstyleRefactorVisitorTest(StaticVariableN
 
     @Test
     fun changeOnlyMatchingVisibility() {
-        val a = parse("""
+        val a = jp.parse("""
             import java.util.List;
             public class A {
                static List MY_LIST;

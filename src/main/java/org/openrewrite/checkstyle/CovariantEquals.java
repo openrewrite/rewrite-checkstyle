@@ -17,6 +17,7 @@ package org.openrewrite.checkstyle;
 
 import org.openrewrite.Cursor;
 import org.openrewrite.AutoConfigure;
+import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.tree.*;
 
 import java.util.ArrayList;
@@ -29,7 +30,29 @@ import static org.openrewrite.Tree.randomId;
 
 @AutoConfigure
 public class CovariantEquals extends CheckstyleRefactorVisitor {
+    private final JavaParser javaParser;
+
     public CovariantEquals() {
+        // TODO simplify this when conditional parser builder is added to rewrite-java
+        JavaParser.Builder<? extends JavaParser, ?> javaParserBuilder;
+        try {
+            if (System.getProperty("java.version").startsWith("1.8")) {
+                javaParserBuilder = (JavaParser.Builder<? extends JavaParser, ?>) Class
+                        .forName("org.openrewrite.java.Java8Parser")
+                        .getDeclaredMethod("builder")
+                        .invoke(null);
+            } else {
+                javaParserBuilder = (JavaParser.Builder<? extends JavaParser, ?>) Class
+                        .forName("org.openrewrite.java.Java11Parser")
+                        .getDeclaredMethod("builder")
+                        .invoke(null);
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("Unable to create a Java parser instance. " +
+                    "`rewrite-java-8` or `rewrite-java-11` must be on the classpath.");
+        }
+
+        this.javaParser = javaParserBuilder.build();
         setCursoringOn();
     }
 
@@ -68,7 +91,7 @@ public class CovariantEquals extends CheckstyleRefactorVisitor {
 
     private J.MethodDecl addEqualsBody(J.MethodDecl method, J.VariableDecls.NamedVar oldParamName, J.VariableDecls.NamedVar paramName) {
         String paramNameStr = paramName.printTrimmed();
-        List<Statement> equalsBody = TreeBuilder.buildSnippet(enclosingCompilationUnit(), new Cursor(getCursor(), method.getBody()),
+        List<Statement> equalsBody = TreeBuilder.buildSnippet(javaParser, enclosingCompilationUnit(), new Cursor(getCursor(), method.getBody()),
                 "if (this == " + paramNameStr + ") return true;\n" +
                         "if (" + paramNameStr + " == null || getClass() != " + paramNameStr + ".getClass()) return false;\n" +
                         "Test " + oldParamName.printTrimmed() + " = (Test) " + paramNameStr + ";\n");

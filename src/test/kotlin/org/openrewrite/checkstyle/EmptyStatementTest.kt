@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 open class EmptyStatementTest: CheckstyleRefactorVisitorTest(EmptyStatement::class) {
     @Test
     fun removeconfigXml() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 {
                     if(1 == 2);

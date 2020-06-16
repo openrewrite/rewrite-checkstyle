@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 open class DefaultComesLastTest : CheckstyleRefactorVisitorTest(DefaultComesLast::class) {
     @Test
     fun moveDefaultToLastAlongWithItsStatementsAndAddBreakIfNecessary() {
-        val a = parse("""
+        val a = jp.parse("""
             class Test {
                 int n;
                 {
@@ -64,7 +64,7 @@ open class DefaultComesLastTest : CheckstyleRefactorVisitorTest(DefaultComesLast
 
     @Test
     fun moveDefaultToLastWhenSharedWithAnotherCaseStatement() {
-        val a = parse("""
+        val a = jp.parse("""
             class Test {
                 int n;
                 {
@@ -107,7 +107,7 @@ open class DefaultComesLastTest : CheckstyleRefactorVisitorTest(DefaultComesLast
 
     @Test
     fun skipIfLastAndSharedWithCase() {
-        val a = parse("""
+        val a = jp.parse("""
             class Test {
                 int n;
                 {
@@ -147,7 +147,7 @@ open class DefaultComesLastTest : CheckstyleRefactorVisitorTest(DefaultComesLast
 
     @Test
     fun defaultIsLastAndThrows() {
-        assertUnchangedByRefactoring(configXml(), """
+        jp.assertUnchangedByRefactoring(configXml(), """
             class Test {
                 int n;
                 {
@@ -164,7 +164,7 @@ open class DefaultComesLastTest : CheckstyleRefactorVisitorTest(DefaultComesLast
 
     @Test
     fun defaultIsLastAndReturnsNonVoid() {
-        assertUnchangedByRefactoring(configXml(), """
+        jp.assertUnchangedByRefactoring(configXml(), """
             class Test {
                 public int foo(int n) {
                     switch (n) {
@@ -180,7 +180,7 @@ open class DefaultComesLastTest : CheckstyleRefactorVisitorTest(DefaultComesLast
 
     @Test
     fun dontAddBreaksIfCasesArentMoving() {
-        assertUnchangedByRefactoring(configXml(), """
+        jp.assertUnchangedByRefactoring(configXml(), """
             class Test {
                 int n;
                 boolean foo() {
@@ -198,7 +198,7 @@ open class DefaultComesLastTest : CheckstyleRefactorVisitorTest(DefaultComesLast
 
     @Test
     fun dontRemoveExtraneousDefaultCaseBreaks() {
-        assertUnchangedByRefactoring(configXml(), """
+        jp.assertUnchangedByRefactoring(configXml(), """
             class Test {
                 int n;
                 void foo() {
@@ -213,7 +213,7 @@ open class DefaultComesLastTest : CheckstyleRefactorVisitorTest(DefaultComesLast
 
     @Test
     fun allCasesGroupedWithDefault() {
-        assertUnchangedByRefactoring(configXml(), """
+        jp.assertUnchangedByRefactoring(configXml(), """
             class Test {
                 int n;
                 boolean foo() {

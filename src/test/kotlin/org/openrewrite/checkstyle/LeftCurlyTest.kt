@@ -21,7 +21,7 @@ import org.openrewrite.checkstyle.policy.LeftCurlyPolicy
 open class LeftCurlyTest: CheckstyleRefactorVisitorTest(LeftCurly::class) {
     @Test
     fun eol() {
-        val a = parse("""
+        val a = jp.parse("""
             class A
             {
                 {
@@ -55,7 +55,7 @@ open class LeftCurlyTest: CheckstyleRefactorVisitorTest(LeftCurly::class) {
 
     @Test
     fun nl() {
-        val a = parse("""
+        val a = jp.parse("""
             class A {
                 {
                     if(1 == 2) {
@@ -90,7 +90,7 @@ open class LeftCurlyTest: CheckstyleRefactorVisitorTest(LeftCurly::class) {
 
     @Test
     fun nlow() {
-        val a = parse("""
+        val a = jp.parse("""
             class A {
                 {
                     if(1 == 2)
@@ -131,7 +131,7 @@ open class LeftCurlyTest: CheckstyleRefactorVisitorTest(LeftCurly::class) {
 
     @Test
     fun caseBlocks() {
-        val a = parse("""
+        val a = jp.parse("""
             class A {
                 {
                     switch(1) {
@@ -164,7 +164,7 @@ open class LeftCurlyTest: CheckstyleRefactorVisitorTest(LeftCurly::class) {
 
     @Test
     fun dontStripNewClassInstanceInitializers() {
-        assertUnchangedByRefactoring(configXml(), """
+        jp.assertUnchangedByRefactoring(configXml(), """
             public class JacksonUtils {
                 static ObjectMapper stdConfigure(ObjectMapper mapper) {
                     return mapper

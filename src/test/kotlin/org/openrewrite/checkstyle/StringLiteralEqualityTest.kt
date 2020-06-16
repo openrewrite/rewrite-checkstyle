@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 open class StringLiteralEqualityTest: CheckstyleRefactorVisitorTest(StringLiteralEquality::class) {
     @Test
     fun stringLiteralEqualityReplacedWithEquals() {
-        val a = parse("""
+        val a = jp.parse("""
             class Test {
                 String a;
                 {

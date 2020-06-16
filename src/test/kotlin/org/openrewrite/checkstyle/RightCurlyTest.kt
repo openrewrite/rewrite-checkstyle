@@ -21,7 +21,7 @@ import org.openrewrite.checkstyle.policy.RightCurlyPolicy
 open class RightCurlyTest: CheckstyleRefactorVisitorTest(RightCurly::class) {
     @Test
     fun alone() {
-        val a = parse("""
+        val a = jp.parse("""
             class A {
                 {
                     if(1 == 2) {} else if(2 == 3) {} else {}
@@ -69,7 +69,7 @@ open class RightCurlyTest: CheckstyleRefactorVisitorTest(RightCurly::class) {
 
     @Test
     fun aloneOrSingleline() {
-        val a = parse("""
+        val a = jp.parse("""
             class A {
                 {
                     if(1 == 2) {} else if(2 == 3) {} else {}
@@ -110,7 +110,7 @@ open class RightCurlyTest: CheckstyleRefactorVisitorTest(RightCurly::class) {
 
     @Test
     fun same() {
-        val a = parse("""
+        val a = jp.parse("""
             class A {
                 {
                     if(1 == 2) {} else if(2 == 3) {}

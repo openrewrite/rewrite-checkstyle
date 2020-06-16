@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 open class SimplifyBooleanExpressionTest: CheckstyleRefactorVisitorTest(SimplifyBooleanExpression::class) {
     @Test
     fun simplifyBooleanExpression() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 {
                     boolean a = !false;

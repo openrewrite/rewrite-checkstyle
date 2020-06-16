@@ -28,7 +28,7 @@ open class HiddenFieldTest : CheckstyleRefactorVisitorTest(HiddenField::class) {
             }
         """.trimIndent()
 
-        val a = parse("""
+        val a = jp.parse("""
             public class A extends B {
                 int n;
                 int n1;
@@ -69,7 +69,7 @@ open class HiddenFieldTest : CheckstyleRefactorVisitorTest(HiddenField::class) {
 
     @Test
     fun ignorePattern() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 int n;
                 
@@ -92,7 +92,7 @@ open class HiddenFieldTest : CheckstyleRefactorVisitorTest(HiddenField::class) {
 
     @Test
     fun ignoreConstructorParameter() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 int n;
                 
@@ -116,7 +116,7 @@ open class HiddenFieldTest : CheckstyleRefactorVisitorTest(HiddenField::class) {
 
     @Test
     fun ignoreSetter() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 int n;
                 
@@ -148,7 +148,7 @@ open class HiddenFieldTest : CheckstyleRefactorVisitorTest(HiddenField::class) {
 
     @Test
     fun ignoreSetterThatReturnsItsClass() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 int n;
                 
@@ -176,7 +176,7 @@ open class HiddenFieldTest : CheckstyleRefactorVisitorTest(HiddenField::class) {
 
     @Test
     fun ignoreAbstractMethods() {
-        val a = parse("""
+        val a = jp.parse("""
             public abstract class A {
                 int n;
                 

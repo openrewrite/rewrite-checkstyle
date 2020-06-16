@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 open class NoFinalizerTest: CheckstyleRefactorVisitorTest(NoFinalizer::class) {
     @Test
     fun noFinalizer() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 @Override
                 protected void finalize() throws Throwable {

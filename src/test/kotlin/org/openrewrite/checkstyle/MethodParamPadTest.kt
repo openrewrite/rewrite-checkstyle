@@ -21,7 +21,7 @@ import org.openrewrite.checkstyle.policy.PadPolicy
 open class MethodParamPadTest: CheckstyleRefactorVisitorTest(MethodParamPad::class) {
     @Test
     fun noSpaceInitializerPadding() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A extends B {
                 A () {
                     super ();
@@ -64,7 +64,7 @@ open class MethodParamPadTest: CheckstyleRefactorVisitorTest(MethodParamPad::cla
 
     @Test
     fun spaceInitializerPadding() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A extends B {
                 A() {
                     super();
@@ -107,7 +107,7 @@ open class MethodParamPadTest: CheckstyleRefactorVisitorTest(MethodParamPad::cla
 
     @Test
     fun allowLineBreaks() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A extends B {
                 void foo
                     (int n) {}

@@ -22,7 +22,7 @@ open class EmptyBlockTest : CheckstyleRefactorVisitorTest(EmptyBlock::class) {
 
     @Test
     fun emptySwitch() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 {
                     int i = 0;
@@ -46,7 +46,7 @@ open class EmptyBlockTest : CheckstyleRefactorVisitorTest(EmptyBlock::class) {
 
     @Test
     fun emptySynchronized() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 {
                     final Object o = new Object();
@@ -70,7 +70,7 @@ open class EmptyBlockTest : CheckstyleRefactorVisitorTest(EmptyBlock::class) {
 
     @Test
     fun emptyTry() {
-        val a = parse("""
+        val a = jp.parse("""
             import java.io.*;
 
             public class A {
@@ -96,7 +96,7 @@ open class EmptyBlockTest : CheckstyleRefactorVisitorTest(EmptyBlock::class) {
 
     @Test
     fun emptyCatchBlockWithIOException() {
-        val a = parse("""
+        val a = jp.parse("""
             import java.io.IOException;
             import java.nio.file.*;
             
@@ -132,7 +132,7 @@ open class EmptyBlockTest : CheckstyleRefactorVisitorTest(EmptyBlock::class) {
 
     @Test
     fun emptyCatchBlockWithExceptionAndEmptyFinally() {
-        val a = parse("""
+        val a = jp.parse("""
             import java.nio.file.*;
             
             public class A {
@@ -166,7 +166,7 @@ open class EmptyBlockTest : CheckstyleRefactorVisitorTest(EmptyBlock::class) {
 
     @Test
     fun emptyLoops() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 public void foo() {
                     while(true) {
@@ -196,7 +196,7 @@ open class EmptyBlockTest : CheckstyleRefactorVisitorTest(EmptyBlock::class) {
 
     @Test
     fun emptyStaticInit() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 static {}
                 {}
@@ -215,7 +215,7 @@ open class EmptyBlockTest : CheckstyleRefactorVisitorTest(EmptyBlock::class) {
 
     @Test
     fun emptyInstanceInit() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 static {}
                 {}
@@ -234,7 +234,7 @@ open class EmptyBlockTest : CheckstyleRefactorVisitorTest(EmptyBlock::class) {
 
     @Test
     fun extractSideEffectsFromEmptyIfsWithNoElse() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 int n = sideEffect();
             
@@ -291,7 +291,7 @@ open class EmptyBlockTest : CheckstyleRefactorVisitorTest(EmptyBlock::class) {
     @Test
     fun invertIfWithOnlyElseClauseAndBinaryOperator() {
         // extra spaces after the original if condition to ensure that we preserve the if statement's block formatting
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 {
                     if("foo".length() > 3)   {
@@ -318,7 +318,7 @@ open class EmptyBlockTest : CheckstyleRefactorVisitorTest(EmptyBlock::class) {
 
     @Test
     fun invertIfWithElseIfElseClause() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 {
                     if("foo".length() > 3) {

@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 open class FallThroughTest : CheckstyleRefactorVisitorTest(FallThrough::class) {
     @Test
     fun addBreaksFallthroughCases() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 int i;
                 {

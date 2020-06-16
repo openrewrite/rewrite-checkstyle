@@ -15,6 +15,7 @@
  */
 package org.openrewrite.checkstyle;
 
+import org.openrewrite.Tree;
 import org.openrewrite.checkstyle.policy.BlockPolicy;
 import org.openrewrite.checkstyle.policy.Token;
 import org.openrewrite.AutoConfigure;
@@ -22,15 +23,14 @@ import org.openrewrite.java.DeleteStatement;
 import org.openrewrite.java.JavaRefactorVisitor;
 import org.openrewrite.java.tree.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toSet;
 import static java.util.stream.IntStream.range;
 import static org.openrewrite.Formatting.EMPTY;
 import static org.openrewrite.Formatting.format;
@@ -41,7 +41,7 @@ import static org.openrewrite.Tree.randomId;
  */
 @AutoConfigure
 public class EmptyBlock extends CheckstyleRefactorVisitor {
-    private static final Set<Token> DEFAULT_TOKENS = Set.of(
+    private static final Set<Token> DEFAULT_TOKENS = Stream.of(
             Token.LITERAL_WHILE,
             Token.LITERAL_TRY,
             Token.LITERAL_FINALLY,
@@ -53,7 +53,7 @@ public class EmptyBlock extends CheckstyleRefactorVisitor {
             Token.STATIC_INIT,
             Token.LITERAL_SWITCH,
             Token.LITERAL_SYNCHRONIZED
-    );
+    ).collect(toSet());
 
     private BlockPolicy block;
     private Set<Token> tokens;
@@ -128,8 +128,8 @@ public class EmptyBlock extends CheckstyleRefactorVisitor {
         J.Try.Catch c = refactor(catzh, super::visitCatch);
 
         if (tokens.contains(Token.LITERAL_CATCH) && isEmptyBlock(c.getBody())) {
-            var exceptionType = c.getParam().getTree().getTypeExpr();
-            var exceptionClassType = exceptionType == null ? null : TypeUtils.asClass(exceptionType.getType());
+            TypeTree exceptionType = c.getParam().getTree().getTypeExpr();
+            JavaType.Class exceptionClassType = exceptionType == null ? null : TypeUtils.asClass(exceptionType.getType());
 
             final String throwName;
             final JavaType.Class throwClass;
@@ -223,7 +223,7 @@ public class EmptyBlock extends CheckstyleRefactorVisitor {
         // NOTE: then part MUST be a J.Block, because otherwise impossible to have an empty if condition followed by else-if/else chain
         J.Block<J> thenPart = (J.Block<J>) i.getThenPart();
 
-        var containing = getCursor().getParentOrThrow().getTree();
+        Tree containing = getCursor().getParentOrThrow().getTree();
         Statement elseStatement = i.getElsePart().getStatement();
         List<J> elseStatementBody;
         if (elseStatement instanceof J.Block) {

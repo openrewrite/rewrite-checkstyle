@@ -22,7 +22,7 @@ import org.openrewrite.checkstyle.policy.WrapPolicy
 open class OperatorWrapTest: CheckstyleRefactorVisitorTest(OperatorWrap::class) {
     @Test
     fun operatorOnNewline() {
-        val a = parse("""
+        val a = jp.parse("""
             import java.io.*;
             class A {
                 {
@@ -88,7 +88,7 @@ open class OperatorWrapTest: CheckstyleRefactorVisitorTest(OperatorWrap::class) 
 
     @Test
     fun operatorOnEndOfLine() {
-        val a = parse("""
+        val a = jp.parse("""
             import java.io.*;
             class A {
                 {

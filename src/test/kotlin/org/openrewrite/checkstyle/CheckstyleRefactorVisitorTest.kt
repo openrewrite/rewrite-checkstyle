@@ -15,11 +15,14 @@
  */
 package org.openrewrite.checkstyle
 
+import org.openrewrite.java.Java11Parser
 import org.openrewrite.java.JavaParser
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 
-abstract class CheckstyleRefactorVisitorTest(private val visitor: KClass<out CheckstyleRefactorVisitor>) : JavaParser() {
+abstract class CheckstyleRefactorVisitorTest(private val visitor: KClass<out CheckstyleRefactorVisitor>) {
+    protected val jp: JavaParser = Java11Parser.builder().build()
+
     fun configXml(vararg properties: Pair<String, Any>) = visitor.createInstance().apply {
         setConfig(
         """

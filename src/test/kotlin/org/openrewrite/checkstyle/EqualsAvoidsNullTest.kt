@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 open class EqualsAvoidsNullTest : CheckstyleRefactorVisitorTest(EqualsAvoidsNull::class) {
     @Test
     fun invertConditional() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 {
                     String s = null;
@@ -46,7 +46,7 @@ open class EqualsAvoidsNullTest : CheckstyleRefactorVisitorTest(EqualsAvoidsNull
 
     @Test
     fun removeUnnecessaryNullCheckAndParens() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 {
                     String s = null;

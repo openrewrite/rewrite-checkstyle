@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 open class HideUtilityClassConstructorTest: CheckstyleRefactorVisitorTest(HideUtilityClassConstructor::class) {
     @Test
     fun hideUtilityConstructor() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 public A() {
                 }

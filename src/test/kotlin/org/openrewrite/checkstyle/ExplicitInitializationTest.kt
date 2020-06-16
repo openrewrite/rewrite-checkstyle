@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 open class ExplicitInitializationTest : CheckstyleRefactorVisitorTest(ExplicitInitialization::class) {
     @Test
     fun removeExplicitInitialization() {
-        val a = parse("""
+        val a = jp.parse("""
             class Test {
                 private int a = 0;
                 private long b = 0L;

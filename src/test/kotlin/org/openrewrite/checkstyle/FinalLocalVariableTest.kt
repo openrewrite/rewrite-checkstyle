@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 open class FinalLocalVariableTest: CheckstyleRefactorVisitorTest(FinalLocalVariable::class) {
     @Test
     fun localVariablesAreMadeFinal() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 {
                     int n = 1;
@@ -45,7 +45,7 @@ open class FinalLocalVariableTest: CheckstyleRefactorVisitorTest(FinalLocalVaria
 
     @Test
     fun multiVariables() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 {
                     int a, b = 1;

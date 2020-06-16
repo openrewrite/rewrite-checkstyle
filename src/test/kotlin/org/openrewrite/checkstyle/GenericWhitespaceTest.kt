@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 class GenericWhitespaceTest: CheckstyleRefactorVisitorTest(GenericWhitespace::class) {
     @Test
     fun genericWhitespace() {
-        val a = parse("""
+        val a = jp.parse("""
             import java.util.*;
             public class A < T1, T2 > {
                 Map < String, Integer > map;
@@ -63,7 +63,7 @@ class GenericWhitespaceTest: CheckstyleRefactorVisitorTest(GenericWhitespace::cl
 
     @Test
     fun stripUpToLinebreak() {
-        val a = parse("""
+        val a = jp.parse("""
             import java.util.HashMap;
             
             // extra space after 'HashMap<' and after 'Integer'
@@ -90,7 +90,7 @@ class GenericWhitespaceTest: CheckstyleRefactorVisitorTest(GenericWhitespace::cl
 
     @Test
     fun doesntConsiderLinebreaksWhitespace() {
-        assertUnchangedByRefactoring(GenericWhitespace(), """
+        jp.assertUnchangedByRefactoring(GenericWhitespace(), """
             import java.util.HashMap;
             
             public class A extends HashMap<

@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 open class SimplifyBooleanReturnTest: CheckstyleRefactorVisitorTest(SimplifyBooleanReturn::class) {
     @Test
     fun simplifyBooleanReturn() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 boolean ifNoElse() {
                     if (isOddMillis()) {
@@ -59,7 +59,7 @@ open class SimplifyBooleanReturnTest: CheckstyleRefactorVisitorTest(SimplifyBool
 
     @Test
     fun dontSimplifyToReturnUnlessLastStatement() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 public boolean absurdEquals(Object o) {
                     if(this == o) {
@@ -88,7 +88,7 @@ open class SimplifyBooleanReturnTest: CheckstyleRefactorVisitorTest(SimplifyBool
 
     @Test
     fun nestedIfsWithNoBlock() {
-        assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
+        jp.assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
             public class A {
                 public boolean absurdEquals(Object o) {
                     if(this == o)
@@ -102,7 +102,7 @@ open class SimplifyBooleanReturnTest: CheckstyleRefactorVisitorTest(SimplifyBool
 
     @Test
     fun dontAlterWhenElseIfPresent() {
-        assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
+        jp.assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
             public class A {
                 public boolean foo(int n) {
                     if (n == 1) {
@@ -121,7 +121,7 @@ open class SimplifyBooleanReturnTest: CheckstyleRefactorVisitorTest(SimplifyBool
 
     @Test
     fun dontAlterWhenElseContainsSomethingOtherThanReturn() {
-        assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
+        jp.assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
             public class A {
                 public boolean foo(int n) {
                     if (n == 1) {
@@ -138,7 +138,7 @@ open class SimplifyBooleanReturnTest: CheckstyleRefactorVisitorTest(SimplifyBool
 
     @Test
     fun onlySimplifyToReturnWhenLastStatement() {
-        assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
+        jp.assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
             import java.util.*;
             public class A {
                 public static boolean deepEquals(List<byte[]> l, List<byte[]> r) {
@@ -155,7 +155,7 @@ open class SimplifyBooleanReturnTest: CheckstyleRefactorVisitorTest(SimplifyBool
 
     @Test
     fun wrapNotReturnsOfTernaryIfConditionsInParentheses() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 Object failure;
                 public boolean equals(Object o) {

@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 open class UnnecessaryParenthesesTest: CheckstyleRefactorVisitorTest(UnnecessaryParentheses::class) {
     @Test
     fun simpleUnwrapping() {
-        val a = parse("""
+        val a = jp.parse("""
             import java.util.*;
             public class A {
                 int square(int a, int b) {

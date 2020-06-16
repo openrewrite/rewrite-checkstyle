@@ -21,7 +21,7 @@ open class NoWhitespaceBeforeTest: CheckstyleRefactorVisitorTest(NoWhitespaceBef
 
     @Test
     fun noWhitespaceBefore() {
-        val a = parse("""
+        val a = jp.parse("""
             package a ;
             import java.util.* ;
             public abstract class A {
@@ -86,7 +86,7 @@ open class NoWhitespaceBeforeTest: CheckstyleRefactorVisitorTest(NoWhitespaceBef
 
     @Test
     fun allowLinebreaks() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 int m;
             
@@ -114,7 +114,7 @@ open class NoWhitespaceBeforeTest: CheckstyleRefactorVisitorTest(NoWhitespaceBef
 
     @Test
     fun dontStripLastParameterSuffixInMethodDeclaration() {
-        assertUnchangedByRefactoring(configXml(), """
+        jp.assertUnchangedByRefactoring(configXml(), """
             package a;
             public abstract class A {
                 abstract A foo(
@@ -127,7 +127,7 @@ open class NoWhitespaceBeforeTest: CheckstyleRefactorVisitorTest(NoWhitespaceBef
 
     @Test
     fun dontStripLastArgumentSuffixInMethodInvocation() {
-        assertUnchangedByRefactoring(configXml(), """
+        jp.assertUnchangedByRefactoring(configXml(), """
             package a;
             public class A {
                 {
@@ -142,7 +142,7 @@ open class NoWhitespaceBeforeTest: CheckstyleRefactorVisitorTest(NoWhitespaceBef
 
     @Test
     fun dontStripChainedMethodInvocationsByDefault() {
-        assertUnchangedByRefactoring(configXml(), """
+        jp.assertUnchangedByRefactoring(configXml(), """
             package a;
             public class A {
                 public static A a(int... n) { return new A(); }
@@ -161,7 +161,7 @@ open class NoWhitespaceBeforeTest: CheckstyleRefactorVisitorTest(NoWhitespaceBef
 
     @Test
     fun dontStripStatementSuffixInTernaryConditionAndTrue() {
-        assertUnchangedByRefactoring(configXml(), """
+        jp.assertUnchangedByRefactoring(configXml(), """
             package a;
             import java.util.*;
             public class A {
@@ -175,7 +175,7 @@ open class NoWhitespaceBeforeTest: CheckstyleRefactorVisitorTest(NoWhitespaceBef
 
     @Test
     fun dontStripStatementSuffixPrecedingInstanceof() {
-        assertUnchangedByRefactoring(configXml(), """
+        jp.assertUnchangedByRefactoring(configXml(), """
             package a;
             import java.util.*;
             public class A {
@@ -189,7 +189,7 @@ open class NoWhitespaceBeforeTest: CheckstyleRefactorVisitorTest(NoWhitespaceBef
 
     @Test
     fun dontStripTryWithResourcesEndParens() {
-        assertUnchangedByRefactoring(configXml(), """
+        jp.assertUnchangedByRefactoring(configXml(), """
             import java.util.zip.*;
             import java.io.*;
             public class A {
@@ -208,7 +208,7 @@ open class NoWhitespaceBeforeTest: CheckstyleRefactorVisitorTest(NoWhitespaceBef
 
     @Test
     fun dontStripAnnotationArguments() {
-        assertUnchangedByRefactoring(configXml(), """
+        jp.assertUnchangedByRefactoring(configXml(), """
             public class A {
                 @SuppressFBWarnings(
                     value = "SECPR",

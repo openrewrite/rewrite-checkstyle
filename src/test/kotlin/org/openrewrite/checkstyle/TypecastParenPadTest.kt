@@ -39,14 +39,14 @@ open class TypecastParenPadTest: CheckstyleRefactorVisitorTest(TypecastParenPad:
 
     @Test
     fun shouldPadTypecast() {
-        val fixed = parse(unpadded).refactor().visit(configXml("option" to PadPolicy.SPACE))
+        val fixed = jp.parse(unpadded).refactor().visit(configXml("option" to PadPolicy.SPACE))
                 .fix().fixed
         assertRefactored(fixed, padded)
     }
 
     @Test
     fun shouldUnpadTypecast() {
-        val fixed = parse(padded).refactor().visit(configXml())
+        val fixed = jp.parse(padded).refactor().visit(configXml())
                 .fix().fixed
         assertRefactored(fixed, unpadded)
     }

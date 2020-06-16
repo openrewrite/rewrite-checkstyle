@@ -24,7 +24,9 @@ import org.openrewrite.java.tree.JavaType;
 import org.openrewrite.java.tree.Statement;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
@@ -54,7 +56,11 @@ public class SimplifyBooleanReturn extends CheckstyleRefactorVisitor {
                     .map(J.Return::getExpr);
 
             if (followingStatements.isEmpty() || singleFollowingStatement.map(r -> isLiteralFalse(r) || isLiteralTrue(r)).orElse(false)) {
-                J.Return retrn = getReturnIfOnlyStatementInThen(iff).orElseThrow();
+                J.Return retrn = getReturnIfOnlyStatementInThen(iff).orElse(null);
+                if(retrn == null) {
+                    throw new NoSuchElementException("No return statement");
+                }
+
                 Expression ifCondition = i.getIfCondition().getTree();
 
                 if (isLiteralTrue(retrn.getExpr())) {
@@ -63,7 +69,7 @@ public class SimplifyBooleanReturn extends CheckstyleRefactorVisitor {
                         return retrn
                                 .withExpr(ifCondition.withFormatting(format(" ")))
                                 .withFormatting(i.getFormatting());
-                    } else if (singleFollowingStatement.isEmpty() &&
+                    } else if (!singleFollowingStatement.isPresent() &&
                             getReturnExprIfOnlyStatementInElseThen(i).map(this::isLiteralFalse).orElse(false)) {
                         if (i.getElsePart() != null) {
                             andThen(new DeleteStatement(i.getElsePart().getStatement()));
@@ -79,7 +85,7 @@ public class SimplifyBooleanReturn extends CheckstyleRefactorVisitor {
                     if (singleFollowingStatement.map(this::isLiteralTrue).orElse(false) && i.getElsePart() == null) {
                         andThen(new DeleteStatement(followingStatements.get(0)));
                         returnThenPart = true;
-                    } else if (singleFollowingStatement.isEmpty() && getReturnExprIfOnlyStatementInElseThen(i)
+                    } else if (!singleFollowingStatement.isPresent() && getReturnExprIfOnlyStatementInElseThen(i)
                             .map(this::isLiteralTrue).orElse(false)) {
                         if (i.getElsePart() != null) {
                             andThen(new DeleteStatement(i.getElsePart().getStatement()));
@@ -89,7 +95,7 @@ public class SimplifyBooleanReturn extends CheckstyleRefactorVisitor {
 
                     if (returnThenPart) {
                         //  we need to NOT the expression inside the if condition
-                        var maybeParenthesizedCondition = ifCondition instanceof J.Binary || ifCondition instanceof J.Ternary ?
+                        Expression maybeParenthesizedCondition = ifCondition instanceof J.Binary || ifCondition instanceof J.Ternary ?
                                 new J.Parentheses<>(randomId(), ifCondition, EMPTY) :
                                 ifCondition;
 
@@ -117,7 +123,12 @@ public class SimplifyBooleanReturn extends CheckstyleRefactorVisitor {
 
     private List<Statement> followingStatements() {
         J.Block<Statement> block = getCursor().getParentOrThrow().getTree();
-        return block.getStatements().stream().dropWhile(s -> s != getCursor().getTree())
+        AtomicBoolean dropWhile = new AtomicBoolean(false);
+        return block.getStatements().stream()
+                .filter(s -> {
+                    dropWhile.set(dropWhile.get() || s == getCursor().getTree());
+                    return dropWhile.get();
+                })
                 .skip(1).collect(toList());
     }
 

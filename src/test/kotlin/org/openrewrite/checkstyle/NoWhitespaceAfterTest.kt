@@ -30,7 +30,7 @@ open class NoWhitespaceAfterTest: CheckstyleRefactorVisitorTest(NoWhitespaceAfte
             }
         """.trimIndent()
 
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 int m;
             
@@ -102,7 +102,7 @@ open class NoWhitespaceAfterTest: CheckstyleRefactorVisitorTest(NoWhitespaceAfte
 
     @Test
     fun dontAllowLinebreaks() {
-        val a = parse("""
+        val a = jp.parse("""
             public class A {
                 int m;
             
@@ -135,7 +135,7 @@ open class NoWhitespaceAfterTest: CheckstyleRefactorVisitorTest(NoWhitespaceAfte
      */
     @Test
     fun dontChangeAnnotationValueNewArrays() {
-        assertUnchangedByRefactoring(configXml(), """
+        jp.assertUnchangedByRefactoring(configXml(), """
             @SuppressWarnings(value = {
                 "all",
                 "unchecked"
@@ -147,7 +147,7 @@ open class NoWhitespaceAfterTest: CheckstyleRefactorVisitorTest(NoWhitespaceAfte
 
     @Test
     fun dontChangeFirstAndLastValuesOfArrayInitializer() {
-        assertUnchangedByRefactoring(configXml(), """
+        jp.assertUnchangedByRefactoring(configXml(), """
             public class A {
                 int[] ns = {
                     0,
