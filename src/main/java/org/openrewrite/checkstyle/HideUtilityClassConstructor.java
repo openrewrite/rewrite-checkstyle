@@ -31,9 +31,10 @@ public class HideUtilityClassConstructor extends CheckstyleRefactorVisitor {
         J.ClassDecl c = refactor(classDecl, super::visitClassDecl);
 
         if (classDecl.getBody().getStatements().stream()
-                .allMatch(s -> !(s instanceof J.MethodDecl) ||
-                        !((J.MethodDecl) s).isConstructor() ||
-                        !((J.MethodDecl) s).hasModifier("static"))) {
+                .allMatch(s -> s instanceof J.MethodDecl && (
+                        ((J.MethodDecl) s).isConstructor() ||
+                                ((J.MethodDecl) s).hasModifier("static"))
+                )) {
             c = c.withBody(c.getBody().withStatements(c.getBody().getStatements().stream().map(s -> {
                 J.MethodDecl ctor = (J.MethodDecl) s;
 
