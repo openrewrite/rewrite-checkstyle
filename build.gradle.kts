@@ -40,7 +40,9 @@ group = "org.openrewrite.plan"
 description = "Eliminate Checkstyle issues. Automatically."
 
 repositories {
-    jcenter()
+    mavenLocal()
+    maven { url = uri("https://dl.bintray.com/openrewrite/maven") }
+    mavenCentral()
 }
 
 configurations.all {
@@ -65,9 +67,6 @@ dependencies {
 
     implementation("ch.qos.logback:logback-classic:1.0.13")
 
-    compileOnly("org.projectlombok:lombok:latest.release")
-    annotationProcessor("org.projectlombok:lombok:latest.release")
-
     testImplementation("org.jetbrains.kotlin:kotlin-reflect")
     testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
@@ -75,7 +74,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:latest.release")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:latest.release")
 
-    testImplementation("org.openrewrite:rewrite-java-11:latest.release")
+    testImplementation("org.openrewrite:rewrite-java-11:latest.integration")
 
     testImplementation("org.assertj:assertj-core:latest.release")
 }

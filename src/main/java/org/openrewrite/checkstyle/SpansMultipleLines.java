@@ -15,7 +15,6 @@
  */
 package org.openrewrite.checkstyle;
 
-import lombok.Getter;
 import org.openrewrite.Tree;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.JavaSourceVisitor;
@@ -26,7 +25,6 @@ import java.util.Spliterators;
 import static java.util.stream.StreamSupport.stream;
 
 class SpansMultipleLines extends JavaSourceVisitor<Boolean> {
-    @Getter
     private final J scope;
 
     @Nullable
