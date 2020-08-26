@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test
 
 open class FinalClassTest : CheckstyleRefactorVisitorTest(FinalClass()) {
     @Test
-    fun shouldBeconfigXml() = assertRefactored(
+    fun makeFinal() = assertRefactored(
             before = """
                 public class A {
                     private A(String s) {
@@ -41,17 +41,8 @@ open class FinalClassTest : CheckstyleRefactorVisitorTest(FinalClass()) {
     )
 
     @Test
-    fun shouldNotBeconfigXml() = assertRefactored(
+    fun dontMakeFinal() = assertUnchanged(
             before = """
-                public class A {
-                    private A(String s) {
-                    }
-                    
-                    public A() {
-                    }
-                }
-            """,
-            after = """
                 public class A {
                     private A(String s) {
                     }

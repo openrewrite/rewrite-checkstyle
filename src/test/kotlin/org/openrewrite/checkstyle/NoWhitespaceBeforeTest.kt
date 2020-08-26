@@ -26,19 +26,19 @@ open class NoWhitespaceBeforeTest: CheckstyleRefactorVisitorTest(NoWhitespaceBef
                 before = """
                     package a ;
                     import java.util.* ;
-                    public abstract class A {
-                        int m ;
+                    import java.util.function.*;
                     
+                    public abstract class A {
                         {
-                            int n = 0 ;
+                            int b = 0 ;
                             int n , o = 0 ;
                             n ++ ;
                             n -- ;
-                            new A() 
+                            new C() 
                                 .m = 2 ;
                             foo(1 , 2) .foo(3 , 4);
                             List <String > generic = new ArrayList < >() ;
-                            var a = Function ::identity ;
+                            Supplier<Function<String, String > > a = Function ::identity ;
                             for(int i = 0 , j = 0 ; i < 2 ; i++ , j++) ;
                             while(true) ;
                             do { } while(true) ;
@@ -47,26 +47,31 @@ open class NoWhitespaceBeforeTest: CheckstyleRefactorVisitorTest(NoWhitespaceBef
                         
                         abstract A foo(int n , int m, int ... others) ;
                     }
+
                     
                     interface B {
                         void foo() ;
+                    }
+                    
+                    class C {
+                        int m;
                     }
                 """,
                 after = """
                     package a;
                     import java.util.*;
-                    public abstract class A {
-                        int m;
+                    import java.util.function.*;
                     
+                    public class A {
                         {
-                            int n = 0;
+                            int b = 0;
                             int n, o = 0;
                             n++;
                             n--;
-                            new A().m = 2;
+                            new C().m = 2;
                             foo(1, 2).foo(3, 4);
                             List<String> generic = new ArrayList<>();
-                            var a = Function::identity;
+                            Supplier<Function<String, String>> a = Function::identity;
                             for(int i = 0, j = 0; i < 2; i++, j++);
                             while(true);
                             do { } while(true);
@@ -79,6 +84,10 @@ open class NoWhitespaceBeforeTest: CheckstyleRefactorVisitorTest(NoWhitespaceBef
                     interface B {
                         void foo();
                     }
+                    
+                    class C {
+                        int m;
+                    }
                 """
         )
     }
@@ -86,18 +95,8 @@ open class NoWhitespaceBeforeTest: CheckstyleRefactorVisitorTest(NoWhitespaceBef
     @Test
     fun allowLinebreaks() {
         setProperties("tokens" to "DOT", "allowLineBreaks" to true)
-        assertRefactored(
+        assertUnchanged(
                 before = """
-                    public class A {
-                        int m;
-                    
-                        {
-                            new A()
-                                .m = 2;
-                        }
-                    }
-                """,
-                after = """
                     public class A {
                         int m;
                     

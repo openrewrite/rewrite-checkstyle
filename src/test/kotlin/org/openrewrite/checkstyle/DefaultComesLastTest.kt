@@ -101,24 +101,8 @@ open class DefaultComesLastTest : CheckstyleRefactorVisitorTest(DefaultComesLast
     @Test
     fun skipIfLastAndSharedWithCase() {
         setProperties("skipIfLastAndSharedWithCase" to true)
-        assertRefactored(
+        assertUnchanged(
                 before = """
-                    class Test {
-                        int n;
-                        {
-                            switch (n) {
-                                case 1:
-                                    break;
-                                case 2:
-                                default:
-                                    break;
-                                case 3:
-                                    break;
-                            }
-                        }
-                    }
-                """,
-                after = """
                     class Test {
                         int n;
                         {

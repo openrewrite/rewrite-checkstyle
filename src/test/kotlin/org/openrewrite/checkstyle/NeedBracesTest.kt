@@ -62,16 +62,8 @@ open class NeedBracesTest: CheckstyleRefactorVisitorTest(NeedBraces()) {
     @Test
     fun allowEmptyLoopBody() {
         setProperties("allowEmptyLoopBody" to true)
-        assertRefactored(
+        assertUnchanged(
                 before = """
-                    public class A {
-                        {
-                            while (true);
-                            for(int i = 0; i < 10; i++);
-                        }
-                    }
-                """,
-                after = """
                     public class A {
                         {
                             while (true);
@@ -85,19 +77,8 @@ open class NeedBracesTest: CheckstyleRefactorVisitorTest(NeedBraces()) {
     @Test
     fun allowSingleLineStatement() {
         setProperties("allowSingleLineStatement" to true)
-        assertRefactored(
+        assertUnchanged(
                 before = """
-                    public class A {
-                        int n;
-                        void foo() {
-                            if (n == 1) return;
-                            while (true) return;
-                            do this.notify(); while (true);
-                            for (int i = 0; ; ) this.notify();
-                        }
-                    }
-                """,
-                after = """
                     public class A {
                         int n;
                         void foo() {
@@ -117,20 +98,8 @@ open class NeedBracesTest: CheckstyleRefactorVisitorTest(NeedBraces()) {
                 "allowSingleLineStatements" to true,
                 "tokens" to "LITERAL_CASE,LITERAL_DEFAULT"
         )
-        assertRefactored(
+        assertUnchanged(
                 before = """
-                    public class A {
-                        {
-                            int n = 1;
-                            switch (n) {
-                              case 1: counter++; break;
-                              case 6: counter += 10; break;
-                              default: counter = 100; break;
-                            }
-                        }
-                    }
-                """,
-                after = """
                     public class A {
                         {
                             int n = 1;

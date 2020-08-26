@@ -20,15 +20,8 @@ import org.openrewrite.checkstyle.policy.PadPolicy
 
 open class EmptyForIteratorPadTest : CheckstyleRefactorVisitorTest(EmptyForIteratorPad()) {
     @Test
-    fun doesntChangeIfIteratorIsPresent() = assertRefactored(
+    fun doesntChangeIfIteratorIsPresent() = assertUnchanged(
             before = """
-                public class A {
-                    {
-                        for (int i = 0; i < 2; i++ );
-                    }
-                }
-            """,
-            after = """
                 public class A {
                     {
                         for (int i = 0; i < 2; i++ );
@@ -77,16 +70,8 @@ open class EmptyForIteratorPadTest : CheckstyleRefactorVisitorTest(EmptyForItera
     }
 
     @Test
-    fun noCheckIfIteratorEndsWithLineTerminator() = assertRefactored(
+    fun noCheckIfIteratorEndsWithLineTerminator() = assertUnchanged(
             before = """
-                public class A {
-                    {
-                        for (int i = 0; i < 2;
-                            );
-                    }
-                }
-            """,
-            after = """
                 public class A {
                     {
                         for (int i = 0; i < 2;

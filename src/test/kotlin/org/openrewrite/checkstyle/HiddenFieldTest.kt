@@ -66,16 +66,8 @@ open class HiddenFieldTest : CheckstyleRefactorVisitorTest(HiddenField()) {
     @Test
     fun ignorePattern() {
         setProperties("ignoreFormat" to "\\w+")
-        assertRefactored(
+        assertUnchanged(
                 before = """
-                    public class A {
-                        int n;
-                        
-                        public void foo(int n) {
-                        }
-                    }
-                """,
-                after = """
                     public class A {
                         int n;
                         
@@ -89,16 +81,8 @@ open class HiddenFieldTest : CheckstyleRefactorVisitorTest(HiddenField()) {
     @Test
     fun ignoreConstructorParameter() {
         setProperties("ignoreConstructorParameter" to true)
-        assertRefactored(
+        assertUnchanged(
                 before = """
-                    public class A {
-                        int n;
-                        
-                        A(int n) {
-                        }
-                    }
-                """,
-                after = """
                     public class A {
                         int n;
                         
@@ -146,17 +130,8 @@ open class HiddenFieldTest : CheckstyleRefactorVisitorTest(HiddenField()) {
                 "ignoreSetter" to true,
                 "setterCanReturnItsClass" to true
         )
-        assertRefactored(
+        assertUnchanged(
                 before = """
-                    public class A {
-                        int n;
-                        
-                        public A setN(int n) {
-                            return this;
-                        }
-                    }
-                """,
-                after = """
                     public class A {
                         int n;
                         
@@ -171,15 +146,8 @@ open class HiddenFieldTest : CheckstyleRefactorVisitorTest(HiddenField()) {
     @Test
     fun ignoreAbstractMethods() {
         setProperties("ignoreAbstractMethods" to true)
-        assertRefactored(
+        assertUnchanged(
                 before = """
-                    public abstract class A {
-                        int n;
-                        
-                        public abstract void foo(int n);
-                    }
-                """,
-                after = """
                     public abstract class A {
                         int n;
                         

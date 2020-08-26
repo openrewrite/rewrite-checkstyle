@@ -23,7 +23,7 @@ open class CovariantEqualsTest : CheckstyleRefactorVisitorTest(CovariantEquals()
             before = """
                 class Test {
                     int n;
-                    
+                
                     public boolean equals(Test t) {
                         return n == t.n;
                     }
@@ -32,7 +32,7 @@ open class CovariantEqualsTest : CheckstyleRefactorVisitorTest(CovariantEquals()
             after = """
                 class Test {
                     int n;
-    
+                
                     @Override
                     public boolean equals(Object o) {
                         if (this == o) return true;

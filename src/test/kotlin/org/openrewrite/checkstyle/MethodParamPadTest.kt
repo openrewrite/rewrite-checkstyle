@@ -105,14 +105,8 @@ open class MethodParamPadTest: CheckstyleRefactorVisitorTest(MethodParamPad()) {
     @Test
     fun allowLineBreaks() {
         setProperties("allowLineBreaks" to true)
-        assertRefactored(
+        assertUnchanged(
                 before = """
-                    public class A extends B {
-                        void foo
-                            (int n) {}
-                    }
-                """,
-                after = """
                     public class A extends B {
                         void foo
                             (int n) {}

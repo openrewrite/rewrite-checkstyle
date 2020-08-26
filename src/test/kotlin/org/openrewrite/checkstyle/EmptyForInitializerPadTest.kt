@@ -20,15 +20,8 @@ import org.openrewrite.checkstyle.policy.PadPolicy
 
 open class EmptyForInitializerPadTest : CheckstyleRefactorVisitorTest(EmptyForInitializerPad()) {
     @Test
-    fun noSpaceInitializerPadding() = assertRefactored(
+    fun noSpaceInitializerPadding() = assertUnchanged(
             before = """
-                public class A {
-                    {
-                        for (; i < j; i++, j--);
-                    }
-                }
-            """,
-            after = """
                 public class A {
                     {
                         for (; i < j; i++, j--);
@@ -59,16 +52,8 @@ open class EmptyForInitializerPadTest : CheckstyleRefactorVisitorTest(EmptyForIn
     }
 
     @Test
-    fun noCheckIfInitializerStartsWithLineTerminator() = assertRefactored(
+    fun noCheckIfInitializerStartsWithLineTerminator() = assertUnchanged(
             before = """
-                public class A {
-                    {
-                        for (
-                              ; i < j; i++, j--);
-                    }
-                }
-            """,
-            after = """
                 public class A {
                     {
                         for (
