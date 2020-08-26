@@ -28,7 +28,11 @@ open class NoWhitespaceBeforeTest: CheckstyleRefactorVisitorTest(NoWhitespaceBef
                     import java.util.* ;
                     import java.util.function.*;
                     
-                    public abstract class A {
+                    public class C {
+                        int m;
+                    }
+                    
+                    abstract class A {
                         {
                             int b = 0 ;
                             int n , o = 0 ;
@@ -47,14 +51,9 @@ open class NoWhitespaceBeforeTest: CheckstyleRefactorVisitorTest(NoWhitespaceBef
                         
                         abstract A foo(int n , int m, int ... others) ;
                     }
-
                     
                     interface B {
                         void foo() ;
-                    }
-                    
-                    class C {
-                        int m;
                     }
                 """,
                 after = """
@@ -62,7 +61,11 @@ open class NoWhitespaceBeforeTest: CheckstyleRefactorVisitorTest(NoWhitespaceBef
                     import java.util.*;
                     import java.util.function.*;
                     
-                    public class A {
+                    public class C {
+                        int m;
+                    }
+                    
+                    abstract class A {
                         {
                             int b = 0;
                             int n, o = 0;
@@ -83,10 +86,6 @@ open class NoWhitespaceBeforeTest: CheckstyleRefactorVisitorTest(NoWhitespaceBef
                     
                     interface B {
                         void foo();
-                    }
-                    
-                    class C {
-                        int m;
                     }
                 """
         )

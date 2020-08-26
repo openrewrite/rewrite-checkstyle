@@ -19,6 +19,7 @@ import org.openrewrite.Formatting;
 import org.openrewrite.AutoConfigure;
 import org.openrewrite.java.tree.J;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.openrewrite.Formatting.format;
@@ -41,7 +42,7 @@ public class FinalClass extends CheckstyleRefactorVisitor {
                 .noneMatch(s -> s instanceof J.MethodDecl &&
                         ((J.MethodDecl) s).isConstructor() &&
                         !((J.MethodDecl) s).hasModifier("private"))) {
-            List<J.Modifier> modifiers = c.getModifiers();
+            List<J.Modifier> modifiers = new ArrayList<>(c.getModifiers());
 
             int insertPosition = 0;
             for (int i = 0; i < modifiers.size(); i++) {

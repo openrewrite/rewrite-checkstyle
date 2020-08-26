@@ -26,14 +26,8 @@ open class StaticVariableNameTest: CheckstyleRefactorVisitorTest(StaticVariableN
     }
 
     @Test
-    fun dontChangeEveryField() = assertRefactored(
+    fun dontChangeEveryField() = assertUnchanged(
             before = """
-                import java.util.List;
-                public class A {
-                   List MY_LIST;
-                }
-            """,
-            after = """
                 import java.util.List;
                 public class A {
                    List MY_LIST;
