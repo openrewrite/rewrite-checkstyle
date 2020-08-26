@@ -15,15 +15,18 @@
  */
 package org.openrewrite.checkstyle;
 
+import org.openrewrite.AutoConfigure;
 import org.openrewrite.Tree;
 import org.openrewrite.checkstyle.policy.BlockPolicy;
 import org.openrewrite.checkstyle.policy.Token;
-import org.openrewrite.AutoConfigure;
 import org.openrewrite.java.DeleteStatement;
 import org.openrewrite.java.JavaRefactorVisitor;
 import org.openrewrite.java.tree.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -146,7 +149,10 @@ public class EmptyBlock extends CheckstyleRefactorVisitor {
             c = c.withBody(
                     c.getBody().withStatements(
                             singletonList(new J.Throw(randomId(),
-                                    new J.NewClass(randomId(),
+                                    new J.NewClass(
+                                            randomId(),
+                                            null,
+                                            new J.NewClass.New(randomId(), EMPTY),
                                             J.Ident.build(randomId(), throwName, throwClass, format(" ")),
                                             new J.NewClass.Arguments(randomId(),
                                                     singletonList(J.Ident.build(randomId(), c.getParam().getTree().getVars().iterator().next().getSimpleName(),

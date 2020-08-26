@@ -15,31 +15,44 @@
  */
 package org.openrewrite.checkstyle
 
-import org.openrewrite.java.Java11Parser
+import org.junit.jupiter.api.BeforeEach
+import org.openrewrite.RefactorVisitor
+import org.openrewrite.RefactorVisitorTestForParser
 import org.openrewrite.java.JavaParser
-import kotlin.reflect.KClass
-import kotlin.reflect.full.createInstance
+import org.openrewrite.java.tree.J
 
-abstract class CheckstyleRefactorVisitorTest(private val visitor: KClass<out CheckstyleRefactorVisitor>) {
-    protected val jp: JavaParser = Java11Parser.builder().build()
+abstract class CheckstyleRefactorVisitorTest(private val visitor: CheckstyleRefactorVisitor) :
+        RefactorVisitorTestForParser<J.CompilationUnit> {
 
-    fun configXml(vararg properties: Pair<String, Any>) = visitor.createInstance().apply {
-        setConfig(
-        """
-            <?xml version="1.0"?>
-            <!DOCTYPE module PUBLIC
-                "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
-                "https://checkstyle.org/dtds/configuration_1_3.dtd">
-            <module name="Checker">
-                <module name="TreeWalker">
-                    <module name="${visitor.simpleName}">
-                    ${properties.joinToString("\n") {
-                    """<property name="${it.first}" value="${it.second}"/>"""
-                }}
+    override val parser: JavaParser = JavaParser.fromJavaVersion().build()
+    override val visitors: Iterable<RefactorVisitor<*>> = listOf(visitor)
+
+    @BeforeEach
+    fun clearConfig() {
+        setProperties()
+    }
+
+    protected fun setProperties(vararg properties: Pair<String, Any>) {
+        visitor.apply {
+            setConfig(
+                    """
+                    <?xml version="1.0"?>
+                    <!DOCTYPE module PUBLIC
+                        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+                    <module name="Checker">
+                        <module name="TreeWalker">
+                            <module name="${visitor.javaClass.simpleName}">
+                            ${
+                                properties.joinToString("\n") {
+                                    """<property name="${it.first}" value="${it.second}"/>"""
+                                }
+                            }
+                            </module>
+                        </module>
                     </module>
-                </module>
-            </module>
-        """.trimIndent().trim()
-        )
+                """.trimIndent().trim()
+            )
+        }
     }
 }

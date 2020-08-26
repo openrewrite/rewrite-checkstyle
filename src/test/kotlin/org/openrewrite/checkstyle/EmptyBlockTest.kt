@@ -17,337 +17,326 @@ package org.openrewrite.checkstyle
 
 import org.junit.jupiter.api.Test
 
-open class EmptyBlockTest : CheckstyleRefactorVisitorTest(EmptyBlock::class) {
-    private fun emptyBlock(vararg tokens: String) = configXml("tokens" to tokens.joinToString(","))
+open class EmptyBlockTest : CheckstyleRefactorVisitorTest(EmptyBlock()) {
+    private fun emptyBlock(vararg tokens: String) = setProperties("tokens" to tokens.joinToString(","))
 
     @Test
     fun emptySwitch() {
-        val a = jp.parse("""
-            public class A {
-                {
-                    int i = 0;
-                    switch(i) {
+        emptyBlock("LITERAL_SWITCH")
+        assertRefactored(
+                before = """
+                    public class A {
+                        {
+                            int i = 0;
+                            switch(i) {
+                            }
+                        }
                     }
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(emptyBlock("LITERAL_SWITCH"))
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                {
-                    int i = 0;
-                }
-            }
-        """)
+                """,
+                after = """
+                    public class A {
+                        {
+                            int i = 0;
+                        }
+                    }
+                """
+        )
     }
 
     @Test
     fun emptySynchronized() {
-        val a = jp.parse("""
-            public class A {
-                {
-                    final Object o = new Object();
-                    synchronized(o) {
+        emptyBlock("LITERAL_SYNCHRONIZED")
+        assertRefactored(
+                before = """
+                    public class A {
+                        {
+                            final Object o = new Object();
+                            synchronized(o) {
+                            }
+                        }
                     }
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(emptyBlock("LITERAL_SYNCHRONIZED"))
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                {
-                    final Object o = new Object();
-                }
-            }
-        """)
+                """,
+                after = """
+                    public class A {
+                        {
+                            final Object o = new Object();
+                        }
+                    }
+                """
+        )
     }
 
     @Test
     fun emptyTry() {
-        val a = jp.parse("""
-            import java.io.*;
-
-            public class A {
-                {
-                    try(FileInputStream fis = new FileInputStream("")) {
-                        
-                    } catch (IOException e) {
+        emptyBlock("LITERAL_TRY")
+        assertRefactored(
+                before = """
+                    import java.io.*;
+        
+                    public class A {
+                        {
+                            try(FileInputStream fis = new FileInputStream("")) {
+                                
+                            } catch (IOException e) {
+                            }
+                        }
                     }
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(emptyBlock("LITERAL_TRY"))
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                {
-                }
-            }
-        """)
+                """,
+                after = """
+                    public class A {
+                        {
+                        }
+                    }
+                """
+        )
     }
 
     @Test
     fun emptyCatchBlockWithIOException() {
-        val a = jp.parse("""
-            import java.io.IOException;
-            import java.nio.file.*;
-            
-            public class A {
-                public void foo() {
-                    try {
-                        Files.readString(Path.of("somewhere"));
-                    } catch (IOException e) {
+        emptyBlock("LITERAL_CATCH")
+        assertRefactored(
+                before = """
+                import java.io.IOException;
+                import java.nio.file.*;
+                
+                public class A {
+                    public void foo() {
+                        try {
+                            Files.readString(Path.of("somewhere"));
+                        } catch (IOException e) {
+                        }
                     }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(emptyBlock("LITERAL_CATCH"))
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            import java.io.IOException;
-            import java.io.UncheckedIOException;
-            import java.nio.file.*;
-            
-            public class A {
-                public void foo() {
-                    try {
-                        Files.readString(Path.of("somewhere"));
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
+            """,
+                after = """
+                import java.io.IOException;
+                import java.io.UncheckedIOException;
+                import java.nio.file.*;
+                
+                public class A {
+                    public void foo() {
+                        try {
+                            Files.readString(Path.of("somewhere"));
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
                     }
                 }
-            }
-        """)
+            """
+        )
     }
 
     @Test
     fun emptyCatchBlockWithExceptionAndEmptyFinally() {
-        val a = jp.parse("""
-            import java.nio.file.*;
-            
-            public class A {
-                public void foo() {
-                    try {
-                        Files.readString(Path.of("somewhere"));
-                    } catch (Throwable t) {
-                    } finally {
+        emptyBlock("LITERAL_CATCH", "LITERAL_FINALLY")
+        assertRefactored(
+                before = """
+                    import java.nio.file.*;
+                    
+                    public class A {
+                        public void foo() {
+                            try {
+                                Files.readString(Path.of("somewhere"));
+                            } catch (Throwable t) {
+                            } finally {
+                            }
+                        }
                     }
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(emptyBlock("LITERAL_CATCH", "LITERAL_FINALLY"))
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            import java.nio.file.*;
-            
-            public class A {
-                public void foo() {
-                    try {
-                        Files.readString(Path.of("somewhere"));
-                    } catch (Throwable t) {
-                        throw new RuntimeException(t);
+                """,
+                after = """
+                    import java.nio.file.*;
+                    
+                    public class A {
+                        public void foo() {
+                            try {
+                                Files.readString(Path.of("somewhere"));
+                            } catch (Throwable t) {
+                                throw new RuntimeException(t);
+                            }
+                        }
                     }
-                }
-            }
-        """)
+                """
+        )
     }
 
     @Test
     fun emptyLoops() {
-        val a = jp.parse("""
-            public class A {
-                public void foo() {
-                    while(true) {
+        emptyBlock("LITERAL_WHILE", "LITERAL_DO")
+        assertRefactored(
+                before = """
+                public class A {
+                    public void foo() {
+                        while(true) {
+                        }
+                        do {
+                        } while(true);
                     }
-                    do {
-                    } while(true);
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(emptyBlock("LITERAL_WHILE", "LITERAL_DO"))
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                public void foo() {
-                    while(true) {
-                        continue;
+            """,
+                after = """
+                public class A {
+                    public void foo() {
+                        while(true) {
+                            continue;
+                        }
+                        do {
+                            continue;
+                        } while(true);
                     }
-                    do {
-                        continue;
-                    } while(true);
                 }
-            }
-        """)
+            """
+        )
     }
 
     @Test
     fun emptyStaticInit() {
-        val a = jp.parse("""
-            public class A {
-                static {}
-                {}
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(emptyBlock("STATIC_INIT"))
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                {}
-            }
-        """)
+        emptyBlock("STATIC_INIT")
+        assertRefactored(
+                before = """
+                    public class A {
+                        static {}
+                        {}
+                    }
+                """,
+                after = """
+                    public class A {
+                        {}
+                    }
+                """
+        )
     }
 
     @Test
     fun emptyInstanceInit() {
-        val a = jp.parse("""
-            public class A {
-                static {}
-                {}
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(emptyBlock("INSTANCE_INIT"))
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                static {}
-            }
-        """)
+        emptyBlock("INSTANCE_INIT")
+        assertRefactored(
+                before = """
+                    public class A {
+                        static {}
+                        {}
+                    }
+                """,
+                after = """
+                    public class A {
+                        static {}
+                    }
+                """
+        )
     }
 
     @Test
     fun extractSideEffectsFromEmptyIfsWithNoElse() {
-        val a = jp.parse("""
-            public class A {
-                int n = sideEffect();
-            
-                int sideEffect() {
-                    return new java.util.Random().nextInt();
-                }
-            
-                boolean boolSideEffect() {
-                    return sideEffect() == 0;
-                }
-            
-                public void lotsOfIfs() {
-                    if(sideEffect() == 1) {}
-                    if(sideEffect() == sideEffect()) {}
-                    int n;
-                    if((n = sideEffect()) == 1) {}
-                    if((n /= sideEffect()) == 1) {}
-                    if(new A().n == 1) {}
-                    if(!boolSideEffect()) {}
-                    if(1 == 2) {}
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(emptyBlock("LITERAL_IF"))
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                int n = sideEffect();
-            
-                int sideEffect() {
-                    return new java.util.Random().nextInt();
-                }
-            
-                boolean boolSideEffect() {
-                    return sideEffect() == 0;
-                }
-            
-                public void lotsOfIfs() {
-                    sideEffect();
-                    sideEffect();
-                    sideEffect();
-                    int n;
-                    n = sideEffect();
-                    n /= sideEffect();
-                    new A();
-                    boolSideEffect();
-                }
-            }
-        """)
+        emptyBlock("LITERAL_IF")
+        assertRefactored(
+                before = """
+                    public class A {
+                        int n = sideEffect();
+                    
+                        int sideEffect() {
+                            return new java.util.Random().nextInt();
+                        }
+                    
+                        boolean boolSideEffect() {
+                            return sideEffect() == 0;
+                        }
+                    
+                        public void lotsOfIfs() {
+                            if(sideEffect() == 1) {}
+                            if(sideEffect() == sideEffect()) {}
+                            int n;
+                            if((n = sideEffect()) == 1) {}
+                            if((n /= sideEffect()) == 1) {}
+                            if(new A().n == 1) {}
+                            if(!boolSideEffect()) {}
+                            if(1 == 2) {}
+                        }
+                    }
+                """,
+                after = """
+                    public class A {
+                        int n = sideEffect();
+                    
+                        int sideEffect() {
+                            return new java.util.Random().nextInt();
+                        }
+                    
+                        boolean boolSideEffect() {
+                            return sideEffect() == 0;
+                        }
+                    
+                        public void lotsOfIfs() {
+                            sideEffect();
+                            sideEffect();
+                            sideEffect();
+                            int n;
+                            n = sideEffect();
+                            n /= sideEffect();
+                            new A();
+                            boolSideEffect();
+                        }
+                    }
+                """
+        )
     }
 
     @Test
     fun invertIfWithOnlyElseClauseAndBinaryOperator() {
-        // extra spaces after the original if condition to ensure that we preserve the if statement's block formatting
-        val a = jp.parse("""
-            public class A {
-                {
-                    if("foo".length() > 3)   {
-                    } else {
-                        System.out.println("this");
-                    }
-                }
-            }
-        """.trimIndent())
+        emptyBlock("LITERAL_IF")
 
-        val fixed = a.refactor().visit(emptyBlock("LITERAL_IF"))
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                {
-                    if("foo".length() <= 3)   {
-                        System.out.println("this");
+        assertRefactored(
+                // extra spaces after the original if condition to ensure that we preserve the if statement's block formatting
+                before = """
+                    public class A {
+                        {
+                            if("foo".length() > 3)   {
+                            } else {
+                                System.out.println("this");
+                            }
+                        }
                     }
-                }
-            }
-        """)
+                """,
+                after = """
+                    public class A {
+                        {
+                            if("foo".length() <= 3)   {
+                                System.out.println("this");
+                            }
+                        }
+                    }
+                """)
     }
 
     @Test
     fun invertIfWithElseIfElseClause() {
-        val a = jp.parse("""
-            public class A {
-                {
-                    if("foo".length() > 3) {
-                    } else if("foo".length() > 4) {
-                        System.out.println("longer");
-                    }
-                    else {
-                        System.out.println("this");
-                    }
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(emptyBlock("LITERAL_IF"))
-                .fix(1).fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                {
-                    if("foo".length() <= 3) {
-                        if("foo".length() > 4) {
-                            System.out.println("longer");
-                        }
-                        else {
-                            System.out.println("this");
+        emptyBlock("LITERAL_IF")
+        assertRefactored(
+                before = """
+                    public class A {
+                        {
+                            if("foo".length() > 3) {
+                            } else if("foo".length() > 4) {
+                                System.out.println("longer");
+                            }
+                            else {
+                                System.out.println("this");
+                            }
                         }
                     }
-                }
-            }
-        """)
+                """,
+                after = """
+                    public class A {
+                        {
+                            if("foo".length() <= 3) {
+                                if("foo".length() > 4) {
+                                    System.out.println("longer");
+                                }
+                                else {
+                                    System.out.println("this");
+                                }
+                            }
+                        }
+                    }
+                """
+        )
     }
 }

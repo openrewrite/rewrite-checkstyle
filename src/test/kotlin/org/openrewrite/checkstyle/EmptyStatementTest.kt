@@ -17,40 +17,37 @@ package org.openrewrite.checkstyle
 
 import org.junit.jupiter.api.Test
 
-open class EmptyStatementTest: CheckstyleRefactorVisitorTest(EmptyStatement::class) {
+open class EmptyStatementTest : CheckstyleRefactorVisitorTest(EmptyStatement()) {
     @Test
-    fun removeconfigXml() {
-        val a = jp.parse("""
-            public class A {
-                {
-                    if(1 == 2);
-                        System.out.println("always runs");
-                    for(;;);
-                        System.out.println("always runs");
-                    for(String s : new String[0]);
-                        System.out.println("always runs");
-                    while(true);
-                        System.out.println("always runs");
-                    while(true);
+    fun removeconfigXml() = assertRefactored(
+            before = """
+                public class A {
+                    {
+                        if(1 == 2);
+                            System.out.println("always runs");
+                        for(;;);
+                            System.out.println("always runs");
+                        for(String s : new String[0]);
+                            System.out.println("always runs");
+                        while(true);
+                            System.out.println("always runs");
+                        while(true);
+                    }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                {
-                    if(1 == 2)
-                        System.out.println("always runs");
-                    for(;;)
-                        System.out.println("always runs");
-                    for(String s : new String[0])
-                        System.out.println("always runs");
-                    while(true)
-                        System.out.println("always runs");
+            """,
+            after = """
+                public class A {
+                    {
+                        if(1 == 2)
+                            System.out.println("always runs");
+                        for(;;)
+                            System.out.println("always runs");
+                        for(String s : new String[0])
+                            System.out.println("always runs");
+                        while(true)
+                            System.out.println("always runs");
+                    }
                 }
-            }
-        """)
-    }
+            """
+    )
 }

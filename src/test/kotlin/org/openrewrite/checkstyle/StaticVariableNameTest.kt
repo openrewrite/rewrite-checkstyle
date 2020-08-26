@@ -18,83 +18,79 @@ package org.openrewrite.checkstyle
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-open class StaticVariableNameTest: CheckstyleRefactorVisitorTest(StaticVariableName::class) {
+open class StaticVariableNameTest: CheckstyleRefactorVisitorTest(StaticVariableName()) {
     @Test
     fun snakeName() {
-        assertThat(StaticVariableName.snakeCaseToCamel("CAMEL_CASE_NAME_1")).isEqualTo("camelCaseName1")
+        assertThat(StaticVariableName.snakeCaseToCamel("CAMEL_CASE_NAME_1"))
+                .isEqualTo("camelCaseName1")
     }
 
     @Test
-    fun dontChangeEveryField() {
-        val a = jp.parse("""
-            import java.util.List;
-            public class A {
-               List MY_LIST;
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            import java.util.List;
-            public class A {
-               List MY_LIST;
-            }
-        """)
-    }
+    fun dontChangeEveryField() = assertRefactored(
+            before = """
+                import java.util.List;
+                public class A {
+                   List MY_LIST;
+                }
+            """,
+            after = """
+                import java.util.List;
+                public class A {
+                   List MY_LIST;
+                }
+            """
+    )
 
     @Test
-    fun changeSingleVariableFieldAndReference() {
-        val a = jp.parse("""
-            import java.util.*;
-            public class A {
-               static List<String> MY_LIST;
-               
-               static {
-                   MY_LIST = new ArrayList<>();
-               }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            import java.util.*;
-            public class A {
-               static List<String> myList;
-               
-               static {
-                   myList = new ArrayList<>();
-               }
-            }
-        """)
-    }
+    fun changeSingleVariableFieldAndReference() = assertRefactored(
+            before = """
+                import java.util.*;
+                public class A {
+                   static List<String> MY_LIST;
+                   
+                   static {
+                       MY_LIST = new ArrayList<>();
+                   }
+                }
+            """,
+            after = """
+                import java.util.*;
+                public class A {
+                   static List<String> myList;
+                   
+                   static {
+                       myList = new ArrayList<>();
+                   }
+                }
+            """
+    )
 
     @Test
     fun changeOnlyMatchingVisibility() {
-        val a = jp.parse("""
-            import java.util.List;
-            public class A {
-               static List MY_LIST;
-               private static List MY_PRIVATE_LIST;
-               public static List MY_PUBLIC_LIST;
-               protected static List MY_PROTECTED_LIST;
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml(
+        setProperties(
                 "applyToPublic" to false,
                 "applyToPackage" to false,
-                "applyToPrivate" to false)).fix().fixed
-
-        assertRefactored(fixed, """
-            import java.util.List;
-            public class A {
-               static List MY_LIST;
-               private static List MY_PRIVATE_LIST;
-               public static List MY_PUBLIC_LIST;
-               protected static List myProtectedList;
-            }
-        """)
+                "applyToPrivate" to false
+        )
+        assertRefactored(
+                before = """
+                    import java.util.List;
+                    public class A {
+                       static List MY_LIST;
+                       private static List MY_PRIVATE_LIST;
+                       public static List MY_PUBLIC_LIST;
+                       protected static List MY_PROTECTED_LIST;
+                    }
+                """,
+                after = """
+                    import java.util.List;
+                    public class A {
+                       static List MY_LIST;
+                       private static List MY_PRIVATE_LIST;
+                       public static List MY_PUBLIC_LIST;
+                       protected static List myProtectedList;
+                    }
+                """
+        )
     }
 }

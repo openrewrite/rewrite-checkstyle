@@ -6,7 +6,6 @@ import nl.javadude.gradle.plugins.license.LicenseExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jfrog.gradle.plugin.artifactory.dsl.ArtifactoryPluginConvention
 import org.jfrog.gradle.plugin.artifactory.dsl.PublisherConfig
-import org.w3c.dom.Element
 import java.util.*
 
 buildscript {
@@ -28,7 +27,7 @@ buildscript {
 
 plugins {
     `java-library`
-    id("org.jetbrains.kotlin.jvm") version "1.3.72"
+    id("org.jetbrains.kotlin.jvm") version "1.4.0"
     id("io.spring.release") version "0.20.1"
 }
 
@@ -60,13 +59,6 @@ dependencies {
     // FIXME the IDE throws "unknown enum constant com.fasterxml.jackson.annotation.JsonTypeInfo.Id.MINIMAL_CLASS sometimes?
     implementation("com.fasterxml.jackson.core:jackson-annotations:latest.release")
 
-    implementation("commons-cli:commons-cli:1.4")
-
-    implementation("io.micrometer.prometheus:prometheus-rsocket-client:latest.release")
-    implementation("io.rsocket:rsocket-transport-netty:1.0.0-RC7")
-
-    implementation("ch.qos.logback:logback-classic:1.0.13")
-
     testImplementation("org.jetbrains.kotlin:kotlin-reflect")
     testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
@@ -74,7 +66,10 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:latest.release")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:latest.release")
 
+    testRuntimeOnly("ch.qos.logback:logback-classic:1.0.13")
+
     testImplementation("org.openrewrite:rewrite-java-11:latest.integration")
+    testImplementation("org.openrewrite:rewrite-test:latest.integration")
 
     testImplementation("org.assertj:assertj-core:latest.release")
 }

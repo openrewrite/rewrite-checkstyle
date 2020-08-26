@@ -17,53 +17,47 @@ package org.openrewrite.checkstyle
 
 import org.junit.jupiter.api.Test
 
-open class FinalLocalVariableTest: CheckstyleRefactorVisitorTest(FinalLocalVariable::class) {
+open class FinalLocalVariableTest: CheckstyleRefactorVisitorTest(FinalLocalVariable()) {
     @Test
-    fun localVariablesAreMadeFinal() {
-        val a = jp.parse("""
-            public class A {
-                {
-                    int n = 1;
-                    for(int i = 0; i < n; i++) {
+    fun localVariablesAreMadeFinal() = assertRefactored(
+            before = """
+                public class A {
+                    {
+                        int n = 1;
+                        for(int i = 0; i < n; i++) {
+                        }
                     }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                {
-                    final int n = 1;
-                    for(int i = 0; i < n; i++) {
+            """,
+            after = """
+                public class A {
+                    {
+                        final int n = 1;
+                        for(int i = 0; i < n; i++) {
+                        }
                     }
                 }
-            }
-        """)
-    }
+            """
+    )
 
     @Test
-    fun multiVariables() {
-        val a = jp.parse("""
-            public class A {
-                {
-                    int a, b = 1;
-                    a = 0;
+    fun multiVariables() = assertRefactored(
+            before = """
+                public class A {
+                    {
+                        int a, b = 1;
+                        a = 0;
+                    }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        // the final only applies to any initialized variables (b in this case)
-        assertRefactored(fixed, """
-            public class A {
-                {
-                    final int a, b = 1;
-                    a = 0;
+            """,
+            // the final only applies to any initialized variables (b in this case)
+            after = """
+                public class A {
+                    {
+                        final int a, b = 1;
+                        a = 0;
+                    }
                 }
-            }
-        """)
-    }
+            """
+    )
 }

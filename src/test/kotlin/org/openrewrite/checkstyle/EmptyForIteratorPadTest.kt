@@ -18,94 +18,81 @@ package org.openrewrite.checkstyle
 import org.junit.jupiter.api.Test
 import org.openrewrite.checkstyle.policy.PadPolicy
 
-open class EmptyForIteratorPadTest: CheckstyleRefactorVisitorTest(EmptyForIteratorPad::class) {
+open class EmptyForIteratorPadTest : CheckstyleRefactorVisitorTest(EmptyForIteratorPad()) {
     @Test
-    fun doesntChangeIfIteratorIsPresent() {
-        val a = jp.parse("""
-            public class A {
-                {
-                    for (int i = 0; i < 2; i++ );
+    fun doesntChangeIfIteratorIsPresent() = assertRefactored(
+            before = """
+                public class A {
+                    {
+                        for (int i = 0; i < 2; i++ );
+                    }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml())
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                {
-                    for (int i = 0; i < 2; i++ );
+            """,
+            after = """
+                public class A {
+                    {
+                        for (int i = 0; i < 2; i++ );
+                    }
                 }
-            }
-        """)
-    }
+            """
+    )
 
     @Test
-    fun noSpaceInitializerPadding() {
-        val a = jp.parse("""
-            public class A {
-                {
-                    for (int i = 0; i < 2; );
+    fun noSpaceInitializerPadding() = assertRefactored(
+            before = """
+                public class A {
+                    {
+                        for (int i = 0; i < 2; );
+                    }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml())
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                {
-                    for (int i = 0; i < 2;);
+            """,
+            after = """
+                public class A {
+                    {
+                        for (int i = 0; i < 2;);
+                    }
                 }
-            }
-        """)
-    }
+            """
+    )
 
     @Test
     fun spaceInitializerPadding() {
-        val a = jp.parse("""
-            public class A {
-                {
-                    for (int i = 0; i < 2;);
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml("option" to PadPolicy.SPACE))
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                {
-                    for (int i = 0; i < 2; );
-                }
-            }
-        """)
+        setProperties("option" to PadPolicy.SPACE)
+        assertRefactored(
+                before = """
+                    public class A {
+                        {
+                            for (int i = 0; i < 2;);
+                        }
+                    }
+                """,
+                after = """
+                    public class A {
+                        {
+                            for (int i = 0; i < 2; );
+                        }
+                    }
+                """
+        )
     }
 
     @Test
-    fun noCheckIfIteratorEndsWithLineTerminator() {
-        val a = jp.parse("""
-            public class A {
-                {
-                    for (int i = 0; i < 2;
-                        );
+    fun noCheckIfIteratorEndsWithLineTerminator() = assertRefactored(
+            before = """
+                public class A {
+                    {
+                        for (int i = 0; i < 2;
+                            );
+                    }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml())
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                {
-                    for (int i = 0; i < 2;
-                        );
+            """,
+            after = """
+                public class A {
+                    {
+                        for (int i = 0; i < 2;
+                            );
+                    }
                 }
-            }
-        """)
-    }
+            """
+    )
 }

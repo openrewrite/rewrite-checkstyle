@@ -17,87 +17,81 @@ package org.openrewrite.checkstyle
 
 import org.junit.jupiter.api.Test
 
-class GenericWhitespaceTest: CheckstyleRefactorVisitorTest(GenericWhitespace::class) {
+class GenericWhitespaceTest : CheckstyleRefactorVisitorTest(GenericWhitespace()) {
     @Test
-    fun genericWhitespace() {
-        val a = jp.parse("""
-            import java.util.*;
-            public class A < T1, T2 > {
-                Map < String, Integer > map;
-                
-                { 
-                    boolean same = this.< Integer, Integer >foo(1, 2);
-                    map = new HashMap <>();
+    fun genericWhitespace() = assertRefactored(
+            before = """
+                import java.util.*;
+                public class A < T1, T2 > {
+                    Map < String, Integer > map;
                     
-                    List < String > list = ImmutableList.Builder< String >::new;
-                    Collections.sort(list, Comparable::< String >compareTo);
-                }
-                
-                < K, V extends Number > boolean foo(K k, V v) {
-                    return true;    
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            import java.util.*;
-            public class A<T1, T2> {
-                Map<String, Integer> map;
-                
-                { 
-                    boolean same = this.<Integer, Integer>foo(1, 2);
-                    map = new HashMap<>();
+                    { 
+                        boolean same = this.< Integer, Integer >foo(1, 2);
+                        map = new HashMap <>();
+                        
+                        List < String > list = ImmutableList.Builder< String >::new;
+                        Collections.sort(list, Comparable::< String >compareTo);
+                    }
                     
-                    List<String> list = ImmutableList.Builder<String>::new;
-                    Collections.sort(list, Comparable::<String>compareTo);
+                    < K, V extends Number > boolean foo(K k, V v) {
+                        return true;    
+                    }
                 }
+            """,
+            after = """
+                import java.util.*;
+                public class A<T1, T2> {
+                    Map<String, Integer> map;
+                    
+                    { 
+                        boolean same = this.<Integer, Integer>foo(1, 2);
+                        map = new HashMap<>();
+                        
+                        List<String> list = ImmutableList.Builder<String>::new;
+                        Collections.sort(list, Comparable::<String>compareTo);
+                    }
+                    
+                    <K, V extends Number> boolean foo(K k, V v) {
+                        return true;    
+                    }
+                }
+            """
+    )
+
+    @Test
+    fun stripUpToLinebreak() = assertRefactored(
+            before = """
+                import java.util.HashMap;
                 
-                <K, V extends Number> boolean foo(K k, V v) {
-                    return true;    
+                // extra space after 'HashMap<' and after 'Integer'
+                public class A extends HashMap< 
+                        String,
+                        Integer 
+                    > {
                 }
-            }
-        """)
-    }
+            """,
+            after = """
+                import java.util.HashMap;
+                
+                // extra space after 'HashMap<' and after 'Integer'
+                public class A extends HashMap<
+                        String,
+                        Integer
+                    > {
+                }
+            """
+    )
 
     @Test
-    fun stripUpToLinebreak() {
-        val a = jp.parse("""
-            import java.util.HashMap;
-            
-            // extra space after 'HashMap<' and after 'Integer'
-            public class A extends HashMap< 
-                    String,
-                    Integer 
-                > {
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            import java.util.HashMap;
-            
-            // extra space after 'HashMap<' and after 'Integer'
-            public class A extends HashMap<
-                    String,
-                    Integer
-                > {
-            }
-        """.trimIndent())
-    }
-
-    @Test
-    fun doesntConsiderLinebreaksWhitespace() {
-        jp.assertUnchangedByRefactoring(GenericWhitespace(), """
-            import java.util.HashMap;
-            
-            public class A extends HashMap<
-                    String,
-                    String
-                > {
-            }
-        """)
-    }
+    fun doesntConsiderLinebreaksWhitespace() = assertUnchanged(
+            before = """
+                import java.util.HashMap;
+                
+                public class A extends HashMap<
+                        String,
+                        String
+                    > {
+                }
+            """
+    )
 }

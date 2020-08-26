@@ -17,214 +17,206 @@ package org.openrewrite.checkstyle
 
 import org.junit.jupiter.api.Test
 
-open class DefaultComesLastTest : CheckstyleRefactorVisitorTest(DefaultComesLast::class) {
+open class DefaultComesLastTest : CheckstyleRefactorVisitorTest(DefaultComesLast()) {
     @Test
-    fun moveDefaultToLastAlongWithItsStatementsAndAddBreakIfNecessary() {
-        val a = jp.parse("""
-            class Test {
-                int n;
-                {
-                    switch (n) {
-                        case 1:
-                            break;
-                        case 2:
-                            break;
-                        default:
-                            System.out.println("default");
-                            break;
-                        case 3:
-                            System.out.println("case3");
+    fun moveDefaultToLastAlongWithItsStatementsAndAddBreakIfNecessary() = assertRefactored(
+            before = """
+                class Test {
+                    int n;
+                    {
+                        switch (n) {
+                            case 1:
+                                break;
+                            case 2:
+                                break;
+                            default:
+                                System.out.println("default");
+                                break;
+                            case 3:
+                                System.out.println("case3");
+                        }
                     }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml())
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            class Test {
-                int n;
-                {
-                    switch (n) {
-                        case 1:
-                            break;
-                        case 2:
-                            break;
-                        case 3:
-                            System.out.println("case3");
-                            break;
-                        default:
-                            System.out.println("default");
+            """,
+            after = """
+                class Test {
+                    int n;
+                    {
+                        switch (n) {
+                            case 1:
+                                break;
+                            case 2:
+                                break;
+                            case 3:
+                                System.out.println("case3");
+                                break;
+                            default:
+                                System.out.println("default");
+                        }
                     }
                 }
-            }
-        """)
-    }
+            """
+    )
 
     @Test
-    fun moveDefaultToLastWhenSharedWithAnotherCaseStatement() {
-        val a = jp.parse("""
-            class Test {
-                int n;
-                {
-                    switch (n) {
-                        case 1:
-                            break;
-                        case 2:
-                            break;
-                        case 3:
-                        default:
-                            break;
-                        case 4:
-                        case 5:
+    fun moveDefaultToLastWhenSharedWithAnotherCaseStatement() = assertRefactored(
+            before = """
+                class Test {
+                    int n;
+                    {
+                        switch (n) {
+                            case 1:
+                                break;
+                            case 2:
+                                break;
+                            case 3:
+                            default:
+                                break;
+                            case 4:
+                            case 5:
+                        }
                     }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            class Test {
-                int n;
-                {
-                    switch (n) {
-                        case 1:
-                            break;
-                        case 2:
-                            break;
-                        case 4:
-                        case 5:
-                            break;
-                        case 3:
-                        default:
+            """,
+            after = """
+                class Test {
+                    int n;
+                    {
+                        switch (n) {
+                            case 1:
+                                break;
+                            case 2:
+                                break;
+                            case 4:
+                            case 5:
+                                break;
+                            case 3:
+                            default:
+                        }
                     }
                 }
-            }
-        """)
-    }
+            """
+    )
 
     @Test
     fun skipIfLastAndSharedWithCase() {
-        val a = jp.parse("""
-            class Test {
-                int n;
-                {
-                    switch (n) {
-                        case 1:
-                            break;
-                        case 2:
-                        default:
-                            break;
-                        case 3:
-                            break;
+        setProperties("skipIfLastAndSharedWithCase" to true)
+        assertRefactored(
+                before = """
+                    class Test {
+                        int n;
+                        {
+                            switch (n) {
+                                case 1:
+                                    break;
+                                case 2:
+                                default:
+                                    break;
+                                case 3:
+                                    break;
+                            }
+                        }
                     }
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml("skipIfLastAndSharedWithCase" to true))
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            class Test {
-                int n;
-                {
-                    switch (n) {
-                        case 1:
-                            break;
-                        case 2:
-                        default:
-                            break;
-                        case 3:
-                            break;
+                """,
+                after = """
+                    class Test {
+                        int n;
+                        {
+                            switch (n) {
+                                case 1:
+                                    break;
+                                case 2:
+                                default:
+                                    break;
+                                case 3:
+                                    break;
+                            }
+                        }
                     }
-                }
-            }
-        """)
+                """
+        )
     }
 
     @Test
-    fun defaultIsLastAndThrows() {
-        jp.assertUnchangedByRefactoring(configXml(), """
-            class Test {
-                int n;
-                {
-                    switch (n) {
-                        case 1:
-                            break;
-                        default:
-                            throw new RuntimeException("unexpected value");
+    fun defaultIsLastAndThrows() = assertUnchanged(
+            before = """
+                class Test {
+                    int n;
+                    {
+                        switch (n) {
+                            case 1:
+                                break;
+                            default:
+                                throw new RuntimeException("unexpected value");
+                        }
                     }
                 }
-            }
-        """)
-    }
+            """
+    )
 
     @Test
-    fun defaultIsLastAndReturnsNonVoid() {
-        jp.assertUnchangedByRefactoring(configXml(), """
-            class Test {
-                public int foo(int n) {
-                    switch (n) {
-                        case 1:
-                            return 1;
-                        default:
-                            return 2;
+    fun defaultIsLastAndReturnsNonVoid() = assertUnchanged(
+            before = """
+                class Test {
+                    public int foo(int n) {
+                        switch (n) {
+                            case 1:
+                                return 1;
+                            default:
+                                return 2;
+                        }
                     }
                 }
-            }
-        """)
-    }
+            """
+    )
 
     @Test
-    fun dontAddBreaksIfCasesArentMoving() {
-        jp.assertUnchangedByRefactoring(configXml(), """
-            class Test {
-                int n;
-                boolean foo() {
-                    switch (n) {
-                        case 1:
-                        case 2:
-                            System.out.println("side effect");
-                        default:
-                            return true;
+    fun dontAddBreaksIfCasesArentMoving() = assertUnchanged(
+            before = """
+                class Test {
+                    int n;
+                    boolean foo() {
+                        switch (n) {
+                            case 1:
+                            case 2:
+                                System.out.println("side effect");
+                            default:
+                                return true;
+                        }
                     }
                 }
-            }
-        """)
-    }
+            """
+    )
 
     @Test
-    fun dontRemoveExtraneousDefaultCaseBreaks() {
-        jp.assertUnchangedByRefactoring(configXml(), """
-            class Test {
-                int n;
-                void foo() {
-                    switch (n) {
-                        default:
-                            break;
+    fun dontRemoveExtraneousDefaultCaseBreaks() = assertUnchanged(
+            before = """
+                class Test {
+                    int n;
+                    void foo() {
+                        switch (n) {
+                            default:
+                                break;
+                        }
                     }
                 }
-            }
-        """)
-    }
+            """
+    )
 
     @Test
-    fun allCasesGroupedWithDefault() {
-        jp.assertUnchangedByRefactoring(configXml(), """
-            class Test {
-                int n;
-                boolean foo() {
-                    switch (n) {
-                        case 1:
-                        case 2:
-                        default:
-                            return true;
+    fun allCasesGroupedWithDefault() = assertUnchanged(
+            before = """
+                class Test {
+                    int n;
+                    boolean foo() {
+                        switch (n) {
+                            case 1:
+                            case 2:
+                            default:
+                                return true;
+                        }
                     }
                 }
-            }
-        """)
-    }
+            """
+    )
 }

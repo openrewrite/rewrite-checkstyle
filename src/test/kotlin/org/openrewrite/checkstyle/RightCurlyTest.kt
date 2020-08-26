@@ -18,133 +18,133 @@ package org.openrewrite.checkstyle
 import org.junit.jupiter.api.Test
 import org.openrewrite.checkstyle.policy.RightCurlyPolicy
 
-open class RightCurlyTest: CheckstyleRefactorVisitorTest(RightCurly::class) {
+open class RightCurlyTest: CheckstyleRefactorVisitorTest(RightCurly()) {
     @Test
     fun alone() {
-        val a = jp.parse("""
-            class A {
-                {
-                    if(1 == 2) {} else if(2 == 3) {} else {}
-                    
-                    try {} catch(Throwable t) {} finally {}
-                    
-                    { int n = 1; }
-                }
-                
-                public int foo() { return 1; }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml("tokens" to "LITERAL_TRY,LITERAL_CATCH,LITERAL_FINALLY,LITERAL_IF,LITERAL_ELSE,METHOD_DEF",
-                "option" to RightCurlyPolicy.ALONE)).fix().fixed
-
-        assertRefactored(fixed, """
-            class A {
-                {
-                    if(1 == 2) {
+        setProperties(
+                "tokens" to "LITERAL_TRY,LITERAL_CATCH,LITERAL_FINALLY,LITERAL_IF,LITERAL_ELSE,METHOD_DEF",
+                "option" to RightCurlyPolicy.ALONE
+        )
+        assertRefactored(
+                before = """
+                    class A {
+                        {
+                            if(1 == 2) {} else if(2 == 3) {} else {}
+                            
+                            try {} catch(Throwable t) {} finally {}
+                            
+                            { int n = 1; }
+                        }
+                        
+                        public int foo() { return 1; }
                     }
-                    else if(2 == 3) {
+                """,
+                after = """
+                    class A {
+                        {
+                            if(1 == 2) {
+                            }
+                            else if(2 == 3) {
+                            }
+                            else {
+                            }
+                            
+                            try {
+                            }
+                            catch(Throwable t) {
+                            }
+                            finally {
+                            }
+                            
+                            {
+                                int n = 1;
+                            }
+                        }
+                        
+                        public int foo() {
+                            return 1;
+                        }
                     }
-                    else {
-                    }
-                    
-                    try {
-                    }
-                    catch(Throwable t) {
-                    }
-                    finally {
-                    }
-                    
-                    {
-                        int n = 1;
-                    }
-                }
-                
-                public int foo() {
-                    return 1;
-                }
-            }
-        """)
+                """
+        )
     }
 
     @Test
     fun aloneOrSingleline() {
-        val a = jp.parse("""
-            class A {
-                {
-                    if(1 == 2) {} else if(2 == 3) {} else {}
-                    
-                    try {} catch(Throwable t) {} finally {}
-                    
-                    {
-                        int n = 1; }
-                }
-                
-                public int foo() { return 1; }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml("option" to RightCurlyPolicy.ALONE_OR_SINGLELINE))
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            class A {
-                {
-                    if(1 == 2) {}
-                    else if(2 == 3) {}
-                    else {}
-                    
-                    try {}
-                    catch(Throwable t) {}
-                    finally {}
-                    
-                    {
-                        int n = 1;
+        setProperties("option" to RightCurlyPolicy.ALONE_OR_SINGLELINE)
+        assertRefactored(
+                before = """
+                    class A {
+                        {
+                            if(1 == 2) {} else if(2 == 3) {} else {}
+                            
+                            try {} catch(Throwable t) {} finally {}
+                            
+                            {
+                                int n = 1; }
+                        }
+                        
+                        public int foo() { return 1; }
                     }
-                }
-                
-                public int foo() { return 1; }
-            }
-        """)
+                """,
+                after = """
+                    class A {
+                        {
+                            if(1 == 2) {}
+                            else if(2 == 3) {}
+                            else {}
+                            
+                            try {}
+                            catch(Throwable t) {}
+                            finally {}
+                            
+                            {
+                                int n = 1;
+                            }
+                        }
+                        
+                        public int foo() { return 1; }
+                    }
+                """
+        )
     }
 
     @Test
     fun same() {
-        val a = jp.parse("""
-            class A {
-                {
-                    if(1 == 2) {} else if(2 == 3) {}
-                    else {}
-                    
-                    try {} catch(java.io.IOException e) {}
-                    catch(Throwable t) {}
-                    finally {}
-                    
-                    {
-                        int n = 1; }
-                }
-                
-                public int foo() { return 1; }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml("option" to RightCurlyPolicy.SAME))
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            class A {
-                {
-                    if(1 == 2) {} else if(2 == 3) {} else {}
-                    
-                    try {} catch(java.io.IOException e) {} catch(Throwable t) {} finally {}
-                    
-                    {
-                        int n = 1;
+        setProperties("option" to RightCurlyPolicy.SAME)
+        assertRefactored(
+                before = """
+                    class A {
+                        {
+                            if(1 == 2) {} else if(2 == 3) {}
+                            else {}
+                            
+                            try {} catch(java.io.IOException e) {}
+                            catch(Throwable t) {}
+                            finally {}
+                            
+                            {
+                                int n = 1; }
+                        }
+                        
+                        public int foo() { return 1; }
                     }
-                }
-                
-                public int foo() { return 1; }
-            }
-        """)
+                """,
+                after = """
+                    class A {
+                        {
+                            if(1 == 2) {} else if(2 == 3) {} else {}
+                            
+                            try {} catch(java.io.IOException e) {} catch(Throwable t) {} finally {}
+                            
+                            {
+                                int n = 1;
+                            }
+                        }
+                        
+                        public int foo() { return 1; }
+                    }
+                """
+        )
     }
 }

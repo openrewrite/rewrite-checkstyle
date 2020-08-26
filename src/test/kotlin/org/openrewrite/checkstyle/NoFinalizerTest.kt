@@ -17,23 +17,20 @@ package org.openrewrite.checkstyle
 
 import org.junit.jupiter.api.Test
 
-open class NoFinalizerTest: CheckstyleRefactorVisitorTest(NoFinalizer::class) {
+open class NoFinalizerTest: CheckstyleRefactorVisitorTest(NoFinalizer()) {
     @Test
-    fun noFinalizer() {
-        val a = jp.parse("""
-            public class A {
-                @Override
-                protected void finalize() throws Throwable {
-                    super.finalize();
+    fun noFinalizer() = assertRefactored(
+            before = """
+                public class A {
+                    @Override
+                    protected void finalize() throws Throwable {
+                        super.finalize();
+                    }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-            }
-        """)
-    }
+            """,
+            after = """
+                public class A {
+                }
+            """
+    )
 }

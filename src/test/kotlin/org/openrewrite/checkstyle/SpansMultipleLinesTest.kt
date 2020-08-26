@@ -44,7 +44,7 @@ class SpansMultipleLinesTest {
             }
         """.trimIndent())
 
-        val init = a.classes[0].body.statements[1] as J.Block<*>
+        val init = a[0].classes[0].body.statements[1] as J.Block<*>
 
         assertFalse(SpansMultipleLines(init.statements[0], null).visit(init.statements[0]))
         assertTrue(SpansMultipleLines(init.statements[1], null).visit(init.statements[1]))
@@ -65,7 +65,7 @@ class SpansMultipleLinesTest {
             }
         """.trimIndent())
 
-        val aClass = a.classes[0]
+        val aClass = a[0].classes[0]
         assertFalse(SpansMultipleLines(aClass, aClass.body).visit(aClass))
     }
 }

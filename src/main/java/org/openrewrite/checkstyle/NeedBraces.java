@@ -15,15 +15,15 @@
  */
 package org.openrewrite.checkstyle;
 
+import org.openrewrite.AutoConfigure;
+import org.openrewrite.Formatting;
 import org.openrewrite.Tree;
 import org.openrewrite.checkstyle.policy.Token;
-import org.openrewrite.AutoConfigure;
 import org.openrewrite.java.JavaFormatter;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Statement;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Collections.emptyList;
@@ -145,12 +145,14 @@ public class NeedBraces extends CheckstyleRefactorVisitor {
 
         String originalBodySuffix = body.getFormatting().getSuffix();
 
-        return new J.Block<>(randomId(),
+        return new J.Block<>(
+                randomId(),
                 null,
                 body instanceof J.Empty ?
                         emptyList() :
                         singletonList(body.withFormatting(format(format.getPrefix(1)))),
                 format(" ", originalBodySuffix),
-                format.getPrefix());
+                new J.Block.End(randomId(), Formatting.format(format.getPrefix()))
+        );
     }
 }

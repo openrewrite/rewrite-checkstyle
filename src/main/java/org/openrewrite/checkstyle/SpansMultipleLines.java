@@ -17,20 +17,20 @@ package org.openrewrite.checkstyle;
 
 import org.openrewrite.Tree;
 import org.openrewrite.internal.lang.Nullable;
-import org.openrewrite.java.JavaSourceVisitor;
+import org.openrewrite.java.AbstractJavaSourceVisitor;
 import org.openrewrite.java.tree.J;
 
 import java.util.Spliterators;
 
 import static java.util.stream.StreamSupport.stream;
 
-class SpansMultipleLines extends JavaSourceVisitor<Boolean> {
+class SpansMultipleLines extends AbstractJavaSourceVisitor<Boolean> {
     private final J scope;
 
     @Nullable
     private final J skip;
 
-    SpansMultipleLines(J scope, J skip) {
+    SpansMultipleLines(J scope, @Nullable J skip) {
         this.scope = scope;
         this.skip = skip;
         setCursoringOn();
@@ -44,14 +44,14 @@ class SpansMultipleLines extends JavaSourceVisitor<Boolean> {
     @Override
     public Boolean visitTree(Tree tree) {
         if (scope.isScope(tree)) {
-            if (tree instanceof J.Block && ((J.Block<?>) tree).getEndOfBlockSuffix().contains("\n")) {
+            if (tree instanceof J.Block && ((J.Block<?>) tree).getEnd().getPrefix().contains("\n")) {
                 return true;
             }
 
             // don't look at the prefix of the scope that we are testing, we are interested in its contents
             return super.visitTree(tree);
         } else if (getCursor().isScopeInPath(scope) && !isSkipInCursorPath()) {
-            if (tree instanceof J.Block && ((J.Block<?>) tree).getEndOfBlockSuffix().contains("\n")) {
+            if (tree instanceof J.Block && ((J.Block<?>) tree).getEnd().getPrefix().contains("\n")) {
                 return true;
             }
 

@@ -18,7 +18,7 @@ package org.openrewrite.checkstyle
 import org.junit.jupiter.api.Test
 import org.openrewrite.checkstyle.policy.PadPolicy
 
-open class TypecastParenPadTest: CheckstyleRefactorVisitorTest(TypecastParenPad::class) {
+open class TypecastParenPadTest: CheckstyleRefactorVisitorTest(TypecastParenPad()) {
     private val padded = """
         public class A {
             { 
@@ -39,15 +39,10 @@ open class TypecastParenPadTest: CheckstyleRefactorVisitorTest(TypecastParenPad:
 
     @Test
     fun shouldPadTypecast() {
-        val fixed = jp.parse(unpadded).refactor().visit(configXml("option" to PadPolicy.SPACE))
-                .fix().fixed
-        assertRefactored(fixed, padded)
+        setProperties("option" to PadPolicy.SPACE)
+        assertRefactored(before = unpadded, after = padded)
     }
 
     @Test
-    fun shouldUnpadTypecast() {
-        val fixed = jp.parse(padded).refactor().visit(configXml())
-                .fix().fixed
-        assertRefactored(fixed, unpadded)
-    }
+    fun shouldUnpadTypecast() = assertRefactored(before = padded, after = unpadded)
 }

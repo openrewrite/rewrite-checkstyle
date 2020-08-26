@@ -17,54 +17,48 @@ package org.openrewrite.checkstyle
 
 import org.junit.jupiter.api.Test
 
-open class FinalClassTest : CheckstyleRefactorVisitorTest(FinalClass::class) {
+open class FinalClassTest : CheckstyleRefactorVisitorTest(FinalClass()) {
     @Test
-    fun shouldBeconfigXml() {
-        val a = jp.parse("""
-            public class A {
-                private A(String s) {
+    fun shouldBeconfigXml() = assertRefactored(
+            before = """
+                public class A {
+                    private A(String s) {
+                    }
+                    
+                    private A() {
+                    }
                 }
-                
-                private A() {
+            """,
+            after = """
+                public final class A {
+                    private A(String s) {
+                    }
+                    
+                    private A() {
+                    }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            public final class A {
-                private A(String s) {
-                }
-                
-                private A() {
-                }
-            }
-        """)
-    }
+            """
+    )
 
     @Test
-    fun shouldNotBeconfigXml() {
-        val a = jp.parse("""
-            public class A {
-                private A(String s) {
+    fun shouldNotBeconfigXml() = assertRefactored(
+            before = """
+                public class A {
+                    private A(String s) {
+                    }
+                    
+                    public A() {
+                    }
                 }
-                
-                public A() {
+            """,
+            after = """
+                public class A {
+                    private A(String s) {
+                    }
+                    
+                    public A() {
+                    }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                private A(String s) {
-                }
-                
-                public A() {
-                }
-            }
-        """)
-    }
+            """
+    )
 }

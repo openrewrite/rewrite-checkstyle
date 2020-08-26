@@ -18,163 +18,157 @@ package org.openrewrite.checkstyle
 import org.junit.jupiter.api.Test
 import org.openrewrite.checkstyle.policy.LeftCurlyPolicy
 
-open class LeftCurlyTest: CheckstyleRefactorVisitorTest(LeftCurly::class) {
+open class LeftCurlyTest: CheckstyleRefactorVisitorTest(LeftCurly()) {
     @Test
-    fun eol() {
-        val a = jp.parse("""
-            class A
-            {
+    fun eol() = assertRefactored(
+            before = """
+                class A
                 {
-                    if(1 == 2)
+                    {
+                        if(1 == 2)
+                        {
+                        }
+                    }
+                
+                    private static final int N = 1;
+                    static
                     {
                     }
                 }
-            
-                private static final int N = 1;
-                static
-                {
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            class A {
-                {
-                    if(1 == 2) {
+            """,
+            after = """
+                class A {
+                    {
+                        if(1 == 2) {
+                        }
+                    }
+                
+                    private static final int N = 1;
+                    static {
                     }
                 }
-            
-                private static final int N = 1;
-                static {
-                }
-            }
-        """)
-    }
+            """
+    )
 
     @Test
     fun nl() {
-        val a = jp.parse("""
-            class A {
-                {
-                    if(1 == 2) {
+        setProperties("option" to LeftCurlyPolicy.NL)
+        assertRefactored(
+                before = """
+                    class A {
+                        {
+                            if(1 == 2) {
+                            }
+                        }
+                    
+                        private static final int N = 1;
+                        static {
+                        }
                     }
-                }
-            
-                private static final int N = 1;
-                static {
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml("option" to LeftCurlyPolicy.NL))
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            class A
-            {
-                {
-                    if(1 == 2)
+                """,
+                after = """
+                    class A
                     {
+                        {
+                            if(1 == 2)
+                            {
+                            }
+                        }
+                    
+                        private static final int N = 1;
+                        static
+                        {
+                        }
                     }
-                }
-            
-                private static final int N = 1;
-                static
-                {
-                }
-            }
-        """)
+                """
+        )
     }
 
     @Test
     fun nlow() {
-        val a = jp.parse("""
-            class A {
-                {
-                    if(1 == 2)
-                    {
+        setProperties("option" to LeftCurlyPolicy.NLOW)
+        assertRefactored(
+                before = """
+                    class A {
+                        {
+                            if(1 == 2)
+                            {
+                            }
+                            if(1 == 2 &&
+                                3 == 4) {
+                            }
+                        }
+                    
+                        private static final int N = 1;
+                        static {
+                        }
                     }
-                    if(1 == 2 &&
-                        3 == 4) {
+                """,
+                after = """
+                    class A {
+                        {
+                            if(1 == 2) {
+                            }
+                            if(1 == 2 &&
+                                3 == 4)
+                            {
+                            }
+                        }
+                    
+                        private static final int N = 1;
+                        static
+                        {
+                        }
                     }
-                }
-            
-                private static final int N = 1;
-                static {
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml("option" to LeftCurlyPolicy.NLOW))
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            class A {
-                {
-                    if(1 == 2) {
-                    }
-                    if(1 == 2 &&
-                        3 == 4)
-                    {
-                    }
-                }
-            
-                private static final int N = 1;
-                static
-                {
-                }
-            }
-        """)
+                """
+        )
     }
 
     @Test
     fun caseBlocks() {
-        val a = jp.parse("""
-            class A {
-                {
-                    switch(1) {
-                    case 1:
-                    {
+        setProperties("option" to LeftCurlyPolicy.EOL)
+        assertRefactored(
+                before = """
+                    class A {
+                        {
+                            switch(1) {
+                            case 1:
+                            {
+                            }
+                            case 2: {
+                            }
+                            }
+                        }
                     }
-                    case 2: {
+                """,
+                after = """
+                    class A {
+                        {
+                            switch(1) {
+                            case 1: {
+                            }
+                            case 2: {
+                            }
+                            }
+                        }
                     }
-                    }
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml("option" to LeftCurlyPolicy.EOL))
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            class A {
-                {
-                    switch(1) {
-                    case 1: {
-                    }
-                    case 2: {
-                    }
-                    }
-                }
-            }
-        """)
+                """
+        )
     }
 
     @Test
-    fun dontStripNewClassInstanceInitializers() {
-        jp.assertUnchangedByRefactoring(configXml(), """
-            public class JacksonUtils {
-                static ObjectMapper stdConfigure(ObjectMapper mapper) {
-                    return mapper
-                        .registerModule(new SimpleModule() {
-                            {
-                                addSerializer(new InstantSerializer());
-                            }
-                        });
+    fun dontStripNewClassInstanceInitializers() = assertUnchanged(
+            before = """
+                public class JacksonUtils {
+                    static ObjectMapper stdConfigure(ObjectMapper mapper) {
+                        return mapper
+                            .registerModule(new SimpleModule() {
+                                {
+                                    addSerializer(new InstantSerializer());
+                                }
+                            });
+                    }
                 }
-            }
-        """)
-    }
+            """
+    )
 }

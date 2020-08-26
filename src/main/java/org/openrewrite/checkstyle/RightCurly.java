@@ -15,15 +15,14 @@
  */
 package org.openrewrite.checkstyle;
 
+import org.openrewrite.AutoConfigure;
 import org.openrewrite.Cursor;
 import org.openrewrite.Tree;
 import org.openrewrite.checkstyle.policy.RightCurlyPolicy;
 import org.openrewrite.checkstyle.policy.Token;
-import org.openrewrite.AutoConfigure;
 import org.openrewrite.java.tree.J;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
@@ -57,7 +56,7 @@ public class RightCurly extends CheckstyleRefactorVisitor {
                 (option != RightCurlyPolicy.ALONE_OR_SINGLELINE && tokens.stream().anyMatch(t -> t.getMatcher().matches(parentCursor))) ||
                 parentCursor.getTree() instanceof J.Block;
 
-        boolean satisfiesPolicy = block.getEndOfBlockSuffix().contains("\n") ||
+        boolean satisfiesPolicy = block.getEnd().getPrefix().contains("\n") ||
                 (option != RightCurlyPolicy.ALONE && !new SpansMultipleLines(block, null).visit(block));
 
         if (tokenMatches && !satisfiesPolicy && parentCursor.firstEnclosing(J.Block.class) != null) {
@@ -65,7 +64,7 @@ public class RightCurly extends CheckstyleRefactorVisitor {
                             .firstEnclosing(J.Block.class).getIndent(),
                     getCursor().getParentOrThrow().getTree()).getPrefix();
 
-            b = b.withEndOfBlockSuffix(suffix);
+            b = b.withEnd(b.getEnd().withPrefix(suffix));
 
             if (b.getStatements().size() == 1) {
                 b.getStatements().set(0, b.getStatements().get(0).withFormatting(formatter.format(b)));

@@ -17,29 +17,26 @@ package org.openrewrite.checkstyle
 
 import org.junit.jupiter.api.Test
 
-open class HideUtilityClassConstructorTest: CheckstyleRefactorVisitorTest(HideUtilityClassConstructor::class) {
+open class HideUtilityClassConstructorTest: CheckstyleRefactorVisitorTest(HideUtilityClassConstructor()) {
     @Test
-    fun hideUtilityConstructor() {
-        val a = jp.parse("""
-            public class A {
-                public A() {
+    fun hideUtilityConstructor() = assertRefactored(
+            before = """
+                public class A {
+                    public A() {
+                    }
+                    
+                    public static void utility() {
+                    }
                 }
-                
-                public static void utility() {
+            """,
+            after = """
+                public class A {
+                    private A() {
+                    }
+                    
+                    public static void utility() {
+                    }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                private A() {
-                }
-                
-                public static void utility() {
-                }
-            }
-        """)
-    }
+            """
+    )
 }

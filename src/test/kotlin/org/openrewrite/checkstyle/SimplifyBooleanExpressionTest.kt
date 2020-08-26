@@ -17,41 +17,38 @@ package org.openrewrite.checkstyle
 
 import org.junit.jupiter.api.Test
 
-open class SimplifyBooleanExpressionTest: CheckstyleRefactorVisitorTest(SimplifyBooleanExpression::class) {
+open class SimplifyBooleanExpressionTest: CheckstyleRefactorVisitorTest(SimplifyBooleanExpression()) {
     @Test
-    fun simplifyBooleanExpression() {
-        val a = jp.parse("""
-            public class A {
-                {
-                    boolean a = !false;
-                    boolean b = (a == true);
-                    boolean c = b || true;
-                    boolean d = c || c;
-                    boolean e = d && d;
-                    boolean f = (e == true) || e;
-                    boolean g = f && false;
-                    boolean h = !!g;
-                    boolean i = (a != false);
+    fun simplifyBooleanExpression() = assertRefactored(
+            before = """
+                public class A {
+                    {
+                        boolean a = !false;
+                        boolean b = (a == true);
+                        boolean c = b || true;
+                        boolean d = c || c;
+                        boolean e = d && d;
+                        boolean f = (e == true) || e;
+                        boolean g = f && false;
+                        boolean h = !!g;
+                        boolean i = (a != false);
+                    }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                {
-                    boolean a = true;
-                    boolean b = a;
-                    boolean c = true;
-                    boolean d = c;
-                    boolean e = d;
-                    boolean f = e;
-                    boolean g = false;
-                    boolean h = g;
-                    boolean i = a;
+            """,
+            after = """
+                public class A {
+                    {
+                        boolean a = true;
+                        boolean b = a;
+                        boolean c = true;
+                        boolean d = c;
+                        boolean e = d;
+                        boolean f = e;
+                        boolean g = false;
+                        boolean h = g;
+                        boolean i = a;
+                    }
                 }
-            }
-        """)
-    }
+            """
+    )
 }

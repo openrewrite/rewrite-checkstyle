@@ -17,54 +17,50 @@ package org.openrewrite.checkstyle
 
 import org.junit.jupiter.api.Test
 
-open class UnnecessaryParenthesesTest: CheckstyleRefactorVisitorTest(UnnecessaryParentheses::class) {
+open class UnnecessaryParenthesesTest: CheckstyleRefactorVisitorTest(UnnecessaryParentheses()) {
     @Test
-    fun simpleUnwrapping() {
-        val a = jp.parse("""
-            import java.util.*;
-            public class A {
-                int square(int a, int b) {
-                    int square = (a * b);
-
-                    int sumOfSquares = 0;
-                    for(int i = (0); i < 10; i++) {
-                      sumOfSquares += (square(i * i, i));
+    fun simpleUnwrapping() = assertRefactored(
+            before = """
+                import java.util.*;
+                public class A {
+                    int square(int a, int b) {
+                        int square = (a * b);
+    
+                        int sumOfSquares = 0;
+                        for(int i = (0); i < 10; i++) {
+                          sumOfSquares += (square(i * i, i));
+                        }
+                        double num = (10.0);
+    
+                        List<String> list = Arrays.asList("a1", "b1", "c1");
+                        list.stream()
+                          .filter((s) -> s.startsWith("c"))
+                          .forEach(System.out::println);
+    
+                        return (square);
                     }
-                    double num = (10.0);
-
-                    List<String> list = Arrays.asList("a1", "b1", "c1");
-                    list.stream()
-                      .filter((s) -> s.startsWith("c"))
-                      .forEach(System.out::println);
-
-                    return (square);
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml())
-                .fix(1).fixed
-
-        assertRefactored(fixed, """
-            import java.util.*;
-            public class A {
-                int square(int a, int b) {
-                    int square = a * b;
-
-                    int sumOfSquares = 0;
-                    for(int i = 0; i < 10; i++) {
-                      sumOfSquares += square(i * i, i);
+            """,
+            after = """
+                import java.util.*;
+                public class A {
+                    int square(int a, int b) {
+                        int square = a * b;
+    
+                        int sumOfSquares = 0;
+                        for(int i = 0; i < 10; i++) {
+                          sumOfSquares += square(i * i, i);
+                        }
+                        double num = 10.0;
+    
+                        List<String> list = Arrays.asList("a1", "b1", "c1");
+                        list.stream()
+                          .filter(s -> s.startsWith("c"))
+                          .forEach(System.out::println);
+    
+                        return square;
                     }
-                    double num = 10.0;
-
-                    List<String> list = Arrays.asList("a1", "b1", "c1");
-                    list.stream()
-                      .filter(s -> s.startsWith("c"))
-                      .forEach(System.out::println);
-
-                    return square;
                 }
-            }
-        """)
-    }
+            """
+    )
 }

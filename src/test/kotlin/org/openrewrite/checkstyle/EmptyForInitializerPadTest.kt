@@ -18,69 +18,63 @@ package org.openrewrite.checkstyle
 import org.junit.jupiter.api.Test
 import org.openrewrite.checkstyle.policy.PadPolicy
 
-open class EmptyForInitializerPadTest: CheckstyleRefactorVisitorTest(EmptyForInitializerPad::class) {
+open class EmptyForInitializerPadTest : CheckstyleRefactorVisitorTest(EmptyForInitializerPad()) {
     @Test
-    fun noSpaceInitializerPadding() {
-        val a = jp.parse("""
-            public class A {
-                {
-                    for (; i < j; i++, j--);
+    fun noSpaceInitializerPadding() = assertRefactored(
+            before = """
+                public class A {
+                    {
+                        for (; i < j; i++, j--);
+                    }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                {
-                    for (; i < j; i++, j--);
+            """,
+            after = """
+                public class A {
+                    {
+                        for (; i < j; i++, j--);
+                    }
                 }
-            }
-        """)
-    }
+            """
+    )
 
     @Test
     fun spaceInitializerPadding() {
-        val a = jp.parse("""
-            public class A {
-                {
-                    for (; i < j; i++, j--);
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml("option" to PadPolicy.SPACE)).fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                {
-                    for ( ; i < j; i++, j--);
-                }
-            }
-        """)
+        setProperties("option" to PadPolicy.SPACE)
+        assertRefactored(
+                before = """
+                    public class A {
+                        {
+                            for (; i < j; i++, j--);
+                        }
+                    }
+                """,
+                after = """
+                    public class A {
+                        {
+                            for ( ; i < j; i++, j--);
+                        }
+                    }
+                """
+        )
     }
 
     @Test
-    fun noCheckIfInitializerStartsWithLineTerminator() {
-        val a = jp.parse("""
-            public class A {
-                {
-                    for (
-                          ; i < j; i++, j--);
+    fun noCheckIfInitializerStartsWithLineTerminator() = assertRefactored(
+            before = """
+                public class A {
+                    {
+                        for (
+                              ; i < j; i++, j--);
+                    }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                {
-                    for (
-                          ; i < j; i++, j--);
+            """,
+            after = """
+                public class A {
+                    {
+                        for (
+                              ; i < j; i++, j--);
+                    }
                 }
-            }
-        """)
-    }
+            """
+    )
 }

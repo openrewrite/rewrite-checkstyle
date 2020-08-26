@@ -17,31 +17,28 @@ package org.openrewrite.checkstyle
 
 import org.junit.jupiter.api.Test
 
-open class StringLiteralEqualityTest: CheckstyleRefactorVisitorTest(StringLiteralEquality::class) {
+open class StringLiteralEqualityTest: CheckstyleRefactorVisitorTest(StringLiteralEquality()) {
     @Test
-    fun stringLiteralEqualityReplacedWithEquals() {
-        val a = jp.parse("""
-            class Test {
-                String a;
-                {
-                    if(a == "test");
-                    if("test" == a);
-                    if("test" == "test");
+    fun stringLiteralEqualityReplacedWithEquals() = assertRefactored(
+            before = """
+                class Test {
+                    String a;
+                    {
+                        if(a == "test");
+                        if("test" == a);
+                        if("test" == "test");
+                    }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            class Test {
-                String a;
-                {
-                    if("test".equals(a));
-                    if("test".equals(a));
-                    if("test".equals("test"));
+            """,
+            after = """
+                class Test {
+                    String a;
+                    {
+                        if("test".equals(a));
+                        if("test".equals(a));
+                        if("test".equals("test"));
+                    }
                 }
-            }
-        """)
-    }
+            """
+    )
 }

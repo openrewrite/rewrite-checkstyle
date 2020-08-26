@@ -19,136 +19,137 @@ import org.junit.jupiter.api.Test
 import org.openrewrite.checkstyle.policy.OperatorToken
 import org.openrewrite.checkstyle.policy.WrapPolicy
 
-open class OperatorWrapTest: CheckstyleRefactorVisitorTest(OperatorWrap::class) {
+open class OperatorWrapTest: CheckstyleRefactorVisitorTest(OperatorWrap()) {
     @Test
     fun operatorOnNewline() {
-        val a = jp.parse("""
-            import java.io.*;
-            class A {
-                {
-                    String s = "aaa" +
-                        "b" + "c";
-                    if(s instanceof
-                        String);
-                    boolean b = s.contains("a") ?
-                        false :
-                        true;
-                    s +=
-                        "b";
-                    var a = Function::
-                        identity;
-                    int n =
-                        1;
-                    int n[] =
-                        new int[0];
-                    n =
-                        2;
-                }
-                
-                <T extends Serializable &
-                        Comparable> T foo() {
-                    return null;
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml("tokens" to OperatorToken.values().joinToString(",")))
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            import java.io.*;
-            class A {
-                {
-                    String s = "aaa"
-                        + "b" + "c";
-                    if(s
-                        instanceof String);
-                    boolean b = s.contains("a")
-                        ? false
-                        : true;
-                    s
-                        += "b";
-                    var a = Function
-                        ::identity;
-                    int n
-                        = 1;
-                    int n[]
-                        = new int[0];
-                    n
-                        = 2;
-                }
-                
-                <T extends Serializable
-                        & Comparable> T foo() {
-                    return null;
-                }
-            }
-        """)
+        setProperties("tokens" to OperatorToken.values().joinToString(","))
+        assertRefactored(
+                before = """
+                    import java.io.*;
+                    class A {
+                        {
+                            String s = "aaa" +
+                                "b" + "c";
+                            if(s instanceof
+                                String);
+                            boolean b = s.contains("a") ?
+                                false :
+                                true;
+                            s +=
+                                "b";
+                            var a = Function::
+                                identity;
+                            int n =
+                                1;
+                            int n[] =
+                                new int[0];
+                            n =
+                                2;
+                        }
+                        
+                        <T extends Serializable &
+                                Comparable> T foo() {
+                            return null;
+                        }
+                    }
+                """,
+                after = """
+                    import java.io.*;
+                    class A {
+                        {
+                            String s = "aaa"
+                                + "b" + "c";
+                            if(s
+                                instanceof String);
+                            boolean b = s.contains("a")
+                                ? false
+                                : true;
+                            s
+                                += "b";
+                            var a = Function
+                                ::identity;
+                            int n
+                                = 1;
+                            int n[]
+                                = new int[0];
+                            n
+                                = 2;
+                        }
+                        
+                        <T extends Serializable
+                                & Comparable> T foo() {
+                            return null;
+                        }
+                    }
+                """
+        )
     }
 
     @Test
     fun operatorOnEndOfLine() {
-        val a = jp.parse("""
-            import java.io.*;
-            class A {
-                {
-                    String s = "aaa"
-                        + "b" + "c";
-                    if(s
-                        instanceof String);
-                    boolean b = s.contains("a")
-                        ? false
-                        : true;
-                    s
-                        += "b";
-                    var a = Function
-                        ::identity;
-                    int n
-                        = 1;
-                    int n[]
-                        = new int[0];
-                    n
-                        = 2;
-                }
-                
-                <T extends Serializable
-                        & Comparable> T foo() {
-                    return null;
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml("option" to WrapPolicy.EOL,
-                                "tokens" to OperatorToken.values().joinToString(","))).fix().fixed
-
-        assertRefactored(fixed, """
-            import java.io.*;
-            class A {
-                {
-                    String s = "aaa" +
-                        "b" + "c";
-                    if(s instanceof
-                        String);
-                    boolean b = s.contains("a") ?
-                        false :
-                        true;
-                    s +=
-                        "b";
-                    var a = Function::
-                        identity;
-                    int n =
-                        1;
-                    int n[] =
-                        new int[0];
-                    n =
-                        2;
-                }
-                
-                <T extends Serializable &
-                        Comparable> T foo() {
-                    return null;
-                }
-            }
-        """)
+        setProperties(
+                "option" to WrapPolicy.EOL,
+                "tokens" to OperatorToken.values().joinToString(",")
+        )
+        assertRefactored(
+                before = """
+                    import java.io.*;
+                    class A {
+                        {
+                            String s = "aaa"
+                                + "b" + "c";
+                            if(s
+                                instanceof String);
+                            boolean b = s.contains("a")
+                                ? false
+                                : true;
+                            s
+                                += "b";
+                            var a = Function
+                                ::identity;
+                            int n
+                                = 1;
+                            int n[]
+                                = new int[0];
+                            n
+                                = 2;
+                        }
+                        
+                        <T extends Serializable
+                                & Comparable> T foo() {
+                            return null;
+                        }
+                    }
+                """,
+                after = """
+                    import java.io.*;
+                    class A {
+                        {
+                            String s = "aaa" +
+                                "b" + "c";
+                            if(s instanceof
+                                String);
+                            boolean b = s.contains("a") ?
+                                false :
+                                true;
+                            s +=
+                                "b";
+                            var a = Function::
+                                identity;
+                            int n =
+                                1;
+                            int n[] =
+                                new int[0];
+                            n =
+                                2;
+                        }
+                        
+                        <T extends Serializable &
+                                Comparable> T foo() {
+                            return null;
+                        }
+                    }
+                """
+        )
     }
 }

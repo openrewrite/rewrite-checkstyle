@@ -17,36 +17,33 @@ package org.openrewrite.checkstyle
 
 import org.junit.jupiter.api.Test
 
-open class MultipleVariableDeclarationsTest: CheckstyleRefactorVisitorTest(MultipleVariableDeclarations::class) {
+open class MultipleVariableDeclarationsTest: CheckstyleRefactorVisitorTest(MultipleVariableDeclarations()) {
     @Test
-    fun replaceWithSingleVariableDeclarations() {
-        val a = jp.parse("""
-            class Test {
-                int n = 0, m = 0;
-                int o = 0, p;
-                
-                {
-                    Integer[] q = { 0 }, r[] = { { 0 } };
-                    for(int i = 0, j = 0;;);
+    fun replaceWithSingleVariableDeclarations() = assertRefactored(
+            before = """
+                class Test {
+                    int n = 0, m = 0;
+                    int o = 0, p;
+                    
+                    {
+                        Integer[] q = { 0 }, r[] = { { 0 } };
+                        for(int i = 0, j = 0;;);
+                    }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            class Test {
-                int n = 0;
-                int m = 0;
-                int o = 0;
-                int p;
-                
-                {
-                    Integer[] q = { 0 };
-                    Integer r[][] = { { 0 } };
-                    for(int i = 0, j = 0;;);
+            """,
+            after = """
+                class Test {
+                    int n = 0;
+                    int m = 0;
+                    int o = 0;
+                    int p;
+                    
+                    {
+                        Integer[] q = { 0 };
+                        Integer r[][] = { { 0 } };
+                        for(int i = 0, j = 0;;);
+                    }
                 }
-            }
-        """)
-    }
+            """
+    )
 }

@@ -18,109 +18,106 @@ package org.openrewrite.checkstyle
 import org.junit.jupiter.api.Test
 import org.openrewrite.checkstyle.policy.PadPolicy
 
-open class MethodParamPadTest: CheckstyleRefactorVisitorTest(MethodParamPad::class) {
+open class MethodParamPadTest: CheckstyleRefactorVisitorTest(MethodParamPad()) {
     @Test
-    fun noSpaceInitializerPadding() {
-        val a = jp.parse("""
-            public class A extends B {
-                A () {
-                    super ();
+    fun noSpaceInitializerPadding() = assertRefactored(
+            before = """
+                public class A extends B {
+                    A () {
+                        super ();
+                    }
+                
+                    void foo (int n) {
+                        A a = new A ();
+                        foo (0);
+                    }
                 }
-            
-                void foo (int n) {
-                    A a = new A ();
-                    foo (0);
+                
+                class B {}
+                
+                enum E {
+                    E1 ()
                 }
-            }
-            
-            class B {}
-            
-            enum E {
-                E1 ()
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            public class A extends B {
-                A() {
-                    super();
+            """,
+            after = """
+                public class A extends B {
+                    A() {
+                        super();
+                    }
+                
+                    void foo(int n) {
+                        A a = new A();
+                        foo(0);
+                    }
                 }
-            
-                void foo(int n) {
-                    A a = new A();
-                    foo(0);
+                
+                class B {}
+                
+                enum E {
+                    E1()
                 }
-            }
-            
-            class B {}
-            
-            enum E {
-                E1()
-            }
-        """)
-    }
+            """
+    )
 
     @Test
     fun spaceInitializerPadding() {
-        val a = jp.parse("""
-            public class A extends B {
-                A() {
-                    super();
-                }
-            
-                void foo(int n) {
-                    A a = new A();
-                    foo(0);
-                }
-            }
-            
-            class B {}
-            
-            enum E {
-                E1()
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml("option" to PadPolicy.SPACE)).fix().fixed
-
-        assertRefactored(fixed, """
-            public class A extends B {
-                A () {
-                    super ();
-                }
-            
-                void foo (int n) {
-                    A a = new A ();
-                    foo (0);
-                }
-            }
-            
-            class B {}
-            
-            enum E {
-                E1 ()
-            }
-        """)
+        setProperties("option" to PadPolicy.SPACE)
+        assertRefactored(
+                before = """
+                    public class A extends B {
+                        A() {
+                            super();
+                        }
+                    
+                        void foo(int n) {
+                            A a = new A();
+                            foo(0);
+                        }
+                    }
+                    
+                    class B {}
+                    
+                    enum E {
+                        E1()
+                    }
+                """,
+                after = """
+                    public class A extends B {
+                        A () {
+                            super ();
+                        }
+                    
+                        void foo (int n) {
+                            A a = new A ();
+                            foo (0);
+                        }
+                    }
+                    
+                    class B {}
+                    
+                    enum E {
+                        E1 ()
+                    }
+                """
+        )
     }
 
     @Test
     fun allowLineBreaks() {
-        val a = jp.parse("""
-            public class A extends B {
-                void foo
-                    (int n) {}
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml("allowLineBreaks" to true)).fix().fixed
-
-        assertRefactored(fixed, """
-            public class A extends B {
-                void foo
-                    (int n) {}
-            }
-        """)
+        setProperties("allowLineBreaks" to true)
+        assertRefactored(
+                before = """
+                    public class A extends B {
+                        void foo
+                            (int n) {}
+                    }
+                """,
+                after = """
+                    public class A extends B {
+                        void foo
+                            (int n) {}
+                    }
+                """
+        )
     }
 }

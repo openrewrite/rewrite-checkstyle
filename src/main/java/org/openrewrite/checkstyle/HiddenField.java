@@ -20,6 +20,7 @@ import org.openrewrite.Tree;
 import org.openrewrite.checkstyle.policy.Token;
 import org.openrewrite.AutoConfigure;
 import org.openrewrite.internal.lang.Nullable;
+import org.openrewrite.java.AbstractJavaSourceVisitor;
 import org.openrewrite.java.JavaRefactorVisitor;
 import org.openrewrite.java.JavaSourceVisitor;
 import org.openrewrite.java.tree.J;
@@ -103,7 +104,7 @@ public class HiddenField extends CheckstyleRefactorVisitor {
         return super.visitVariable(variable);
     }
 
-    private class FindNameShadows extends JavaSourceVisitor<List<J.VariableDecls.NamedVar>> {
+    private class FindNameShadows extends AbstractJavaSourceVisitor<List<J.VariableDecls.NamedVar>> {
         @Nullable
         private final J.VariableDecls.NamedVar thatLookLike;
 
@@ -184,7 +185,7 @@ public class HiddenField extends CheckstyleRefactorVisitor {
         }
     }
 
-    private static class ShadowsName extends JavaSourceVisitor<Boolean> {
+    private static class ShadowsName extends AbstractJavaSourceVisitor<Boolean> {
         private final Cursor scope;
         private final String name;
 

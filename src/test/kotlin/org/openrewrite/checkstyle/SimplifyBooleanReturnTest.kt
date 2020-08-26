@@ -17,165 +17,157 @@ package org.openrewrite.checkstyle
 
 import org.junit.jupiter.api.Test
 
-open class SimplifyBooleanReturnTest: CheckstyleRefactorVisitorTest(SimplifyBooleanReturn::class) {
+open class SimplifyBooleanReturnTest: CheckstyleRefactorVisitorTest(SimplifyBooleanReturn()) {
     @Test
-    fun simplifyBooleanReturn() {
-        val a = jp.parse("""
-            public class A {
-                boolean ifNoElse() {
-                    if (isOddMillis()) {
-                        return true;
-                    }
-                    return false;
-                }
-                
-                static boolean isOddMillis() {
-                    boolean even = System.currentTimeMillis() % 2 == 0;
-                    if (even == true) {
-                        return false;
-                    }
-                    else {
-                        return true;
-                    }
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                boolean ifNoElse() {
-                    return isOddMillis();
-                }
-                
-                static boolean isOddMillis() {
-                    boolean even = System.currentTimeMillis() % 2 == 0;
-                    return !(even == true);
-                }
-            }
-        """)
-    }
-
-    @Test
-    fun dontSimplifyToReturnUnlessLastStatement() {
-        val a = jp.parse("""
-            public class A {
-                public boolean absurdEquals(Object o) {
-                    if(this == o) {
-                        return true;
-                    }
-                    if(this == o) {
-                        return true;
-                    }
-                    return false;
-                }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                public boolean absurdEquals(Object o) {
-                    if(this == o) {
-                        return true;
-                    }
-                    return this == o;
-                }
-            }""")
-    }
-
-    @Test
-    fun nestedIfsWithNoBlock() {
-        jp.assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
-            public class A {
-                public boolean absurdEquals(Object o) {
-                    if(this == o)
-                        if(this == 0) 
+    fun simplifyBooleanReturn() = assertRefactored(
+            before = """
+                public class A {
+                    boolean ifNoElse() {
+                        if (isOddMillis()) {
                             return true;
-                    return false;
+                        }
+                        return false;
+                    }
+                    
+                    static boolean isOddMillis() {
+                        boolean even = System.currentTimeMillis() % 2 == 0;
+                        if (even == true) {
+                            return false;
+                        }
+                        else {
+                            return true;
+                        }
+                    }
                 }
-            }
-        """)
-    }
+            """,
+            after = """
+                public class A {
+                    boolean ifNoElse() {
+                        return isOddMillis();
+                    }
+                    
+                    static boolean isOddMillis() {
+                        boolean even = System.currentTimeMillis() % 2 == 0;
+                        return !(even == true);
+                    }
+                }
+            """
+    )
 
     @Test
-    fun dontAlterWhenElseIfPresent() {
-        jp.assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
-            public class A {
-                public boolean foo(int n) {
-                    if (n == 1) {
-                        return false;
-                    } 
-                    else if (n == 2) {
-                        return true;
-                    } 
-                    else {
+    fun dontSimplifyToReturnUnlessLastStatement() = assertRefactored(
+            before = """
+                public class A {
+                    public boolean absurdEquals(Object o) {
+                        if(this == o) {
+                            return true;
+                        }
+                        if(this == o) {
+                            return true;
+                        }
                         return false;
                     }
                 }
-            }
-        """)
-    }
-
-    @Test
-    fun dontAlterWhenElseContainsSomethingOtherThanReturn() {
-        jp.assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
-            public class A {
-                public boolean foo(int n) {
-                    if (n == 1) {
-                        return true;
-                    } 
-                    else {
-                        System.out.println("side effect");
-                        return false;
-                    } 
+            """,
+            after = """
+                public class A {
+                    public boolean absurdEquals(Object o) {
+                        if(this == o) {
+                            return true;
+                        }
+                        return this == o;
+                    }
                 }
-            }
-        """)
-    }
+            """
+    )
 
     @Test
-    fun onlySimplifyToReturnWhenLastStatement() {
-        jp.assertUnchangedByRefactoring(SimplifyBooleanReturn(), """
-            import java.util.*;
-            public class A {
-                public static boolean deepEquals(List<byte[]> l, List<byte[]> r) {
-                    for (int i = 0; i < l.size(); ++i) {
-                        if (!Arrays.equals(l.get(i), r.get(i))) {
+    fun nestedIfsWithNoBlock() = assertUnchanged(
+            before = """
+                public class A {
+                    public boolean absurdEquals(Object o) {
+                        if(this == o)
+                            if(this == 0) 
+                                return true;
+                        return false;
+                    }
+                }
+            """
+    )
+
+    @Test
+    fun dontAlterWhenElseIfPresent() = assertUnchanged(
+            before = """
+                public class A {
+                    public boolean foo(int n) {
+                        if (n == 1) {
+                            return false;
+                        } 
+                        else if (n == 2) {
+                            return true;
+                        } 
+                        else {
                             return false;
                         }
                     }
-                    return true;
                 }
-            }
-        """)
-    }
+            """
+    )
 
     @Test
-    fun wrapNotReturnsOfTernaryIfConditionsInParentheses() {
-        val a = jp.parse("""
-            public class A {
-                Object failure;
-                public boolean equals(Object o) {
-                    if (failure != null ? !failure.equals(that.failure) : that.failure != null) {
-                        return false;
+    fun dontAlterWhenElseContainsSomethingOtherThanReturn() = assertUnchanged(
+            before = """
+                public class A {
+                    public boolean foo(int n) {
+                        if (n == 1) {
+                            return true;
+                        } 
+                        else {
+                            System.out.println("side effect");
+                            return false;
+                        } 
                     }
-                    return true;
                 }
-            }
-        """.trimIndent())
+            """
+    )
 
-        val fixed = a.refactor().visit(configXml()).fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                Object failure;
-                public boolean equals(Object o) {
-                    return !(failure != null ? !failure.equals(that.failure) : that.failure != null);
+    @Test
+    fun onlySimplifyToReturnWhenLastStatement() = assertUnchanged(
+            before = """
+                import java.util.*;
+                public class A {
+                    public static boolean deepEquals(List<byte[]> l, List<byte[]> r) {
+                        for (int i = 0; i < l.size(); ++i) {
+                            if (!Arrays.equals(l.get(i), r.get(i))) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
                 }
-            }
-        """)
-    }
+            """
+    )
+
+    @Test
+    fun wrapNotReturnsOfTernaryIfConditionsInParentheses() = assertRefactored(
+            before = """
+                public class A {
+                    Object failure;
+                    public boolean equals(Object o) {
+                        if (failure != null ? !failure.equals(that.failure) : that.failure != null) {
+                            return false;
+                        }
+                        return true;
+                    }
+                }
+            """,
+            after = """
+                public class A {
+                    Object failure;
+                    public boolean equals(Object o) {
+                        return !(failure != null ? !failure.equals(that.failure) : that.failure != null);
+                    }
+                }
+            """
+    )
 }

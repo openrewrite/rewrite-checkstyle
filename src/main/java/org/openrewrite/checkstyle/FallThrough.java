@@ -15,10 +15,10 @@
  */
 package org.openrewrite.checkstyle;
 
-import org.openrewrite.Tree;
 import org.openrewrite.AutoConfigure;
+import org.openrewrite.Tree;
+import org.openrewrite.java.AbstractJavaSourceVisitor;
 import org.openrewrite.java.JavaRefactorVisitor;
-import org.openrewrite.java.JavaSourceVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Statement;
 
@@ -45,9 +45,9 @@ public class FallThrough extends CheckstyleRefactorVisitor {
     }
 
     @Override
-    public void nextCycle() {
+    public void next() {
         casesToAddBreak.clear();
-        super.nextCycle();
+        super.next();
     }
 
     @Override
@@ -112,7 +112,7 @@ public class FallThrough extends CheckstyleRefactorVisitor {
         }
     }
 
-    private class LastLineBreaksOrFallsThrough extends JavaSourceVisitor<Boolean> {
+    private class LastLineBreaksOrFallsThrough extends AbstractJavaSourceVisitor<Boolean> {
         private final J.Case scope;
 
         private LastLineBreaksOrFallsThrough(J.Case scope) {
@@ -147,7 +147,7 @@ public class FallThrough extends CheckstyleRefactorVisitor {
         @Override
         public Boolean visitBlock(J.Block<J> block) {
             return lastLineBreaksOrFallsThrough(block.getStatements()) ||
-                    reliefPattern.matcher(block.getEndOfBlockSuffix()).find() ||
+                    reliefPattern.matcher(block.getEnd().getPrefix()).find() ||
                     super.visitBlock(block);
         }
 

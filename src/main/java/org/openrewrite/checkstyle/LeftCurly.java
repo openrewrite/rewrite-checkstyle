@@ -15,15 +15,14 @@
  */
 package org.openrewrite.checkstyle;
 
+import org.openrewrite.AutoConfigure;
 import org.openrewrite.Cursor;
 import org.openrewrite.Tree;
 import org.openrewrite.checkstyle.policy.LeftCurlyPolicy;
 import org.openrewrite.checkstyle.policy.Token;
-import org.openrewrite.AutoConfigure;
 import org.openrewrite.java.tree.J;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
@@ -126,8 +125,8 @@ public class LeftCurly extends CheckstyleRefactorVisitor {
 
                 return block.getStatic() == null ? block.withPrefix(" ") : block.withStatic(block.getStatic().withSuffix(" "));
             case NL:
-                return block.getStatic() == null ? block.withPrefix(block.getEndOfBlockSuffix()) :
-                        block.withStatic(block.getStatic().withSuffix(block.getEndOfBlockSuffix()));
+                return block.getStatic() == null ? block.withPrefix(block.getEnd().getPrefix()) :
+                        block.withStatic(block.getStatic().withSuffix(block.getEnd().getPrefix()));
             case NLOW:
             default:
                 return formatCurly(spansMultipleLines ? LeftCurlyPolicy.NL : LeftCurlyPolicy.EOL, block, spansMultipleLines, containing);

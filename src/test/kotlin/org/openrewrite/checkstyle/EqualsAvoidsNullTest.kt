@@ -17,58 +17,50 @@ package org.openrewrite.checkstyle
 
 import org.junit.jupiter.api.Test
 
-open class EqualsAvoidsNullTest : CheckstyleRefactorVisitorTest(EqualsAvoidsNull::class) {
+open class EqualsAvoidsNullTest : CheckstyleRefactorVisitorTest(EqualsAvoidsNull()) {
     @Test
-    fun invertConditional() {
-        val a = jp.parse("""
-            public class A {
-                {
-                    String s = null;
-                    if(s.equals("test")) {}
-                    if(s.equalsIgnoreCase("test")) {}
+    fun invertConditional() = assertRefactored(
+            before = """
+                public class A {
+                    {
+                        String s = null;
+                        if(s.equals("test")) {}
+                        if(s.equalsIgnoreCase("test")) {}
+                    }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml())
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                {
-                    String s = null;
-                    if("test".equals(s)) {}
-                    if("test".equalsIgnoreCase(s)) {}
+            """,
+            after = """
+                public class A {
+                    {
+                        String s = null;
+                        if("test".equals(s)) {}
+                        if("test".equalsIgnoreCase(s)) {}
+                    }
                 }
-            }
-        """)
-    }
+            """
+    )
 
     @Test
-    fun removeUnnecessaryNullCheckAndParens() {
-        val a = jp.parse("""
-            public class A {
-                {
-                    String s = null;
-                    if((s != null && s.equals("test"))) {}
-                    if(s != null && s.equals("test")) {}
-                    if(null != s && s.equals("test")) {}
+    fun removeUnnecessaryNullCheckAndParens() = assertRefactored(
+            before = """
+                public class A {
+                    {
+                        String s = null;
+                        if((s != null && s.equals("test"))) {}
+                        if(s != null && s.equals("test")) {}
+                        if(null != s && s.equals("test")) {}
+                    }
                 }
-            }
-        """.trimIndent())
-
-        val fixed = a.refactor().visit(configXml())
-                .fix().fixed
-
-        assertRefactored(fixed, """
-            public class A {
-                {
-                    String s = null;
-                    if("test".equals(s)) {}
-                    if("test".equals(s)) {}
-                    if("test".equals(s)) {}
+            """,
+            after = """
+                public class A {
+                    {
+                        String s = null;
+                        if("test".equals(s)) {}
+                        if("test".equals(s)) {}
+                        if("test".equals(s)) {}
+                    }
                 }
-            }
-        """)
-    }
+            """
+    )
 }
