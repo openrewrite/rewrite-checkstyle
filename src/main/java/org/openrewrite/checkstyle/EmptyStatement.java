@@ -74,7 +74,7 @@ public class EmptyStatement extends CheckstyleRefactorVisitor {
                 .orElseGet(() -> {
                     // This is the last statement in the block. There is nothing that could
                     // execute in the body of this statement, so just remove it.
-                    andThen(new DeleteStatement(getCursor().getTree()));
+                    andThen(new DeleteStatement.Scoped(getCursor().getTree()));
                     return t;
                 });
     }

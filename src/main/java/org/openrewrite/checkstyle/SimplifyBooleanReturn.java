@@ -65,14 +65,14 @@ public class SimplifyBooleanReturn extends CheckstyleRefactorVisitor {
 
                 if (isLiteralTrue(retrn.getExpr())) {
                     if (singleFollowingStatement.map(this::isLiteralFalse).orElse(false) && i.getElsePart() == null) {
-                        andThen(new DeleteStatement(followingStatements.get(0)));
+                        andThen(new DeleteStatement.Scoped(followingStatements.get(0)));
                         return retrn
                                 .withExpr(ifCondition.withFormatting(format(" ")))
                                 .withFormatting(i.getFormatting());
                     } else if (!singleFollowingStatement.isPresent() &&
                             getReturnExprIfOnlyStatementInElseThen(i).map(this::isLiteralFalse).orElse(false)) {
                         if (i.getElsePart() != null) {
-                            andThen(new DeleteStatement(i.getElsePart().getStatement()));
+                            andThen(new DeleteStatement.Scoped(i.getElsePart().getStatement()));
                         }
 
                         return retrn
@@ -83,12 +83,12 @@ public class SimplifyBooleanReturn extends CheckstyleRefactorVisitor {
                     boolean returnThenPart = false;
 
                     if (singleFollowingStatement.map(this::isLiteralTrue).orElse(false) && i.getElsePart() == null) {
-                        andThen(new DeleteStatement(followingStatements.get(0)));
+                        andThen(new DeleteStatement.Scoped(followingStatements.get(0)));
                         returnThenPart = true;
                     } else if (!singleFollowingStatement.isPresent() && getReturnExprIfOnlyStatementInElseThen(i)
                             .map(this::isLiteralTrue).orElse(false)) {
                         if (i.getElsePart() != null) {
-                            andThen(new DeleteStatement(i.getElsePart().getStatement()));
+                            andThen(new DeleteStatement.Scoped(i.getElsePart().getStatement()));
                         }
                         returnThenPart = true;
                     }

@@ -175,7 +175,7 @@ public class EmptyBlock extends CheckstyleRefactorVisitor {
         J.Try t = refactor(tryable, super::visitTry);
 
         if (tokens.contains(Token.LITERAL_TRY) && isEmptyBlock(t.getBody())) {
-            andThen(new DeleteStatement(tryable));
+            andThen(new DeleteStatement.Scoped(tryable));
         } else if (tokens.contains(Token.LITERAL_FINALLY) && t.getFinally() != null && isEmptyBlock(t.getFinally().getBody())) {
             t = t.withFinally(null);
         }
@@ -253,7 +253,7 @@ public class EmptyBlock extends CheckstyleRefactorVisitor {
     @Override
     public J visitSynchronized(J.Synchronized synch) {
         if (tokens.contains(Token.LITERAL_SYNCHRONIZED) && isEmptyBlock(synch.getBody())) {
-            andThen(new DeleteStatement(synch));
+            andThen(new DeleteStatement.Scoped(synch));
         }
 
         return super.visitSynchronized(synch);
@@ -262,7 +262,7 @@ public class EmptyBlock extends CheckstyleRefactorVisitor {
     @Override
     public J visitSwitch(J.Switch switzh) {
         if (tokens.contains(Token.LITERAL_SWITCH) && isEmptyBlock(switzh.getCases())) {
-            andThen(new DeleteStatement(switzh));
+            andThen(new DeleteStatement.Scoped(switzh));
         }
 
         return super.visitSwitch(switzh);
