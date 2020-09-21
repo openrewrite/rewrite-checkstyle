@@ -22,6 +22,7 @@ import org.openrewrite.checkstyle.policy.Token;
 import org.openrewrite.java.JavaFormatter;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Statement;
+import org.openrewrite.java.utilities.SpansMultipleLines;
 
 import java.util.Set;
 import java.util.stream.Stream;
