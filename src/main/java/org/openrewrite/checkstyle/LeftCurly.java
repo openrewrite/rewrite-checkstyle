@@ -21,6 +21,7 @@ import org.openrewrite.Tree;
 import org.openrewrite.checkstyle.policy.LeftCurlyPolicy;
 import org.openrewrite.checkstyle.policy.Token;
 import org.openrewrite.java.tree.J;
+import org.openrewrite.java.utilities.SpansMultipleLines;
 
 import java.util.Set;
 import java.util.stream.Stream;
