@@ -91,7 +91,7 @@ public class CovariantEquals extends CheckstyleRefactorVisitor {
 
     private J.MethodDecl addEqualsBody(J.MethodDecl method, J.VariableDecls.NamedVar oldParamName, J.VariableDecls.NamedVar paramName) {
         String paramNameStr = paramName.printTrimmed();
-        List<Statement> equalsBody = TreeBuilder.buildSnippet(javaParser, enclosingCompilationUnit(), new Cursor(getCursor(), method.getBody()),
+        List<Statement> equalsBody = treeBuilder.buildSnippet(new Cursor(getCursor(), method.getBody()),
                 "if (this == " + paramNameStr + ") return true;\n" +
                         "if (" + paramNameStr + " == null || getClass() != " + paramNameStr + ".getClass()) return false;\n" +
                         "Test " + oldParamName.printTrimmed() + " = (Test) " + paramNameStr + ";\n");
