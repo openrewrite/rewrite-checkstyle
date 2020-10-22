@@ -35,7 +35,7 @@ apply(plugin = "license")
 apply(plugin = "nebula.maven-resolved-dependencies")
 apply(plugin = "io.spring.publishing")
 
-group = "org.openrewrite.plan"
+group = "org.openrewrite.recipe"
 description = "Eliminate Checkstyle issues. Automatically."
 
 repositories {
