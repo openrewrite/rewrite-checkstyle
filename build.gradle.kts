@@ -7,6 +7,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jfrog.gradle.plugin.artifactory.dsl.ArtifactoryPluginConvention
 import org.jfrog.gradle.plugin.artifactory.dsl.PublisherConfig
 import java.util.*
+import com.github.jk1.license.LicenseReportExtension
 
 buildscript {
     repositories {
@@ -29,6 +30,7 @@ plugins {
     `java-library`
     id("org.jetbrains.kotlin.jvm") version "1.4.0"
     id("io.spring.release") version "0.20.1"
+    id("com.github.jk1.dependency-license-report") version "1.16"
 }
 
 apply(plugin = "license")
@@ -107,6 +109,10 @@ configure<LicenseExtension> {
     header = project.rootProject.file("gradle/licenseHeader.txt")
     mapping(mapOf("kt" to "SLASHSTAR_STYLE", "java" to "SLASHSTAR_STYLE"))
     strictCheck = true
+}
+
+configure<LicenseReportExtension> {
+    renderers = arrayOf(com.github.jk1.license.render.CsvReportRenderer())
 }
 
 configure<PublishingExtension> {
