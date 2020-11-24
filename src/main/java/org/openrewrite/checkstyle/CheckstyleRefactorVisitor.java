@@ -27,6 +27,7 @@ import org.xml.sax.InputSource;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -59,7 +60,7 @@ public abstract class CheckstyleRefactorVisitor extends JavaRefactorVisitor {
 
     @Override
     public J visitCompilationUnit(J.CompilationUnit cu) {
-        if (suppressions.accept(new AuditEvent("does not matter", cu.getSourcePath(), localizedMessageThatDoesntMatter))) {
+        if (suppressions.accept(new AuditEvent("does not matter", cu.getSourcePath().toString(), localizedMessageThatDoesntMatter))) {
             return super.visitCompilationUnit(cu);
         }
         return cu;
