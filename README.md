@@ -13,7 +13,7 @@ This module parses your _existing_ Checkstyle configuration, supporting all the 
 
 Since all of the rules check for syntactic and not semantic patterns, there is no need to ensure that the ASTs evaluated by Rewrite Checkstyle are fully type-attributed (i.e. there is no need to provide the compile classpath to `JavaParser`).
 
-The list of currently supported checks is [here](https://github.com/openrewrite/rewrite-checkstyle/tree/master/src/main/java/org/openrewrite/checkstyle/check). Submit an issue to add support for additional checks. Even better, submit a PR!
+The list of currently supported checks is [here](https://github.com/openrewrite/rewrite-checkstyle/tree/master/src/main/java/org/openrewrite/checkstyle). Submit an issue to add support for additional checks. Even better, submit a PR!
 
 ## How to use?
 
